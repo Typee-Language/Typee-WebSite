@@ -34,5 +34,4 @@ if __name__ == '__main__':
     #-------------------------------------------------------------------------
     CopyrightYearsModif().modify_directories( ['../html-content', '../scripts'] ).modify_files( ['../README.md'] )
 
-
 #=====   end of   scripts.copyright_automated_modification   =====#
