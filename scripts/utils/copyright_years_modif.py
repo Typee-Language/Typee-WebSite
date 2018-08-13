@@ -26,7 +26,6 @@ SOFTWARE.
 from datetime import date
 import os
 
-
 #=============================================================================
 class CopyrightYearsModif:
     """
