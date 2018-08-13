@@ -6,6 +6,4 @@ This is not the case with our Web site content, which is copyrigthed and protect
 
 THIS IS THE CASE FOR ALL THE .HTML FILES IN THIS DIRECTORY AND ALL OF ITS SUB-DIRECTORIES. All of this content is not for free use.
 
-
 copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh
-
