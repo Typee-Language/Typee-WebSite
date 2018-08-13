@@ -11,7 +11,7 @@ allowed__ to use it as is without the express and written consent of the
 authors, which means that you have to send an e-mail to PostMaster (at) 
 typee.ovh and ask for permision before copying any part of our content.
 
-THIS IS THE CASE FOR ALL THE .HTML FILES IN THIS DIRECTORY AND ALL OF ITS SUB-
-DIRECTORIES. All of this content is not for free use.
+THIS IS THE CASE FOR ALL THE .HTML FILES IN THIS DIRECTORY AND ALL OF ITS 
+SUB-DIRECTORIES. All of this content is not for free use.
 
 copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh
