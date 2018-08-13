@@ -1,7 +1,12 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# Typee-Website Python local scripts
 
-"""
+Although HTML content of this repository is not for free use, all Python 
+developed code is available in this directory `scripts/` and in all of its maybe 
+sun-directories are available here under the permissive MIT license. Find a 
+copy of it below:
+
+```
+------------------------------------------------------------------------------
 Copyright (c) 2018 Philippe Schmouker, Typee project, http://www.typee.ovh
 
 Permission is hereby granted,  free of charge,  to any person obtaining a copy
@@ -21,18 +26,5 @@ AUTHORS  OR  COPYRIGHT  HOLDERS  BE  LIABLE  FOR  ANY CLAIM,  DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  TORT OR OTHERWISE, ARISING FROM,
 OUT  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
-
-#=============================================================================
-from scripts.utils.copyright_years_modif import CopyrightYearsModif
-
-#=============================================================================
-if __name__ == '__main__':
-    """
-    Runs the script function.
-    """
-    #-------------------------------------------------------------------------
-    CopyrightYearsModif().modify_directories( ['../html-content', '../scripts'] ).modify_files( ['../README.md'] )
-
-
-#=====   end of   scripts.copyright_automated_modification   =====#
+------------------------------------------------------------------------------
+```
