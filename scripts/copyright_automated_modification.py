@@ -24,24 +24,7 @@ SOFTWARE.
 """
 
 #=============================================================================
-from datetime import date
-import os
-
-
-
-#=============================================================================
-
-#-------------------------------------------------------------------------
-def modify_copyright():
-    '''
-    Modifies copyright notices in every HTML page in directory
-    Typee-Website/html-content.
-    '''
-    pass
-
-
-#-------------------------------------------------------------------------
-
+from scripts.utils.copyright_years_modif import CopyrightYearsModif
 
 #=============================================================================
 if __name__ == '__main__':
@@ -49,7 +32,7 @@ if __name__ == '__main__':
     Runs the script function.
     """
     #-------------------------------------------------------------------------
-    modify_copyright()
+    CopyrightYearsModif().modify_directories( ['../html-content', '../scripts'] ).modify_files( ['../README.md'] )
 
 
 #=====   end of   scripts.copyright_automated_modification   =====#
