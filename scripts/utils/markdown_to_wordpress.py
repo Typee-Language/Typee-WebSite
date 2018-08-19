@@ -33,23 +33,46 @@ class MarkdownToWordpress:
     for WordPress utility.
     """    
     #-------------------------------------------------------------------------
-    def __init__(self, params):
+    def __init__(self, md_text:str=None):
         '''
         Constructor.
+        If md_text is not None, its translation is available in attribute 
+        `translated_text`  right after construction time, else caller has
+        to call method `translate` on created instance.
                 
         Args:
-            ...
-        
-        Returns:
-            ...
-        
-        Raises:
-            ...
+            md_text: str
+                A reference to the text to be translated from Markdown to
+                HTML conforming with WordPress pages content.
         '''
-        pass
-   
+        self.translated_text = None if md_text is None else self.translate( md_text )
+
     #-------------------------------------------------------------------------
-    def _is_header(self, line:str, next_line:str=None) -> (int, str):
+    def translate(self, md_text:str) -> str:
+        '''
+        Translates Markdown text in HTML conforming WordPress pages content.
+        '''
+        wp_text = ''
+        
+        lines = md_text.split( '\n' )
+        for num_line, line in enumerate( lines ):
+            
+            # is this line a header one?
+            try:
+                (header_level, header_text) = self._check_header( line, lines[num_line+1] )
+                if header_level > 0:
+                    wp_text = wp_text.append( self._header(header_level, header_text) )
+                    continue  ## header text detected
+            except:
+                pass  ## we're parsing the last line of MD text
+        
+        # end of MD text translating
+        return wp_text
+    
+
+    #=========================================================================
+    #-------------------------------------------------------------------------
+    def _check_header(self, line:str, next_line:str=None) -> (int, str):
         '''
         Returns the number of the header if some is found and the header text,
         or 0 if not header and the whole line as text.
@@ -89,8 +112,11 @@ class MarkdownToWordpress:
                     return len(line) <= count
             #-------------------------------------------------------------
             return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, line )
-        
-        
+
+    #-------------------------------------------------------------------------
+    def _header(self, hdr_level:int, hdr_text:str) -> str:
+        return "<h{:d}>{:s}</h{:d}>".format( hdr_level, hdr_text, hdr_level )
+
 
 #=====   end of   scripts.utils.markdown_to_wordpress   =====#
 
