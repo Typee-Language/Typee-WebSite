@@ -163,6 +163,35 @@ class MarkdownToWordpress:
         return _check('*', line) or _check('_', line) or _check('-', line)
         
     #-------------------------------------------------------------------------
+    def _check_list(self, line:str) -> (bool, bool, str):
+        '''
+        Returns a triplet:
+          - first bool is True if line is an item of a list;
+          - second bool is True if item is unordered;
+          - last string contains the item text without the item head.
+        '''
+        item = line.ltrim().split( maxsplit=1 )
+        head, content = item[0], item[1]
+        
+        if len(head) == 1 and head[0] in ['-', '*', '+']:
+            return (True, True, content)
+        elif head[-1] == '.':
+            try:
+                _ = int( head[:-1] )
+                return (True, False, content)
+            except:
+                return (False, False, line)
+        else:
+            return (False, False, line)
+
+    #-------------------------------------------------------------------------
+    def _check_paragraph_break(self, next_line:str) -> bool:
+        '''
+        Returns True when next_line just contains '\n'
+        '''
+        return next_line == '\n'
+
+    #-------------------------------------------------------------------------
     def _check_strike(self, line:str) -> bool:
         '''
         Returns True if strikethrough is present in line, in which case line 
