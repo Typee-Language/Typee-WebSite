@@ -33,18 +33,25 @@ class MarkdownToWordpress:
     for WordPress utility.
     """    
     #-------------------------------------------------------------------------
-    def __init__(self, md_text:str=None):
+    def __init__(self, md_text:str=None, gfm_mode:bool=False):
         '''
         Constructor.
-        If md_text is not None, its translation is available in attribute 
-        `translated_text`  right after construction time, else caller has
+        If md_text is not None,  its translation is available in  attribute 
+        `translated_text`  right  after construction time,  else caller has
         to call method `translate` on created instance.
                 
         Args:
             md_text: str
-                A reference to the text to be translated from Markdown to
+                A reference to the text to be translated from  Markdown  to
                 HTML conforming with WordPress pages content.
+            gfm_mode: bool
+                Set to True if translation is done from GFM Mardown reader,
+                else set to False. Defauts to False.
+                In GFM mode, break-lines are '\n',  while in  not-GFM  mode 
+                (i.e. in standard MD mode), break-lines are set by at least
+                two spaces at end of line.
         '''
+        self._gfm_mode = gfm_mode
         self.translated_text = None if md_text is None else self.translate( md_text )
 
     #-------------------------------------------------------------------------
@@ -55,11 +62,17 @@ class MarkdownToWordpress:
         wp_text = ''
         
         lines = md_text.split( '\n' )
+        two_lines_header = False
+        
         for num_line, line in enumerate( lines ):
+            
+            if two_lines_header:
+                two_lines_header = False
+                continue
             
             # is this line a header one?
             try:
-                (header_level, header_text) = self._check_header( line, lines[num_line+1] )
+                (header_level, header_text, two_lines_header) = self._check_header( line, lines[num_line+1] )
                 if header_level > 0:
                     wp_text = wp_text.append( self._header(header_level, header_text) )
                     continue  ## header text detected
@@ -72,10 +85,33 @@ class MarkdownToWordpress:
 
     #=========================================================================
     #-------------------------------------------------------------------------
-    def _check_header(self, line:str, next_line:str=None) -> (int, str):
+    def _check_emphasis_marks(self, line:str, emph_str:str) -> bool:
+        '''
+        Returns True if an emphasis mark is detected, or False else. If 
+        True is returned, line is split into a list of strings, each of 
+        them being separated by an emphasis mark.
+        '''
+        if emph_str in line:
+            line = line.split( emph_str )
+            return True
+        else:
+            return False
+        
+    #-------------------------------------------------------------------------
+    def _check_emphasis(self, line:str) -> bool:
+        '''
+        Returns True if emphasis is present in line, in which case line is
+        split  into  a list of strings,  each of them being separated by a
+        mark. Returns False else, and line is unchanged.
+        '''
+        return self._check_emphasis_marks( line, '*' ) or self._check_emphasis_marks( line, '_' )
+
+    #-------------------------------------------------------------------------
+    def _check_header(self, line:str, next_line:str=None) -> (int, str, bool):
         '''
         Returns the number of the header if some is found and the header text,
-        or 0 if not header and the whole line as text.
+        or 0 if not header,  plus the whole line as text and a bool to specify
+        that the header stood on two successive lines.
         MD syntax:
         # H1
         ## H2
@@ -97,12 +133,12 @@ class MarkdownToWordpress:
             hashes = splitted_line[0]
             count = hashes.count( '#' )
             if count == len( hashes ):
-                return (count, splitted_line[1])
+                return (count, splitted_line[1], False)
             else:
-                return (0, line)
+                return (0, line, False)
             
         elif next_line is None:
-            return (0, line)
+            return (0, line, False)
         
         else:
             #-------------------------------------------------------------
@@ -111,7 +147,75 @@ class MarkdownToWordpress:
                 if len(next_line) == count:
                     return len(line) <= count
             #-------------------------------------------------------------
-            return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, line )
+            return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, line, True )
+
+    #-------------------------------------------------------------------------
+    def _check_hrule(self, line:str) -> bool:
+        '''
+        Returns True if some horizontal rule is detected in line, or False else.
+        '''
+        #-----------------------------------------------------------------
+        def _check(rule_char:str, line:str) -> bool:
+            count = line.count( rule_char )
+            return count >= 3 and count == len(line)
+        #-----------------------------------------------------------------
+        line = line.trim()
+        return _check('*', line) or _check('_', line) or _check('-', line)
+        
+    #-------------------------------------------------------------------------
+    def _check_strike(self, line:str) -> bool:
+        '''
+        Returns True if strikethrough is present in line, in which case line 
+        is split  into a list of strings,  each of them being separated by a
+        mark. Returns False else, and line is unchanged.
+        '''
+        return self._check_emphasis_marks( line, '~~' )
+
+    #-------------------------------------------------------------------------
+    def _check_strong(self, line:str) -> bool:
+        '''
+        Returns True if strong is present in line, in which case line is
+        split into a list of strings,  each of them being separated by a
+        mark. Returns False else, and line is unchanged.
+        '''
+        return self._check_emphasis_marks( line, '**' ) or self._check_emphasis_marks( line, '__' )
+
+    #-------------------------------------------------------------------------
+    def _combined_emphasis(self, line:str) -> str:
+        '''
+        Modifies every MD emphasis mark with its HTML equivalent in a line.
+        '''
+        #-------------------------------------------------------------
+        def _insert_emph(emph_start:str, txt:str, emph_end) -> str:
+            return ''.join( ["{:s}{:s}{:s}{:s}".format(txt[k]   ,
+                                                       emph_start,
+                                                       txt[k+1] ,
+                                                       emph_end ) for k in range(0, len(txt), 2)] )
+        #-------------------------------------------------------------
+        def _modify_em(sub_line:str) -> str:
+            if self._check_emphasis( sub_line ):
+                return _insert_emph( '<em>', sub_line, '</em>')
+            else:
+                return sub_line
+        #-------------------------------------------------------------
+        def _modify_strong(line:str) -> str:
+            if self._check_strong( line ):
+                return _insert_emph( '<strong>', line, '</strong>')
+            else:
+                return line
+        #-------------------------------------------------------------
+        def _modify_strikethrough(line:str) -> str:
+            if self._check_strike( line ):
+                return _insert_emph( '<span text-decorator="line-through">', line, '</span>')
+        #-------------------------------------------------------------
+        if self._check_strike(line):
+            line = _modify_strikethrough( line )
+        if self._check_strong(line):
+            for i, txt in enumerate(line):
+                line[i] = _modify_em( txt )
+            return _modify_strong( line )
+        else:
+            return _modify_em( line )
 
     #-------------------------------------------------------------------------
     def _header(self, hdr_level:int, hdr_text:str) -> str:
