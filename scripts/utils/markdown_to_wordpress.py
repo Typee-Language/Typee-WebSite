@@ -52,6 +52,7 @@ class MarkdownToWordpress:
                 two spaces at end of line.
         '''
         self._gfm_mode = gfm_mode
+        self._RefLinks = dict()
         self.translated_text = None if md_text is None else self.translate( md_text )
 
     #-------------------------------------------------------------------------
@@ -85,6 +86,35 @@ class MarkdownToWordpress:
 
     #=========================================================================
     #-------------------------------------------------------------------------
+    class _Link:
+        '''
+        Internal definition of links.
+        '''
+        def __init__(self, text:str, link:str, start:int, end:int, is_link:bool=True, is_url:bool=False):
+            self.text    = text
+            self.link    = link
+            self.start   = start
+            self.end     = end
+            self.is_link = is_link
+            self.is_url  = is_url
+
+    #-------------------------------------------------------------------------
+    class _RefLink( _Link ):
+        '''
+        Internal definition of self references.
+        '''
+        def __init__(self, text:str, start:int, end:int):
+            super().__init__( text, text, start, end, False )
+
+    #-------------------------------------------------------------------------
+    class _UrlLink( _Link ):
+        '''
+        Internal definition of self references.
+        '''
+        def __init__(self, text:str, start:int, end:int):
+            super().__init__( text, text, start, end, False, True )
+
+    #-------------------------------------------------------------------------
     def _check_emphasis_marks(self, line:str, emph_str:str) -> bool:
         '''
         Returns True if an emphasis mark is detected, or False else. If 
@@ -104,7 +134,8 @@ class MarkdownToWordpress:
         split  into  a list of strings,  each of them being separated by a
         mark. Returns False else, and line is unchanged.
         '''
-        return self._check_emphasis_marks( line, '*' ) or self._check_emphasis_marks( line, '_' )
+        return self._check_emphasis_marks( line, '*' ) or \
+               self._check_emphasis_marks( line, '_' )
 
     #-------------------------------------------------------------------------
     def _check_header(self, line:str, next_line:str=None) -> (int, str, bool):
@@ -161,7 +192,45 @@ class MarkdownToWordpress:
         #-----------------------------------------------------------------
         line = line.trim()
         return _check('*', line) or _check('_', line) or _check('-', line)
+
+    #-------------------------------------------------------------------------
+    def _check_links(self, line:str) -> (bool, list):
+        '''
+        Returns True if line contains links plus a list of these links, or 
+        False plus None if not.
+        '''
+        if '[' in line and ']' in line:
+            links = []
+            start_index = line.find( '[ ')
+            end_index   = line.find( '] ')
+            while end_index != -1:
+                try:
+                    text = line[start_index+1:end_index]
+                    if line[end_index+1] == '(':
+                        start_index = end_index+1
+                        end_index = line[start_index+1:].find(')')
+                        links.append( self._Link(text, line[start_index:end_index]) )
+                        
+                    elif line[end_index+1] == '[':
+                        start_index = end_index+1
+                        end_index = line[start_index+1:].find(']')
+                        links.append( self._RefLink(text, line[start_index:end_index]) )
+                    
+                    else:
+                        links.append( self._RefLink(text) )
+                    
+                    start_index = line[end_index+1:].find( '[' )
+                    end_index   = line[start_index+1:].find( ']' )
+                    
+                except:
+                    break
+            
+            return (True, links)
         
+        elif     
+        else:
+            return (False, None)
+
     #-------------------------------------------------------------------------
     def _check_list(self, line:str) -> (bool, bool, str):
         '''
@@ -192,6 +261,13 @@ class MarkdownToWordpress:
         return next_line == '\n'
 
     #-------------------------------------------------------------------------
+    def _check_Reference(self, line) -> bool:
+        '''
+        Returns True if line is a reference, or False else.
+        '''
+        return line.ltrim()[0] == '[' and line.contains ']:'
+
+    #-------------------------------------------------------------------------
     def _check_strike(self, line:str) -> bool:
         '''
         Returns True if strikethrough is present in line, in which case line 
@@ -208,6 +284,37 @@ class MarkdownToWordpress:
         mark. Returns False else, and line is unchanged.
         '''
         return self._check_emphasis_marks( line, '**' ) or self._check_emphasis_marks( line, '__' )
+
+    #-------------------------------------------------------------------------
+    def _check_urls(self, line:str) -> (bool, list):
+        '''
+        Returns True if line contains URLs plus a list of these URLs, or 
+        False plus None if not.
+        '''
+        #---------------------------------------------------------------------
+        urls = []
+        if 'http://' in line or 'https://' in line:
+            sublines = line.split( 'http' )
+            i = 0
+            while i < len(sublines):
+                try:
+                    if len(sublines[i]) == 0:
+                        url = 'http{:s}'.format( sublines[i+1].split(' ', 1) )
+                        urls.append( self._UrlLink( url ) )
+                        i += 2
+                    elif sublines[i][-1] in ' <':
+                        pairing = { ' ': ' ',  '<': '>' }
+                        end_url = sublines[i+1].find( pairing[sublines[i][-1]], 1)
+                        url = 'http{:s}'.format( sublines[i+1][:end_url] )
+                        urls.append( self._UrlLink( url ) )
+                        i += 2
+                    else:
+                        i += 1
+                except:
+                    break
+            return (True, urls)
+        else:
+            return (False, None)
 
     #-------------------------------------------------------------------------
     def _combined_emphasis(self, line:str) -> str:
