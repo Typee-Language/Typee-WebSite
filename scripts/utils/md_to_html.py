@@ -27,33 +27,26 @@ SOFTWARE.
 
 
 #=============================================================================
-class MarkdownToWordpress:
+class MDtoHTML:
     """
     This class helps translating Markdown texts in HTML texts specifically 
-    for WordPress utility.
+    for the "standard" MD specification.
     """    
     #-------------------------------------------------------------------------
-    def __init__(self, md_text:str=None, gfm_mode:bool=False):
+    def __init__(self, md_text:str=None):
         '''
         Constructor.
         If md_text is not None,  its translation is available in  attribute 
-        `translated_text`  right  after construction time,  else caller has
-        to call method `translate` on created instance.
+        `html_text` right after construction time,  else caller has to call 
+        method `translate()` on created instance.
                 
         Args:
             md_text: str
                 A reference to the text to be translated from  Markdown  to
                 HTML conforming with WordPress pages content.
-            gfm_mode: bool
-                Set to True if translation is done from GFM Mardown reader,
-                else set to False. Defauts to False.
-                In GFM mode, break-lines are '\n',  while in  not-GFM  mode 
-                (i.e. in standard MD mode), break-lines are set by at least
-                two spaces at end of line.
         '''
-        self._gfm_mode = gfm_mode
-        self._RefLinks = dict()
-        self.translated_text = None if md_text is None else self.translate( md_text )
+        self._refLinks = dict()
+        self.html_text = None if md_text is None else self.translate( md_text )
 
     #-------------------------------------------------------------------------
     def translate(self, md_text:str) -> str:
@@ -358,5 +351,5 @@ class MarkdownToWordpress:
         return "<h{:d}>{:s}</h{:d}>".format( hdr_level, hdr_text, hdr_level )
 
 
-#=====   end of   scripts.utils.markdown_to_wordpress   =====#
+#=====   end of   scripts.utils.md_to_html   =====#
 
