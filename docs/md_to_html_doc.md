@@ -1,4 +1,4 @@
-# Github Flavored Markdown to WordPress specialized translator - Design
+# Markdown to HTML Translator - Design
 
 This document presents the design of the translator of Markdown documents into 
 HTML WordPress content.
