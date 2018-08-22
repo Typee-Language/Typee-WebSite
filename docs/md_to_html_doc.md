@@ -84,9 +84,6 @@ detected and remembered in attribute `_refs`.
 - During the second phase, the HTML text is generated using the marks and the 
 references detected during first phase.
 
-As for the implementation, method `translate()` initializes a string as empty 
-and appends to it the translated MD text according to the detected MD marks 
-and MD references.
 
 
 #### 1.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
