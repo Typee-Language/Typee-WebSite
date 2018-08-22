@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 #=============================================================================
-# no import.
+from scripts.utils.md_mark import *
 
 
 #=============================================================================
@@ -33,7 +33,7 @@ class MDtoHTML:
     for the "standard" MD specification.
     """    
     #-------------------------------------------------------------------------
-    def __init__(self, md_text:str=None):
+    def __init__(self, md_text_lines:list=None):
         '''
         Constructor.
         If md_text is not None,  its translation is available in  attribute 
@@ -45,87 +45,77 @@ class MDtoHTML:
                 A reference to the text to be translated from  Markdown  to
                 HTML conforming with WordPress pages content.
         '''
-        self._refLinks = dict()
-        self.html_text = None if md_text is None else self.translate( md_text )
+        self.html_text = None if md_text_lines is None else self.translate( md_text_lines )
 
     #-------------------------------------------------------------------------
-    def translate(self, md_text:str) -> str:
+    def translate(self, md_text_lines:list) -> str:
         '''
         Translates Markdown text in HTML conforming WordPress pages content.
         '''
-        wp_text = ''
-        
-        lines = md_text.split( '\n' )
+        self._parse_md( md_text_lines )       # first  phase of translation
+        self._translate_md( md_text_lines )   # second phase of translation
+
+    
+    #=========================================================================
+    #-------------------------------------------------------------------------
+    def _parse_md(self, md_lines:str):
+        '''
+        Implementation of the first phase of the MD to HTML translation
+        '''
+        self._marks = list()
+        self._refs  = dict()
+
         two_lines_header = False
-        
-        for num_line, line in enumerate( lines ):
+        for num_line, line in enumerate( md_lines ):
             
-            if two_lines_header:
+            if two_lines_header:  ## set to True while checking for a MD header, see below
                 two_lines_header = False
                 continue
             
-            # is this line a header one?
+            # is this line an MD header?
             try:
-                (header_level, header_text, two_lines_header) = self._check_header( line, lines[num_line+1] )
+                (header_level, header_text, two_lines_header) = self._check_header( line, md_lines[num_line+1] )
                 if header_level > 0:
-                    wp_text = wp_text.append( self._header(header_level, header_text) )
+                    self._marks.append( MDHeader( LineColumn(num_line, header_level+1), header_level, header_text ) )
                     continue  ## header text detected
+
+                
+            
             except:
                 pass  ## we're parsing the last line of MD text
-        
+
+    #-------------------------------------------------------------------------
+    def _translate_md(self, md_text_lines:str):
+        '''
+        Implementation of the second phase of the MD to HTML translation
+        '''
+        wp_text = ''
+                
         # end of MD text translating
         return wp_text
     
 
     #=========================================================================
     #-------------------------------------------------------------------------
-    class _Link:
+    def _check_emphasis_marks(self, line:str, emph_str:str) -> (bool, list):
         '''
-        Internal definition of links.
-        '''
-        def __init__(self, text:str, link:str, start:int, end:int, is_link:bool=True, is_url:bool=False):
-            self.text    = text
-            self.link    = link
-            self.start   = start
-            self.end     = end
-            self.is_link = is_link
-            self.is_url  = is_url
-
-    #-------------------------------------------------------------------------
-    class _RefLink( _Link ):
-        '''
-        Internal definition of self references.
-        '''
-        def __init__(self, text:str, start:int, end:int):
-            super().__init__( text, text, start, end, False )
-
-    #-------------------------------------------------------------------------
-    class _UrlLink( _Link ):
-        '''
-        Internal definition of self references.
-        '''
-        def __init__(self, text:str, start:int, end:int):
-            super().__init__( text, text, start, end, False, True )
-
-    #-------------------------------------------------------------------------
-    def _check_emphasis_marks(self, line:str, emph_str:str) -> bool:
-        '''
-        Returns True if an emphasis mark is detected, or False else. If 
-        True is returned, line is split into a list of strings, each of 
-        them being separated by an emphasis mark.
+        Returns True if an emphasis mark is detected, or False else. If True
+        is  returned,  the line split into a list of strings separated by an 
+        emphasis mark is returned also in the tuple.  If False is  returned, 
+        None is return in place of list in the tuple.
         '''
         if emph_str in line:
-            line = line.split( emph_str )
-            return True
+            return (True, line.split(emph_str))
         else:
-            return False
+            return (False, None)
         
     #-------------------------------------------------------------------------
-    def _check_emphasis(self, line:str) -> bool:
+    def _check_emphasis(self, line:str) -> (bool, list):
         '''
-        Returns True if emphasis is present in line, in which case line is
-        split  into  a list of strings,  each of them being separated by a
-        mark. Returns False else, and line is unchanged.
+        Returns True if an emphasis mark is detected, or False else. If True
+        is  returned,  the line split into a list of strings separated by an 
+        emphasis mark is returned also in the tuple.  If False is  returned, 
+        None is return in place of list in the tuple.
         '''
         return self._check_emphasis_marks( line, '*' ) or \
                self._check_emphasis_marks( line, '_' )
@@ -235,7 +225,7 @@ class MDtoHTML:
         item = line.ltrim().split( maxsplit=1 )
         head, content = item[0], item[1]
         
-        if len(head) == 1 and head[0] in ['-', '*', '+']:
+        if len(head) == 1 and head[0] in "-+*":
             return (True, True, content)
         elif head[-1] == '.':
             try:
@@ -261,20 +251,22 @@ class MDtoHTML:
         return line.ltrim()[0] == '[' and line.contains ']:'
 
     #-------------------------------------------------------------------------
-    def _check_strike(self, line:str) -> bool:
+    def _check_strike(self, line:str) -> (bool, list):
         '''
         Returns True if strikethrough is present in line, in which case line 
-        is split  into a list of strings,  each of them being separated by a
-        mark. Returns False else, and line is unchanged.
+        is split into a list of strings that is returned in the tuple,  each 
+        of them being separated by a mark.  Returns False else,  and None is 
+        returned in place of list in the returned tuple.
         '''
         return self._check_emphasis_marks( line, '~~' )
 
     #-------------------------------------------------------------------------
-    def _check_strong(self, line:str) -> bool:
+    def _check_strong(self, line:str) -> (bool, list):
         '''
         Returns True if strong is present in line, in which case line is
-        split into a list of strings,  each of them being separated by a
-        mark. Returns False else, and line is unchanged.
+        split into a list of strings that is returned in the tuple, each 
+        of them being separated by a mark. Returns False else,  and None 
+        is returned in place of list in the returned tuple.
         '''
         return self._check_emphasis_marks( line, '**' ) or self._check_emphasis_marks( line, '__' )
 
