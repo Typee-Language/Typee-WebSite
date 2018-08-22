@@ -6,7 +6,7 @@ HTML content.
 We had to code this translator by our own because we didn't find any Open 
 Source tool accepting every Markdown tags and goodies that GitHub accepts. 
 Even the Markdown excellent tool available on PyPi could not be used for our 
-purpose (we unsuccessfully tried to)
+purpose (we unsuccessfully tried to).
 
 Notably, GitHub uses an extended Markdown specification, the 
 [GitHub Flavored Markdown Spec](https://github.github.com/gfm/) (or _GFM_). 
@@ -64,10 +64,29 @@ the HTML text returned corresponds to what he expected.
 
 ##### General design
 
-Method `translate()` runs in two phases. The first one parses the _MD_ text 
-and marks the detected MD tags. During this parsing, forward references are 
-also detected and remembered. During the second phase, the HTML text is 
-generated using the marks and the references detected during first phase.
+An internal class, `_MDMark`, stores the line and column numbers where MD tags 
+are detected. At construction time, the attribute `_marks` is set to an empty 
+list. This list will store all MD marks detected in the MD source file. It is 
+ordered on lines then on column numbers of those detected MD marks.
+
+Another internal class, `_Refs`, stores all the references that are detected 
+during the parsing of the MD source file. This is a dictionary with reference 
+text as the key and link text as the item. It is instantiated at construction 
+time with attribute `_refs`, set as empty at that time.
+
+The list of MD marks indexes also the place vers references are... referenced 
+(i.e. line and column numbers of starting and ending text in MD source file.
+
+Method `translate()` runs in two phases:
+- The first one parses the _MD_ text and marks the detected MD tags in 
+attribute `_marks`. During this first phase, forward references are also 
+detected and remembered in attribute `_refs`.
+- During the second phase, the HTML text is generated using the marks and the 
+references detected during first phase.
+
+As for the implementation, method `translate()` initializes a string as empty 
+and appends to it the translated MD text according to the detected MD marks 
+and MD references.
 
 
 #### 1.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
@@ -97,12 +116,11 @@ the HTML text returned corresponds to what he expected.
 
 ##### General design
 
-Method `translate()` runs in two phases. The first one parses the _MD_ text 
-and marks the detected MD tags. During this parsing, forward references are 
-also detected and remembered, as well as tables characteristics (e.g. columns 
-alignments and header if present), for instance. During the second phase, the 
-HTML text is generated using the marks and the references detected during 
-first phase.
+Method `translate()` of base class `MDtoHTML` is overwritten in the inheriting 
+class `GFMtoHTML`. Specificities of GitHub Flavored Markdown, thes that are 
+augmenting the original Markdown specification, are implemented in method 
+`translate()` aside the implementation of the other standard MD marks that are 
+already available in the base class.
 
 
 
