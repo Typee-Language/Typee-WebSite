@@ -1,7 +1,7 @@
 # Markdown to HTML Translator - Design
 
 This document presents the design of the translator of Markdown documents into 
-HTML WordPress content.
+HTML content.
 
 We had to code this translator by our own because we didn't find any Open 
 Source tool accepting every Markdown tags and goodies that GitHub accepts. 
