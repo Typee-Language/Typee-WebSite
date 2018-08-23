@@ -9,40 +9,56 @@ Even the Markdown excellent tool available on PyPi could not be used for our
 purpose (we unsuccessfully tried to).
 
 Notably, GitHub uses an extended Markdown specification, the 
-[GitHub Flavored Markdown Spec](https://github.github.com/gfm/) (or _GFM_). 
-This spec extends MD with __Tables__, __Tasklists__, __Strikethrough__, 
-__Autolinks__ and specifies some __disallowed raw HTML__ tags. GitHub allows 
-also some other goodies __that we do not coded in our tool__. For instance, 
+[GitHub Flavored Markdown Spec][GFM syntax] (or _GFM_). This spec extends MD 
+with __Tables__, __Tasklists__, __Strikethrough__, __Autolinks__ and specifies 
+some __disallowed raw HTML__ tags. GitHub allows also some other goodies 
+__that we do not coded in our tool__. For instance, 
 [Mermaid](https://mermaidjs.github.io/) JavaScript goodies for drawing 
 flowcharts adn diagrams __is not__ integrated in our tool.
- 
-In the meantime, while coded to translate from GFM to HTML, our tool is 
-__also__ correctly translating from MD to HTML since MD is a subset of GFM.
+
+The curious reader will get access to the specs of initial Markdown syntax on 
+its [project Web page][standard MD syntax].
 
 
+## 1. Two translating classes and the associated scripts
 
-## 1. Two translating classes
-
-GFM being extending MD, we first design a `MDtoHTML` class that fully 
+GFM being extending MD, we first designed a `MDtoHTML` class that fully 
 translates standard Markdown text.
 
 A second class, `GFMtoHTML`, inherits from MDtoHTML and augments it with GFM 
-adds (i.e tables, etc.) or modifies its behavior (e.g. about the break-lines 
-specs which are different between MD and GFM).
+adds (i.e tables alignment, etc.) or modifies its behavior (e.g. about the 
+break-lines specs which are different between MD and GFM).
 
-Both classes definitions are grouped in a single Python module, 
-`scripts/utils/md_to_html.py`. We describe these two classes in next 
-subsections.
+Both classes definitions are grouped in a single Python module: 
+`scripts/utils/md_to_html.py`. We describe these two classes in a next 
+section.
 
 Scripts are also provided to ease their use on directories content. They can 
 be accessed in directory `scripts/`. We describe their usage in a dedicated 
 further section also.
 
+Finally, two utility modules have been developed.
+- `scripts/utils/md_mark.py` describes all the MD marks that can be detected 
+   in MD texts and helps locating them in this text;
+- `scripts/utils/md_marks_list.py` defines a class for lists of MD marks and 
+   their operations.
 
-#### 1.1 Markdown (_MD_) to HTML Translator
+They both are imported and classes they define are used in classes `MDtoHTML` 
+and `GFMtoHTML`. We discuss the two modules and the classes they define in 
+next section.
 
-Class `MDtoHTML` defines all the needed stuff to translate "standard" Markdown 
-as initially developed by John Gruber with Aaron Swartz.
+
+
+## 2. Utility Modules and Classes
+
+
+## 3. _MD_ and _GFM_ Translators Modules
+
+#### 3.1 Markdown (_MD_) to HTML Translator
+
+Class `MDtoHTML` defines all the needed stuff to translate 
+["standard" Markdown ][standard MD syntax] as initially developed by John 
+Gruber with Aaron Swartz.
 
 
 ##### `__init__()`
@@ -86,7 +102,7 @@ references detected during first phase.
 
 
 
-#### 1.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
+#### 3.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
 
 Class `GFMtoHTML` inherits from class `MDtoHTML` and:
 - augments it with the _GFM_ added marks;
@@ -121,13 +137,13 @@ already available in the base class.
 
 
 
-## 2. Related Scripts Usage
+## 4. Related Scripts Usage
 
 Two scripts, each related to one of the two classes discussed above, are 
 provided to ease the translation of MD files into HTML.
 
 
-#### 2.1 Markdown to HTML Script
+#### 4.1 Markdown to HTML Script
 
 Module `scripts/md_to_html_script.py` runs the translation of "standard" MD 
 text in HTML5 text. This is not the one we use for feeding our site 
@@ -137,7 +153,7 @@ files to be translated in HTML5.
 (_options have to be described for command line_)
 
 
-#### 2.2 GitHub Flavored Markdown (_GFM_) to HTML Script
+#### 4.2 GitHub Flavored Markdown (_GFM_) to HTML Script
 
 Module `scripts/gfm_to_html_script.py` runs the translation of GitHub Flavored 
 Markdown text in HTML5 text. This is the one we use for feeding our site 
@@ -147,10 +163,15 @@ www.typee.ovh.
 
 
 
+[standard MD syntax]: https://daringfireball.net/projects/markdown/syntax
+[GFM syntax]: https://github.github.com/gfm
+
 
 ## Annex - This document revisions history
 
 | Date  | Rev.  | Author(s)  | Comments  |
 |---|---|---|---|
 | 2018-08-21 | 0.0.1 | Schmouk | Creation. |
+| 2018-08-22 | 0.0.2 | Kerm | Added utility classes for MD tags, see module `scripts/utils/md_mark.py` |
+| 2018-08-23 | 0.0.3 | Schmouk | Modified global design; Modified structure of this document; Added class for defining list of MD marks and their operations; Added classes for the description of MD marks and their location within MD texts. |
 |  |  |  |  |
