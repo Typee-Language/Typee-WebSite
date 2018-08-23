@@ -87,8 +87,8 @@ defined with a single line of MD text. This is an important information to
 keep in memory, since for _Setext_ headers the second defining line must be 
 skipped and not put in the resulting HTML text. Finally, instances of class 
 `MDHeader` embed the level of the header.  
-(_atx headers are from \<H1\> to \<H6\>; Setext ones are either \<H1\> or 
-\<H\2>_)
+(_atx headers are from \<H1> to \<H6>; Setext ones are either \<H1> or 
+\<H2>_)
 
 `MDBlockQuote` memorizes blockquote MD tags. Start and end of related tag is 
 stored in there, plus the level of nesting of the quote.
