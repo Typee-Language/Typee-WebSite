@@ -87,8 +87,7 @@ defined with a single line of MD text. This is an important information to
 keep in memory, since for _Setext_ headers the second defining line must be 
 skipped and not put in the resulting HTML text. Finally, instances of class 
 `MDHeader` embed the level of the header.  
-(_atx headers are within set {<H1> ... <H6>}, Setext ones are within set 
-{<H1>, <H2>}_)
+(_atx headers are from <H1> to <H6>; Setext ones are either <H1> or <H2>_)
 
 `MDBlockQuote` memorizes blockquote MD tags. Start and end of related tag is 
 stored in there, plus the level of nesting of the quote.
@@ -165,9 +164,7 @@ rather than the text of the link to the image.
 
 `MDEscape` defines the point in the MD text of an escape sequence of 
 characters. In standard MD, not all characters are escaped. Only the ones in 
-this next string are : ``" \ ` * _ { } [ ] ( ) # + - . ! "``.
-
-
+this next string are: ``" \ ` * _ { } [ ] ( ) # + - . ! "``.
 
 
 #### 2.2 `md_marks_list.py`
