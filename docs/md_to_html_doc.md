@@ -57,7 +57,7 @@ GFM in HTML. They both can be found in directory `scripts/utils/`. We discuss
 them in the two next sub-sections.
 
 
-#### 2.1 `md_mark.py`
+### 2.1 `md_mark.py`
 
 This module defines classes that are each associated with a Markdown tag.
 
@@ -74,7 +74,7 @@ used to characterize the class of the mark without having to test the class
 it is an instance of (via Python built-in funcion `isinstanceof()`).
 
 
-##### Block Elements
+#### Block Elements
 
 We list here the classes dedicated to the block elements of MD.
 
@@ -112,7 +112,7 @@ done with the sole starting point of the mark. Ten ending points is set to
 `None`.
 
 
-##### Span Elements
+#### Span Elements
 
 Span elements are MD tags that are directly embedded in the text.
 
@@ -168,21 +168,21 @@ characters. In standard MD, not all characters are escaped. Only the ones in
 this next string are: ``" \ ` * _ { } [ ] ( ) # + - . ! "``.
 
 
-#### 2.2 `md_marks_list.py`
+### 2.2 `md_marks_list.py`
 
 This module defines the class of the lists of MD marks and the few operations 
 associated with them.
 
 ## 3. _MD_ and _GFM_ Translators Modules
 
-#### 3.1 Markdown (_MD_) to HTML Translator
+### 3.1 Markdown (_MD_) to HTML Translator
 
 Class `MDtoHTML` defines all the needed stuff to translate 
 ["standard" Markdown ][standard MD syntax] as initially developed by John 
 Gruber with Aaron Swartz.
 
 
-##### `__init__()`
+#### `__init__()`
 
 The constructor, `__init__()`, directly translates the content of a `.md` file 
 when a related file path is provided as input argument. The result of the 
@@ -192,14 +192,14 @@ is `None` and it is the responsibility of the user to call method
 `translate()` on the constructed instance of the class.
 
 
-##### `translate()`
+#### `translate()`
 
 Method `translate()` returns the translated text in its HTML5 form. Detected 
 errors are neither logged nor displayed. Its up to the user to verify that 
 the HTML text returned corresponds to what he expected.
 
 
-##### General design
+#### General design
 
 An internal class, `_MDMark`, stores the line and column numbers where MD tags 
 are detected. At construction time, the attribute `_marks` is set to an empty 
@@ -223,14 +223,14 @@ references detected during first phase.
 
 
 
-#### 3.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
+### 3.2 GitHub Flavored Markdown (_GFM_) to HTML Translator
 
 Class `GFMtoHTML` inherits from class `MDtoHTML` and:
 - augments it with the _GFM_ added marks;
 - modifies it with _GFM_ specs that differ from their _MD_ equivalent specs.
 
 
-##### `__init__()`
+#### `__init__()`
 
 The constructor, `__init__()`, acts exactly as does the base class 
 constructor. It directly translates the content of a `.md` file when a related 
@@ -241,14 +241,14 @@ the responsibility of the user to call method `translate()` on the constructed
 instance of the class.
 
 
-##### `translate()`
+#### `translate()`
 
 Method `translate()` returns the translated text in its HTML5 form. Detected 
 errors are neither logged nor displayed. Its up to the user to verify that 
 the HTML text returned corresponds to what he expected.
 
 
-##### General design
+#### General design
 
 Method `translate()` of base class `MDtoHTML` is overwritten in the inheriting 
 class `GFMtoHTML`. Specificities of GitHub Flavored Markdown, thes that are 
@@ -264,7 +264,7 @@ Two scripts, each related to one of the two classes discussed above, are
 provided to ease the translation of MD files into HTML.
 
 
-#### 4.1 Markdown to HTML Script
+### 4.1 Markdown to HTML Script
 
 Module `scripts/md_to_html_script.py` runs the translation of "standard" MD 
 text in HTML5 text. This is not the one we use for feeding our site 
@@ -274,7 +274,7 @@ files to be translated in HTML5.
 (_options have to be described for command line_)
 
 
-#### 4.2 GitHub Flavored Markdown (_GFM_) to HTML Script
+### 4.2 GitHub Flavored Markdown (_GFM_) to HTML Script
 
 Module `scripts/gfm_to_html_script.py` runs the translation of GitHub Flavored 
 Markdown text in HTML5 text. This is the one we use for feeding our site 
