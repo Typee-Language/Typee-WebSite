@@ -37,14 +37,12 @@ class LineColumn:
         Stores line and column numbers
         '''
         self.line, self.coln = line, coln
-   
     #-------------------------------------------------------------------------
     def __add__(self, other:(LineColumn,tuple)) -> LineColumn:
         if isinstance( other, tuple ):
             return LineColumn( self.line + other[0], self.coln + other[1] )
         else:
             return LineColumn( self.line + other.line, self.coln + other.coln )
-   
     #-------------------------------------------------------------------------
     def __gt__(self, other:LineColumn) -> bool:
         return self.line < other.line or (self.line == other.line and self.coln < other.coln)
@@ -88,25 +86,45 @@ class MDMarkText( MDMark ):
 
 
 #=============================================================================
-class MDBlockQuote( MDMarkText ):
+class MDBlockQuote( MDMark ):
     '''
-    The class of MD blocquotes - GFM specific.
+    The class of MD blockquotes.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, mark_text:MDMarkText):
-        super().__init__( mark_text.start, mark_text.end )
-        self.block = [ mark_text ]
-    #-------------------------------------------------------------------------
-    def add_text(self, mark_text:MDMarkText):
-        self.block.append( mark_text )
-        self.start = min( self.start, mark_text.start )
-        self.end   = max( self.end  , mark_text.end   )
+    def __init__(self, start:LineColumn, end:LineColumn, level:int):
+        super().__init__( start, end )
+        self.level = level
     #-------------------------------------------------------------------------
     CLASS = 'BLCK'
 
 
 #=============================================================================
-class MDCode( MDMarkText ):
+class MDBlockQuoteML( MDMark ):
+    '''
+    The class of GFM Multi-Lines blockquotes - GFM specific.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn, level:int):
+        super().__init__( start, end )
+        self.level = level
+    #-------------------------------------------------------------------------
+    CLASS = 'BLCKML'
+
+
+#=============================================================================
+class MDBreakLine( MDMark ):
+    '''
+    The class of MD breaklines - i.e. two or more spaces at end of line.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'BRKLN'
+
+
+#=============================================================================
+class MDCodeBlock( MDMarkText ):
     '''
     The class of MD code - plus GFM specificity.
     '''
@@ -115,19 +133,19 @@ class MDCode( MDMarkText ):
         super().__init__( start, end, code_source_language )
     #-------------------------------------------------------------------------
     @property
-    def language(self): return self.txt
+    def language(self): return self.txt  # GFM specific
     #-------------------------------------------------------------------------
-    CLASS = 'COD'
+    CLASS = 'CODBLK'
 
 
 #=============================================================================
-class MDCodeInlined( MDMarkText ):
+class MDCodeInlined( MDMark ):
     '''
     The class of MD inlined code.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str):
-        super().__init__( start, end, txt )
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'CODINL'
 
@@ -145,14 +163,51 @@ class MDEmphasis( MDMark ):
 
 
 #=============================================================================
-class MDHeader( MDMarkText ):
+class MDEscape( MDMark ):
+    '''
+    The class of MD escape sequences.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'ESC'
+
+
+#=============================================================================
+class MDFootnote( MDMarkText ):
+    '''
+    The class of GFM footnote tags.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str):
+        super().__init__( start, end, txt )
+    #-------------------------------------------------------------------------
+    CLASS = 'FOOTNT'
+
+
+#=============================================================================
+class MDFootnoteRef( MDMarkText ):
+    '''
+    The class of GFM footnote rference tags.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str):
+        super().__init__( start, end, txt )
+    #-------------------------------------------------------------------------
+    CLASS = 'FOOTNT'
+
+
+#=============================================================================
+class MDHeader( MDMark ):
     '''
     The class of MD headers.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, hdr_num:int, txt:str ):
-        super().__init__( start, start+(0,len(txt)), txt )
+    def __init__(self, start:LineColumn, hdr_num:int, two_lines:bool ):
+        super().__init__( start, start+(0,hdr_num) )
         self.hdr_num = hdr_num
+        self.two_lines = two_lines
     #-------------------------------------------------------------------------
     CLASS = 'HDR'
 
@@ -182,6 +237,30 @@ class MDLinebreak( MDMark ):
 
 
 #=============================================================================
+class MDInlineAddition( MDMark ):
+    '''
+    The class of GFM additions - GFM specific.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'INLADD'
+
+
+#=============================================================================
+class MDInlineDeletion( MDMark ):
+    '''
+    The class of GFM deletions - GFM specific.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'INLDEL'
+
+
+#=============================================================================
 class MDLink( MDMarkText ):
     '''
     The class of MD links.
@@ -195,28 +274,15 @@ class MDLink( MDMarkText ):
 
 
 #=============================================================================
-class MDLinkRef( MDMarkText ):
+class MDLinkAuto( MDLink ):
     '''
-    The class of MD links by reference.
-    '''
-    #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str):
-        super().__init__( start, end, txt )
-        self.ref =  ref
-    #-------------------------------------------------------------------------
-    CLASS = 'LNKREF'
-
-
-#=============================================================================
-class MDLinkText( MDLinkRef ):
-    '''
-    The class of MD links by text reference.
+    The class of MD automatic links.
     '''
     #-------------------------------------------------------------------------
     def __init__(self, start:LineColumn, end:LineColumn, txt:str):
         super().__init__( start, end, txt, txt )
     #-------------------------------------------------------------------------
-    CLASS = 'LNKTXT'
+    CLASS = 'LNKAUT'
 
 
 #=============================================================================
@@ -230,6 +296,33 @@ class MDLinkTitle( MDLink ):
         self.title = title
     #-------------------------------------------------------------------------
     CLASS = 'LNKTITL'
+
+
+#=============================================================================
+class MDLinkRef( MDLink ):
+    '''
+    The class of MD links by reference.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str):
+        super().__init__( start, end, txt, ref )
+    #-------------------------------------------------------------------------
+    @property
+    def ref(self): return self.link
+    #-------------------------------------------------------------------------
+    CLASS = 'LNKREF'
+
+
+#=============================================================================
+class MDLinkAutoRef( MDLinkRef ):
+    '''
+    The class of MD auto links by text reference.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str):
+        super().__init__( start, end, txt, txt )
+    #-------------------------------------------------------------------------
+    CLASS = 'LNKARF'
 
 
 #=============================================================================
@@ -257,7 +350,7 @@ class MDListItem( MDMark ):
 
 
 #=============================================================================
-class MDNumberedList( MDMark ):
+class MDListNumItem( MDMark ):
     '''
     The class of MD numbered lists.
     '''
@@ -265,7 +358,7 @@ class MDNumberedList( MDMark ):
     def __init__(self, start:LineColumn, end:LineColumn):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
-    CLASS = 'NBLST'
+    CLASS = 'LSTNUM'
 
 
 #=============================================================================
@@ -298,9 +391,8 @@ class MDTable( MDMark ):
     The class of GFM tables - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, nb_colns:int):
+    def __init__(self, start:LineColumn, end:LineColumn):
         super().__init__( start, end )
-        self.nb_colns = nb_colns
     #-------------------------------------------------------------------------
     CLASS = 'TABL'
 
@@ -329,31 +421,28 @@ class MDTableAlign( MDMark ):
 
 
 #=============================================================================
-class MDTableHeader( MDMark ):
+class MDTableRow( MDMark ):
     '''
     The class of GFM headers of tables - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:int, end:int, colns_txt:list=None ):
+    def __init__(self, start:int, end:int, colns_txt:str ):
         super().__init__( start, end )
-        self.txt = colns_txt if colns_txt else []
+        self.txt = [ row_txt.trim() for row_txt in colns_txt.split('|') if row_txt.trim() != '' ]
     #-------------------------------------------------------------------------
-    def add_coln_txt(self, txt:str):
-        self.txt.append( txt )
-    #-------------------------------------------------------------------------
-    CLASS = 'TBLHDR'
+    CLASS = 'TBLROW'
 
 
 #=============================================================================
-class MDTableRow( MDTableHeader ):
+class MDTableHeader( MDTableRow ):
     '''
     The class of GFM headers of tables - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:int, end:int, colns_txt:list=None ):
+    def __init__(self, start:int, end:int, colns_txt:str ):
         super().__init__( start, end, colns_txt )
     #-------------------------------------------------------------------------
-    CLASS = 'TBLROW'
+    CLASS = 'TBLHDR'
 
 
 #=============================================================================
@@ -362,7 +451,7 @@ class MDImage( MDLinkTitle ):
     The class of MD images - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, link:str, title:str):
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str, link:str, title:str=None):
         super().__init__( start, end, txt, link, title )
     #-------------------------------------------------------------------------
     CLASS = 'IMG'
@@ -374,7 +463,7 @@ class MDImageRef( MDImage ):
     The class of MD images set by reference - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str, title:str):
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str, title:str=None):
         super().__init__( start, end, txt, ref, title )
     #-------------------------------------------------------------------------
     @property
