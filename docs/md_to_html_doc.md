@@ -94,17 +94,18 @@ skipped and not put in the resulting HTML text. Finally, instances of class
 stored in there, plus the level of nesting of the quote.
 
 `MDListItem` stores the starting end ending points of the MD tag of an item 
-belonging to an unordered list.  
-`MDListNumItem` stores also the starting and ending points of the MD tag of an 
-item belonging to an ordered list.
+belonging to an unordered list. It stores also the nested level of the item.
 
-`MDCodeBlock` represents a whole block of code, from its starting point in the 
-MD text up to the end of the text contained in this block. So, the ending 
-point may be very far from the starting point.  
-Notice that GFM augments the MD specification of blockquotes. While GFM tags 
-differ from MD ones, GFM allows also for the definition of the language used 
-for the code in this block. `MDCodeBlock` stores also this information when it 
-is available in the source text.
+`MDListNumItem` stores also the starting and ending points of the MD tag of an 
+item belonging to an ordered list. It stores also the nested level of the 
+item.
+
+`MDCodeBlock` represents a GFM tag. It stores its starting point in the MD 
+line text and its ending point in the same line. It also stores the computer 
+language of the displayed code when it is available in the source text.
+
+`MDCodeLine` represents a line of code. It stores the starting point of the 
+code line in the MD line text.
 
 `MDHRule` describes horizontal rules. The only thing to remeber here is the 
 line number of the MD text where their different tags are appearing. This is 
@@ -372,4 +373,5 @@ www.typee.ovh.
 | 2018-08-22 | 0.0.2 | Kerm    | Added utility classes for MD tags, see module `scripts/utils/md_mark.py` |
 | 2018-08-23 | 0.0.3 | Schmouk | Modified global design; Modified structure of this document; Added class for defining list of MD marks and their operations; Added classes for the description of MD marks and their location within MD texts. |
 | 2018-08-24 | 0.0.4 | Schmouk | Added description of missing classes in section 2. |
+| 2018-08-24 | 0.0.5 | Kerm    | Modified description of a few MD and GFM marks classes according to the current development of module `script/utils/md_to_html.py` |
 |  |  |  |  |

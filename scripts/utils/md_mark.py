@@ -139,6 +139,18 @@ class MDCodeBlock( MDMarkText ):
 
 
 #=============================================================================
+class MDCodeLine( MDMark ):
+    '''
+    The class of MD lines of code
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'CODLIN'
+
+
+#=============================================================================
 class MDCodeInlined( MDMark ):
     '''
     The class of MD inlined code.
@@ -331,32 +343,33 @@ class MDList( MDMark ):
     The class of MD lists.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn):
+    def __init__(self, start:LineColumn, end:LineColumn, nested_level:int):
         super().__init__( start, end )
+        self.nested_level = nested_level
     #-------------------------------------------------------------------------
     CLASS = 'LST'
 
 
 #=============================================================================
-class MDListItem( MDMark ):
+class MDListItem( MDList ):
     '''
     The class of MD items of lists.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn):
-        super().__init__( start, end )
+    def __init__(self, start:LineColumn, end:LineColumn, nested_level:int):
+        super().__init__( start, end, nested_level )
     #-------------------------------------------------------------------------
     CLASS = 'LSTITM'
 
 
 #=============================================================================
-class MDListNumItem( MDMark ):
+class MDListNumItem( MDList ):
     '''
     The class of MD numbered lists.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn):
-        super().__init__( start, end )
+    def __init__(self, start:LineColumn, end:LineColumn, nested_level:int):
+        super().__init__( start, end, nested_level )
     #-------------------------------------------------------------------------
     CLASS = 'LSTNUM'
 

@@ -23,7 +23,8 @@ SOFTWARE.
 """
 
 #=============================================================================
-from scripts.utils.md_mark import *
+from scripts.utils.md_mark       import *
+from scripts.utils.md_marks_list import MDMarksList
 
 
 #=============================================================================
@@ -62,40 +63,89 @@ class MDtoHTML:
         '''
         Implementation of the first phase of the MD to HTML translation
         '''
-        self._marks = list()
+        self._marks = MDMarksList()
         self._refs  = dict()
 
-        two_lines_header = False
+        setext_header = False
+        current_indent = 0
+        lines_count = len( md_lines )
         for num_line, line in enumerate( md_lines ):
             
-            if two_lines_header:  ## set to True while checking for a MD header, see below
-                two_lines_header = False
+            if setext_header:  ## set to True while checking for a Setext MD header, see below
+                setext_header = False
                 continue
             
-            # is this line an MD header?
-            try:
-                (header_level, two_lines_header) = self._check_header( line, md_lines[num_line+1] )
-                if header_level > 0:
-                    self._marks.append( MDHeader( LineColumn(num_line, header_level+1), header_level, two_lines_header ) )
-                    continue  ## header text detected
-
-                
+            ##--- first, parses block elements ---
+            ## checks headers
+            header_level, setext_header = self._check_header( line 
+                                                              md_lines[num_line+1] if num_line + 1 < lines_count : None )
+            if header_level > 0:
+                self._marks.append( MDHeader( LineColumn(num_line, 0), header_level, setext_header ) )
             
-            except:
-                pass  ## we're parsing the last line of MD text
+            else:
+                ## checks blockquotes (never present in headers)
+                blockquote_level, my_line = self._check_blockquote( line, current_indent )
+                if blockquote_level > 0:
+                    self.marks.append( MDBlockQuote( LineColumn(num_line, 0), blockquote_level ) )
+                
+                ## checks list items (never present in headers)
+                nested_level, start_item, is_unordered_list = self._check_list( my_line )
+                if nested_level > 0:
+                    if is_unordered_list:
+                        self.marks.append( MDListItem(LineColumn(num_line, 0),
+                                                      LineColumn(num_line, start_item-1), nested_level) )
+                    else:
+                        self.marks.append( MDListNumItem(LineColumn(num_line, 0),
+                                                         LineColumn(num_line, start_item-1), nested_level) )
+                    current_indent = nested_level * 4
+                
+                ## checks code line
+                if self._check_code_line( my_line, current_indent ):
+                    self.marks.append( MDCodeLine( LineColumn(num_line, 0) ) )
+                
+                ## checks horizontal roules (never present in headers)
+                if self._check_hrule( line ):
+                    self.marks.append( MDHRule( LineColumn(num_line, 0) ) )
+
+            ##--- second, parses span elements ---
+
 
     #-------------------------------------------------------------------------
     def _translate_md(self, md_text_lines:str):
         '''
         Implementation of the second phase of the MD to HTML translation
         '''
-        wp_text = ''
+        html_text = ''
                 
         # end of MD text translating
-        return wp_text
+        return html_text
     
 
     #=========================================================================
+    #-------------------------------------------------------------------------
+    def _check_blockquote(self, line:str, indent:int) -> (int, str):
+        '''
+        Returns the blockquote level,  even if set to 0 (i.e. no blockquote
+        detected). Last returned value is the text of the line which is not 
+        part of the blockquote MD tag,  or the whole line if no  blockquote
+        has been detected.
+        '''
+        index = line[indent:].find( '>' )
+        if 0 <= index <= 3:
+            items = line.split( '> ' )
+            bq_level = len( items ) - 1
+            return (bq_level, items[-1])
+        else:
+            return (0, line)
+
+    #-------------------------------------------------------------------------
+    def _check_code_line(self, line:str, indent:int) -> bool:
+        '''
+        Returns True if line belongs to a block of code, or False else.
+        '''
+        start = self._count_leading_spaces( line )
+        return start - indent >= 4        
+
     #-------------------------------------------------------------------------
     def _check_emphasis_marks(self, line:str, emph_str:str) -> (bool, list):
         '''
@@ -142,8 +192,8 @@ class MDtoHTML:
         Alt-H2
         ------
         '''
-        if line.ltrim()[0] == '#':
-            splitted_line = line.ltrim().split( maxsplit=1 )
+        if line.lstrip()[0] == '#':
+            splitted_line = line.lstrip().split( maxsplit=1 )
             hashes = splitted_line[0]
             count = hashes.count( '#' )
             if count == len( hashes ):
@@ -173,7 +223,7 @@ class MDtoHTML:
             count = line.count( rule_char )
             return count >= 3 and count == len(line)
         #-----------------------------------------------------------------
-        line = line.trim()
+        line = line.strip()
         return _check('*', line) or _check('_', line) or _check('-', line)
 
     #-------------------------------------------------------------------------
@@ -215,26 +265,29 @@ class MDtoHTML:
             return (False, None)
 
     #-------------------------------------------------------------------------
-    def _check_list(self, line:str) -> (bool, bool, str):
+    def _check_list(self, line:str) -> (int, int, bool):
         '''
         Returns a triplet:
-          - first bool is True if line is an item of a list;
-          - second bool is True if item is unordered;
-          - last string contains the item text without the item head.
+          - first int is the nested level of list;
+          - second int is the index in line of first character of the item content;
+          - bool is True if item is unordered;
         '''
-        item = line.ltrim().split( maxsplit=1 )
-        head, content = item[0], item[1]
+        nb_spaces = self._count_leading_spaces( line )
+        item_level = nb_spaces // 4 + 1
         
-        if len(head) == 1 and head[0] in "-+*":
-            return (True, True, content)
-        elif head[-1] == '.':
-            try:
-                _ = int( head[:-1] )
-                return (True, False, content)
-            except:
-                return (False, False, line)
+        if line[nb_spaces] in  "-+*":
+            return (item_level, nb_spaces, True)
         else:
-            return (False, False, line)
+            item = line[nb_spaces:].split( maxsplit=1 )
+            head, content = item[0], item[1]
+            if head[-1] == '.':
+                try:
+                    _ = int( head[:-1] )
+                    return (item_level, nb_spaces, False)
+                except:
+                    return (0, 0, False)
+            else:
+                return (0, 0, False)
 
     #-------------------------------------------------------------------------
     def _check_paragraph_break(self, next_line:str) -> bool:
@@ -248,7 +301,7 @@ class MDtoHTML:
         '''
         Returns True if line is a reference, or False else.
         '''
-        return line.ltrim()[0] == '[' and line.contains ']:'
+        return line.lstrip()[0] == '[' and line.contains ']:'
 
     #-------------------------------------------------------------------------
     def _check_strike(self, line:str) -> (bool, list):
@@ -302,7 +355,7 @@ class MDtoHTML:
             return (False, None)
 
     #-------------------------------------------------------------------------
-    def _combined_emphasis(self, line:str) -> str:
+    def _tanslate_combined_emphasis(self, line:str) -> str:
         '''
         Modifies every MD emphasis mark with its HTML equivalent in a line.
         '''
@@ -339,7 +392,17 @@ class MDtoHTML:
             return _modify_em( line )
 
     #-------------------------------------------------------------------------
-    def _header(self, hdr_level:int, hdr_text:str) -> str:
+    def _count_leading_spaces(self, line:str) -> int:
+        count = 0
+        for c in line:
+            if c == ' ':    count += 1
+            elif c == '\t': count += 4
+            else:
+                break
+        return count
+
+    #-------------------------------------------------------------------------
+    def _translate_header(self, hdr_level:int, hdr_text:str) -> str:
         return "<h{:d}>{:s}</h{:d}>".format( hdr_level, hdr_text, hdr_level )
 
 
