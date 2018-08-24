@@ -258,7 +258,7 @@ Class `MDtoHTML` defines all the needed stuff to translate
 Gruber with Aaron Swartz.
 
 
-#### `__init__()`
+#### 3.1.1 `__init__()`
 
 The constructor, `__init__()`, directly translates the content of a `.md` file 
 when a related file path is provided as input argument. The result of the 
@@ -268,14 +268,14 @@ is `None` and it is the responsibility of the user to call method
 `translate()` on the constructed instance of the class.
 
 
-#### `translate()`
+#### 3.1.2 `translate()`
 
 Method `translate()` returns the translated text in its HTML5 form. Detected 
 errors are neither logged nor displayed. Its up to the user to verify that 
 the HTML text returned corresponds to what he expected.
 
 
-#### General design
+#### 3.1.3 General design
 
 An internal class, `_MDMark`, stores the line and column numbers where MD tags 
 are detected. At construction time, the attribute `_marks` is set to an empty 
@@ -306,7 +306,7 @@ Class `GFMtoHTML` inherits from class `MDtoHTML` and:
 - modifies it with _GFM_ specs that differ from their _MD_ equivalent specs.
 
 
-#### `__init__()`
+#### 3.2.1 `__init__()`
 
 The constructor, `__init__()`, acts exactly as does the base class 
 constructor. It directly translates the content of a `.md` file when a related 
@@ -317,18 +317,18 @@ the responsibility of the user to call method `translate()` on the constructed
 instance of the class.
 
 
-#### `translate()`
+#### 3.2.2 `translate()`
 
 Method `translate()` returns the translated text in its HTML5 form. Detected 
 errors are neither logged nor displayed. Its up to the user to verify that 
 the HTML text returned corresponds to what he expected.
 
 
-#### General design
+#### 3.2.3 General design
 
 Method `translate()` of base class `MDtoHTML` is overwritten in the inheriting 
-class `GFMtoHTML`. Specificities of GitHub Flavored Markdown, thes that are 
-augmenting the original Markdown specification, are implemented in method 
+class `GFMtoHTML`. Specificities of GitHub Flavored Markdown, the ones that 
+are augmenting the original Markdown specification, are implemented in method 
 `translate()` aside the implementation of the other standard MD marks that are 
 already available in the base class.
 
