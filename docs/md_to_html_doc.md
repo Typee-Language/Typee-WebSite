@@ -168,10 +168,86 @@ characters. In standard MD, not all characters are escaped. Only the ones in
 this next string are: ``" \ ` * _ { } [ ] ( ) # + - . ! "``.
 
 
+#### GFM Extensions
+
+GitHub Flavored Markdown extends the standard Markdown with new tags or with 
+extended MD tags.
+
+`MDBlockQuoteML` describes Multi-Lines Blockquotes. The starting point of this 
+tag indicates the line where it appears in the GFM text. The ending point 
+indicates the line where the same tag appears a second time. The in-between 
+text is the blockquoted text. This class inherits from `MDMark`.
+
+`MDInlineAddition` describes text to be displayed with "addition" 
+characteristics (i.e. mainly displayed with green background). The starting 
+point indicates the position of the first character of GFM entering tag within 
+the GFM text. The ending point indicates the position of the first character 
+of the paired GFM tag. The in-between text in the GFM text is the text to be 
+colored in the tareget HTML text. This class inherits from `MDMark`.
+
+`MDInlineDeletion` describes text to be displayed with "deletion" 
+characteristics (i.e. mainly displayed with pink background). The starting 
+point indicates the position of the first character of GFM entering tag within 
+the GFM text. The ending point indicates the position of the first character 
+of the paired GFM tag. The in-between text in the GFM text is the text to be 
+colored in the target HTML text. This class inherits from `MDMark`.
+
+`MDTable` stores the starting point of a table and the ending point of it. 
+Those points correspond to the first char describing the table and to the last 
+character of its description. Those characters may be _pipes (\|) as well as 
+any other character corresponding to the text to be HTML-ed. This class 
+inherits from `MDMark`.
+
+`MDTableRow` describes a row of a table. The start and end points correspond 
+to the row starting point and the row ending point in the GFM text. They are 
+not used because the main info that `MDTableRow` contains is the list of texts 
+to be inserted in the cells of this row. Argument `colns_txt` passed at 
+construction time is the text to be split into indivdual cells. It is split 
+internally and attribute `txt` finally contains the content of every cells. 
+This class inherits from `MDMark`.
+
+`MDTableHeader` indicates the starting point and the ending point of the row 
+that describes the headers of the columns of the table. After construction 
+time, attribute `txt` contains the header text of every column of the table. 
+This class inherits from `MDTableRow`.
+
+`MDTableAlign` describes the alignment of text in the cells of every columns. 
+If this information is available in the GFM description of the table, it has 
+to be evaluated by an external parser that can initialize the corresponding 
+alignment for each row by calling method `set_align()` with alignment tag, 
+described with constants `MDTableAlign.LEFT`, `MDTableAlign.CENTER` and 
+`MDTableAlign.RIGHT`. The index of the column may be specified when setting 
+the alignment of a column. If it is not specified, the alignment value is just 
+appended to the list of alignments. Once alignments set, they can be accessed 
+via attribute `aligns` (which is a list). This class inherits from `MDMark`.
+
+`MDFootnote` stores the starting and the ending points of a footnote tag. It 
+associated a text with this footnote, for it to be displayed at end of page.
+The text in-between contains the footnote number. This class inherits from 
+`MDMarkText`.
+
+`MDFootnoteRef`  stores the starting and the ending points of a footnote 
+reference tag. It associated the reference text with this footnote. This 
+reference text will be later used to link with the footnote text in the HTML 
+text. This class inherits from `MDMarkText`.
+
+
 ### 2.2 `md_marks_list.py`
 
 This module defines the class of the lists of MD marks and the few operations 
 associated with them.
+
+Class `MDMarksList` describes such lists. It inherits from _Python_ built-in 
+type `list`. MD marks can then easily be appended to its instances along the 
+parsing of some MD text. It is also easy to get access to its content either 
+by indexing it, which is not the recommended way, or by iterating on it with a 
+`for` loop, which the recommended way.
+
+While this module contains very little code, we have decided to create it 
+nevertheless, in case we woulf late rmodify this code and augment it to get 
+more functionnalities.
+
+
 
 ## 3. _MD_ and _GFM_ Translators Modules
 
@@ -290,9 +366,10 @@ www.typee.ovh.
 
 ## Annex - This document revisions history
 
-| Date  | Rev.  | Author(s)  | Comments  |
+| Date | Rev. | Author | Comments |
 |---|---|---|---|
 | 2018-08-21 | 0.0.1 | Schmouk | Creation. |
-| 2018-08-22 | 0.0.2 | Kerm | Added utility classes for MD tags, see module `scripts/utils/md_mark.py` |
+| 2018-08-22 | 0.0.2 | Kerm    | Added utility classes for MD tags, see module `scripts/utils/md_mark.py` |
 | 2018-08-23 | 0.0.3 | Schmouk | Modified global design; Modified structure of this document; Added class for defining list of MD marks and their operations; Added classes for the description of MD marks and their location within MD texts. |
+| 2018-08-24 | 0.0.4 | Schmouk | Added description of missing classes in section 2. |
 |  |  |  |  |
