@@ -74,9 +74,9 @@ class MDtoHTML:
             
             # is this line an MD header?
             try:
-                (header_level, header_text, two_lines_header) = self._check_header( line, md_lines[num_line+1] )
+                (header_level, two_lines_header) = self._check_header( line, md_lines[num_line+1] )
                 if header_level > 0:
-                    self._marks.append( MDHeader( LineColumn(num_line, header_level+1), header_level, header_text ) )
+                    self._marks.append( MDHeader( LineColumn(num_line, header_level+1), header_level, two_lines_header ) )
                     continue  ## header text detected
 
                 
@@ -121,11 +121,11 @@ class MDtoHTML:
                self._check_emphasis_marks( line, '_' )
 
     #-------------------------------------------------------------------------
-    def _check_header(self, line:str, next_line:str=None) -> (int, str, bool):
+    def _check_header(self, line:str, next_line:str=None) -> (int, bool):
         '''
-        Returns the number of the header if some is found and the header text,
-        or 0 if not header,  plus the whole line as text and a bool to specify
-        that the header stood on two successive lines.
+        Returns the number of the header if some is found, or 0 if not header,
+        plus a bool to specify that the header stood on two successive lines.
+        
         MD syntax:
         # H1
         ## H2
@@ -147,12 +147,12 @@ class MDtoHTML:
             hashes = splitted_line[0]
             count = hashes.count( '#' )
             if count == len( hashes ):
-                return (count, splitted_line[1], False)
+                return (count, False)
             else:
-                return (0, line, False)
+                return (0, False)
             
         elif next_line is None:
-            return (0, line, False)
+            return (0, False)
         
         else:
             #-------------------------------------------------------------
@@ -161,7 +161,7 @@ class MDtoHTML:
                 if len(next_line) == count:
                     return len(line) <= count
             #-------------------------------------------------------------
-            return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, line, True )
+            return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, True )
 
     #-------------------------------------------------------------------------
     def _check_hrule(self, line:str) -> bool:
