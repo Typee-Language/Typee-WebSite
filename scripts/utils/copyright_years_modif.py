@@ -100,11 +100,6 @@ class CopyrightYearsModif:
         '''
         for current_dir_path, _dir_names, file_names in os.walk( rootdir_path ):
             self.modify_files( [os.path.join(current_dir_path, file_name) for file_name in file_names] )
-            #===================================================================
-            # for file_name in file_names:
-            #     file_path = os.path.join( current_dir_path, file_name )
-            #     self.modify_file( file_path )
-            #===================================================================
         
         return self
 
