@@ -236,31 +236,37 @@ class MDtoHTML:
             links = []
             start_index = line.find( '[ ')
             end_index   = line.find( '] ')
-            while end_index != -1:
-                try:
-                    text = line[start_index+1:end_index]
-                    if line[end_index+1] == '(':
-                        start_index = end_index+1
-                        end_index = line[start_index+1:].find(')')
-                        links.append( self._Link(text, line[start_index:end_index]) )
-                        
-                    elif line[end_index+1] == '[':
-                        start_index = end_index+1
-                        end_index = line[start_index+1:].find(']')
-                        links.append( self._RefLink(text, line[start_index:end_index]) )
-                    
-                    else:
-                        links.append( self._RefLink(text) )
-                    
-                    start_index = line[end_index+1:].find( '[' )
-                    end_index   = line[start_index+1:].find( ']' )
-                    
-                except:
-                    break
             
-            return (True, links)
+            if start_index > 0 and line[start_index-1] == '\\' or line[end_index-1] == '\\':
+                return (False, None)
+            
+            
+            #===================================================================
+            # while end_index != -1:
+            #     try:
+            #         text = line[start_index+1:end_index]
+            #         if line[end_index+1] == '(':
+            #             start_index = end_index+1
+            #             end_index = line[start_index+1:].find(')')
+            #             links.append( self._Link(text, line[start_index:end_index]) )
+            #             
+            #         elif line[end_index+1] == '[':
+            #             start_index = end_index+1
+            #             end_index = line[start_index+1:].find(']')
+            #             links.append( self._RefLink(text, line[start_index:end_index]) )
+            #         
+            #         else:
+            #             links.append( self._RefLink(text) )
+            #         
+            #         start_index = line[end_index+1:].find( '[' )
+            #         end_index   = line[start_index+1:].find( ']' )
+            #         
+            #     except:
+            #         break
+            # 
+            # return (True, links)
+            #===================================================================
         
-        elif     
         else:
             return (False, None)
 
