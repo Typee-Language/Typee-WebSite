@@ -126,9 +126,13 @@ will have to be put in the resulting HMTL file.
 `MDLinkTitle` is a link MD tag that contains also a _title_ information. This 
 added title is also stored by this class. This class inherits from `MDLink`.
 
-`MDLinkAuto` is the class of links that are shown as-is in the MD text. This 
-is a GFM extension. It duplicates the as-is text into the text adn the link 
-that are associated with this MD tag. This class inherits from `MDLink`.  
+`MDLinkAuto` is the class of links that are shown as-is in the MD text. In 
+standard MD, they are enclosed in pairs of `<` and `>`. In GFM, it is extended 
+to URLs preceded and succeded by spaces. This MD tag duplicates the as-is text 
+into the text adn the link that are associated with this MD tag. Automatic 
+links remember the point of their starting tag (i.e. either `<` or ` `), the 
+point of their ending tag (i.e. either `>` or ` `) and the text in-between. 
+This class inherits from `MDLink`.  
 Notice: MD and GFM specifications for automatic links differ.
 
 `MDLinkRef` represents links taht are specified by reference in MD text. The 

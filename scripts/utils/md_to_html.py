@@ -108,6 +108,13 @@ class MDtoHTML:
                     self.marks.append( MDHRule( LineColumn(num_line, 0) ) )
 
             ##--- second, parses span elements ---
+            self._automatic_links = MDMarksList()
+            self._links           = MDMarksList()
+            self._refs            = MDMarksList()
+            self._backslashes     = MDMarksList()
+            self._emphasis        = MDMarksList()
+            self._inlined_code    = MDMarksList()
+            self._images          = MDMarksList()
 
 
     #-------------------------------------------------------------------------
@@ -147,30 +154,6 @@ class MDtoHTML:
         return start - indent >= 4        
 
     #-------------------------------------------------------------------------
-    def _check_emphasis_marks(self, line:str, emph_str:str) -> (bool, list):
-        '''
-        Returns True if an emphasis mark is detected, or False else. If True
-        is  returned,  the line split into a list of strings separated by an 
-        emphasis mark is returned also in the tuple.  If False is  returned, 
-        None is return in place of list in the tuple.
-        '''
-        if emph_str in line:
-            return (True, line.split(emph_str))
-        else:
-            return (False, None)
-        
-    #-------------------------------------------------------------------------
-    def _check_emphasis(self, line:str) -> (bool, list):
-        '''
-        Returns True if an emphasis mark is detected, or False else. If True
-        is  returned,  the line split into a list of strings separated by an 
-        emphasis mark is returned also in the tuple.  If False is  returned, 
-        None is return in place of list in the tuple.
-        '''
-        return self._check_emphasis_marks( line, '*' ) or \
-               self._check_emphasis_marks( line, '_' )
-
-    #-------------------------------------------------------------------------
     def _check_header(self, line:str, next_line:str=None) -> (int, bool):
         '''
         Returns the number of the header if some is found, or 0 if not header,
@@ -208,8 +191,8 @@ class MDtoHTML:
             #-------------------------------------------------------------
             def _my_check( hdr_char:str ) -> bool:
                 count = next_line.count( hdr_char )
-                if len(next_line) == count:
-                    return len(line) <= count
+                if count > 0:
+                    return len(next_line) == count:
             #-------------------------------------------------------------
             return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, True )
 
@@ -227,48 +210,11 @@ class MDtoHTML:
         return _check('*', line) or _check('_', line) or _check('-', line)
 
     #-------------------------------------------------------------------------
-    def _check_links(self, line:str) -> (bool, list):
+    def _check_linebreak(self, line:str) -> bool:
         '''
-        Returns True if line contains links plus a list of these links, or 
-        False plus None if not.
+        Returns True if line ends with at least two spaces.
         '''
-        if '[' in line and ']' in line:
-            links = []
-            start_index = line.find( '[ ')
-            end_index   = line.find( '] ')
-            
-            if start_index > 0 and line[start_index-1] == '\\' or line[end_index-1] == '\\':
-                return (False, None)
-            
-            
-            #===================================================================
-            # while end_index != -1:
-            #     try:
-            #         text = line[start_index+1:end_index]
-            #         if line[end_index+1] == '(':
-            #             start_index = end_index+1
-            #             end_index = line[start_index+1:].find(')')
-            #             links.append( self._Link(text, line[start_index:end_index]) )
-            #             
-            #         elif line[end_index+1] == '[':
-            #             start_index = end_index+1
-            #             end_index = line[start_index+1:].find(']')
-            #             links.append( self._RefLink(text, line[start_index:end_index]) )
-            #         
-            #         else:
-            #             links.append( self._RefLink(text) )
-            #         
-            #         start_index = line[end_index+1:].find( '[' )
-            #         end_index   = line[start_index+1:].find( ']' )
-            #         
-            #     except:
-            #         break
-            # 
-            # return (True, links)
-            #===================================================================
-        
-        else:
-            return (False, None)
+        return line[-2:] == '  ' 
 
     #-------------------------------------------------------------------------
     def _check_list(self, line:str) -> (int, int, bool):
@@ -303,62 +249,220 @@ class MDtoHTML:
         return next_line == '\n'
 
     #-------------------------------------------------------------------------
-    def _check_Reference(self, line) -> bool:
+    def _check_reference(self, line) -> bool:
         '''
         Returns True if line is a reference, or False else.
         '''
         return line.lstrip()[0] == '[' and line.contains ']:'
 
     #-------------------------------------------------------------------------
-    def _check_strike(self, line:str) -> (bool, list):
+    def _count_leading_spaces(self, line:str, tabs_length:int=4) -> int:
         '''
-        Returns True if strikethrough is present in line, in which case line 
-        is split into a list of strings that is returned in the tuple,  each 
-        of them being separated by a mark.  Returns False else,  and None is 
-        returned in place of list in the returned tuple.
+        Internal utility. Counts leading spaces in line.
         '''
-        return self._check_emphasis_marks( line, '~~' )
-
-    #-------------------------------------------------------------------------
-    def _check_strong(self, line:str) -> (bool, list):
-        '''
-        Returns True if strong is present in line, in which case line is
-        split into a list of strings that is returned in the tuple, each 
-        of them being separated by a mark. Returns False else,  and None 
-        is returned in place of list in the returned tuple.
-        '''
-        return self._check_emphasis_marks( line, '**' ) or self._check_emphasis_marks( line, '__' )
-
-    #-------------------------------------------------------------------------
-    def _check_urls(self, line:str) -> (bool, list):
-        '''
-        Returns True if line contains URLs plus a list of these URLs, or 
-        False plus None if not.
-        '''
-        #---------------------------------------------------------------------
-        urls = []
-        if 'http://' in line or 'https://' in line:
-            sublines = line.split( 'http' )
-            i = 0
-            while i < len(sublines):
-                try:
-                    if len(sublines[i]) == 0:
-                        url = 'http{:s}'.format( sublines[i+1].split(' ', 1) )
-                        urls.append( self._UrlLink( url ) )
-                        i += 2
-                    elif sublines[i][-1] in ' <':
-                        pairing = { ' ': ' ',  '<': '>' }
-                        end_url = sublines[i+1].find( pairing[sublines[i][-1]], 1)
-                        url = 'http{:s}'.format( sublines[i+1][:end_url] )
-                        urls.append( self._UrlLink( url ) )
-                        i += 2
-                    else:
-                        i += 1
-                except:
+        count = 0
+        try:
+            for c in line:
+                if c == ' ':    count += 1
+                elif c == '\t': count += tabs_length
+                else:
                     break
-            return (True, urls)
-        else:
-            return (False, None)
+        except:
+            pass
+        return count
+
+    #-------------------------------------------------------------------------
+    def evaluate_automatic_link_marks(self, num_line:int, line:str):
+        '''
+        Appends automatic links to attribute 'automatic_lins'.
+        '''
+        line_length = len( line )
+        i = 0
+        while i < line_length:
+            if line[i] == '<':
+                end = line[i:].find( '>' )
+                if end != -1 and '://' in line[i:end] and ' ' not in line[i:end]:
+                    self._automatic_links.append( MDLinkAuto( LineColumn(num_line, i),
+                                                              LineColumn(num_line, end),
+                                                              line[i+1:end] ) )
+
+    #-------------------------------------------------------------------------
+    def _evaluate_emphasis_marks(self, num_line:int, line:str):
+        '''
+        Appends all kinds of emphasis marks to attribute '_emphasis'.
+        '''
+        #-----------------------------------------------------------------
+        def _append(indx:int, emph_car:str, count:int):
+            end_point = LineColumn( num_line, indx+count )
+            if emph_char == '~':
+                if count == 2:
+                    self._emphasis.append( MDStrikethrough( LineColumn(num_line, indx), end_point ) )
+            elif count == 1:
+                self._emphasis.append( MDEmphasis( LineColumn(num_line, indx), end_point ) )
+            else:
+                self._emphasis.append( MDStrong( LineColumn(num_line, indx), end_point ) )
+        #-----------------------------------------------------------------
+        def _check_spaces(indx:int, count:int, line_length:int)-> bool:
+            if indx == 0 or indx+count >= line_length:
+                return False
+            else:
+                return line[index-1] == line[index+count] == ' '
+        #-----------------------------------------------------------------
+        i = 0
+        line_length = len( line )
+        while i < line_length:
+           if line[i] in ['*_~'] and (i == 0 or line[i-1] != '\\'):
+               if i+1 < line_length and line[i+1] == line[i]:
+                   if not _check_spaces(i, 2, line_length):
+                       _append( i, line[i], 2 )
+                       i += 1
+               else:
+                   if not _check_spaces(i, 1, line_length):
+                       _append( i, line[i], 1 )
+            i += 1
+
+    #-------------------------------------------------------------------------
+    def _evaluate_image_marks(self, num_line:int, line:str):
+        '''
+        Appends every image mark to attribute '_images'.
+        '''
+        start = 0
+        excl_split = line.split( '!' )
+        if len( excl_split ) > 1:
+            i = 0
+            try:
+                while i < len( excl_split ):
+                    if excl_split[i][-1] == '\\':
+                        i += 1
+                    
+                    elif excl_split[i+1][0] == '[':
+                        text = excl_split.split( ']', 1 )
+                        alt_text = text[0]
+                        length = len( alt_text ) + 3
+                        
+                        image_class = None
+                        if text[1] == '(':
+                            length += text[1].find( ')' ) + 1
+                            image_class = MDImage
+                        elif text[1] == '[':
+                            length += text[1].find( ']' ) + 1
+                            image_class = MDImageRef
+                        
+                        if image_class:
+                            text = text[1].split( '"' )
+                            if len(text) == 1:
+                                link_txt = text
+                                title_text = None
+                            else:
+                                link_txt = text[0].rstrip()
+                                title_text = text[1]
+                                
+                            self._images.append( image_class( LineColumn(num_line, start),
+                                                              LineColumn(num_line, start+length),
+                                                              alt_text,
+                                                              link_text,
+                                                              title_text ) )
+                            i += 2
+                        else:
+                            i += 1
+            except:
+                pass
+
+    #-------------------------------------------------------------------------
+    def _evaluate_inlined_code(self, num_line:int, line:str):
+        '''
+        Appends every inlined-code tags to attribute '_inlined_code'. 
+        '''
+        line_length = len( line )
+        entering_double_backticks = True
+        
+        i = 0
+        while i < line_length:
+            if line[i] == '`' and (i == 0 or line[i-1] != '\\'):
+                if i < line_length-1 and line[i+1] == '`':
+                    if entering_double_backticks:
+                        entering_double_backticks = False
+                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i+1) ) )
+                        i += 1
+                    else:
+                        entering_double_backticks = True
+                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i-1), LineColumn(num_line, i) ) )
+                        i += 1
+                else:
+                    if entering_double_backticks:
+                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i) ) )
+            i += 1
+
+    #-------------------------------------------------------------------------
+    def _evaluate_links_and_refs(self, num_line:int, line:str):
+        '''
+        Appends  detected links to attribute '_links' 
+        and detected references to attribute '_refs'.
+        '''
+        line_length = len( line )
+        i = 0
+        while i < line_length:
+            if line[i] == '[' and (i == 0 or line[i-1] != '\\'):
+                start = i
+                end = line[i:].find( ']' )
+                if end < 0:
+                    i = line[i:].find( '[' )
+                    if i <= -1:
+                        break
+                    else:
+                        continue
+                    
+                elif i == line_length - 1:
+                    break
+                
+                else:
+                    brackets_text = line[i+1:end]
+                    i = end+1
+                    spaces = self._count_leading_spaces( line[i:] )
+                    i += spaces
+                    if i >= line_length:
+                        break
+                    if line[i] == '(':
+                        # direct link
+                        end = line[i:].find( ')' )
+                        if end != -1:
+                            splt = line[i+1:end].split( '"' )
+                            link_text = splt[0]
+                            title_text = splt[1] if len(splt) > 1 else None
+                            self._links.append( MDLinkTitle( LineColumn(num_line, start),
+                                                             LineColumn(num_line, end),
+                                                             brackets_text,
+                                                             link_text,
+                                                             title_text ) )
+                    elif line[i] == '[':
+                        # link by reference
+                        end = line[i:].find( ']' )
+                        if end != -1:
+                            ref_text = brackets_text if end == i+1 else line[i+1:end]
+                            self.l_inks.append( MDLinkRef( LineColumn(num_line, start),
+                                                           LineColumn(num_line, end),
+                                                           brackets_text,
+                                                           ref_text.lower() ) )
+                    elif line[i] == ':' and spaces == 0:
+                        # reference
+                        if self._count_leading_spaces(line) < 3:
+                            splt = line[i:].split()
+                            if len( splt ) > 1:
+                                url_ref = splt[1].strip( '<>' )
+                                title = None
+                                if len( splt ) >= 2:
+                                    title_text = splt[2]
+                                    if title_text[0] == title_text[-1] == '"' or \
+                                       title_text[0] == title_text[-1] == "'" or \
+                                       title_text[0] == '(' and title_text[-1] == ')':
+                                        title = title_text[1:-1]
+                                self._refs.append( MDReference( LineColumn(num_line, 0),
+                                                                LineCOlumn(num_line, len(line)),
+                                                                brackets_text.lower(),
+                                                                url_ref,
+                                                                title ) )
+                                break
+            i += 1
 
     #-------------------------------------------------------------------------
     def _tanslate_combined_emphasis(self, line:str) -> str:
@@ -396,16 +500,6 @@ class MDtoHTML:
             return _modify_strong( line )
         else:
             return _modify_em( line )
-
-    #-------------------------------------------------------------------------
-    def _count_leading_spaces(self, line:str) -> int:
-        count = 0
-        for c in line:
-            if c == ' ':    count += 1
-            elif c == '\t': count += 4
-            else:
-                break
-        return count
 
     #-------------------------------------------------------------------------
     def _translate_header(self, hdr_level:int, hdr_text:str) -> str:

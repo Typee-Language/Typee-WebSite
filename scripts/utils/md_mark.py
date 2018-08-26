@@ -375,15 +375,27 @@ class MDListNumItem( MDList ):
 
 
 #=============================================================================
-class MDReference( MDLink ):
+class MDReference( MDLinkTitle ):
     '''
     The class of MD links by reference.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str):
-        super().__init__( start, end, txt, ref )
+    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str, title:str=None):
+        super().__init__( start, end, txt, ref, title )
     #-------------------------------------------------------------------------
     CLASS = 'RFR'
+
+
+#=============================================================================
+class MDStrikethrough( MDMark ):
+    '''
+    The class of MD strikethrough.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn, end:LineColumn):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'STRKT'
 
 
 #=============================================================================
@@ -464,8 +476,8 @@ class MDImage( MDLinkTitle ):
     The class of MD images - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, link:str, title:str=None):
-        super().__init__( start, end, txt, link, title )
+    def __init__(self, start:LineColumn, end:LineColumn, alt_txt:str, link:str, title:str=None):
+        super().__init__( start, end, alt_txt, link, title )
     #-------------------------------------------------------------------------
     CLASS = 'IMG'
 
@@ -476,8 +488,8 @@ class MDImageRef( MDImage ):
     The class of MD images set by reference - GFM specific.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, end:LineColumn, txt:str, ref:str, title:str=None):
-        super().__init__( start, end, txt, ref, title )
+    def __init__(self, start:LineColumn, end:LineColumn, alt_txt:str, ref:str, title:str=None):
+        super().__init__( start, end, alt_txt, ref, title )
     #-------------------------------------------------------------------------
     @property
     def ref(self):  return self.link
