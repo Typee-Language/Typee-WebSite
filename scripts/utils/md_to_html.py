@@ -77,8 +77,8 @@ class MDtoHTML:
             
             ##--- first, parses block elements ---
             ## checks headers
-            header_level, setext_header = self._check_header( line 
-                                                              md_lines[num_line+1] if num_line + 1 < lines_count : None )
+            header_level, setext_header = self._check_header( line,
+                                                              md_lines[num_line+1] if num_line + 1 < lines_count else None )
             if header_level > 0:
                 self._marks.append( MDHeader( LineColumn(num_line, 0), header_level, setext_header ) )
             
@@ -106,6 +106,8 @@ class MDtoHTML:
                 ## checks horizontal roules (never present in headers)
                 if self._check_hrule( line ):
                     self.marks.append( MDHRule( LineColumn(num_line, 0) ) )
+            
+            self._parse_local_block( num_line, line, md_lines )
 
             ##--- second, parses span elements ---
             self._automatic_links = MDMarksList()
@@ -116,9 +118,28 @@ class MDtoHTML:
             self._inlined_code    = MDMarksList()
             self._images          = MDMarksList()
 
+            self._evaluate_emphasis_marks( num_line, line )
+            self._evaluate_inlined_code( num_line, line )
+            self._evaluate_links_and_refs( num_line, line )
+            self._evaluate_image_marks( num_line, line )
+            self._parse_local_scan( num_line, line )
 
     #-------------------------------------------------------------------------
-    def _translate_md(self, md_text_lines:str):
+    def _parse_local_block(self, num_line, line, md_lines):
+        '''
+        Protected method, to be implemented by inheriting classes.
+        '''
+        pass
+
+    #-------------------------------------------------------------------------
+    def _parse_local_scan(self, num_line, line_parse_local_scan):
+        '''
+        Protected method, to be implemented by inheriting classes.
+        '''
+        pass
+    
+    #-------------------------------------------------------------------------
+    def _translate_md(self, md_text_lines:str) -> str:
         '''
         Implementation of the second phase of the MD to HTML translation
         '''
@@ -192,7 +213,7 @@ class MDtoHTML:
             def _my_check( hdr_char:str ) -> bool:
                 count = next_line.count( hdr_char )
                 if count > 0:
-                    return len(next_line) == count:
+                    return len(next_line) == count
             #-------------------------------------------------------------
             return ( 1 if _my_check('=') else 2 if _my_check('-') else 0, True )
 
@@ -230,8 +251,7 @@ class MDtoHTML:
         if line[nb_spaces] in  "-+*":
             return (item_level, nb_spaces, True)
         else:
-            item = line[nb_spaces:].split( maxsplit=1 )
-            head, content = item[0], item[1]
+            head = line[nb_spaces:].split( maxsplit=1 )[0]
             if head[-1] == '.':
                 try:
                     _ = int( head[:-1] )
@@ -253,7 +273,7 @@ class MDtoHTML:
         '''
         Returns True if line is a reference, or False else.
         '''
-        return line.lstrip()[0] == '[' and line.contains ']:'
+        return line.lstrip()[0] == '[' and line.contains == ']:'
 
     #-------------------------------------------------------------------------
     def _count_leading_spaces(self, line:str, tabs_length:int=4) -> int:
@@ -292,7 +312,7 @@ class MDtoHTML:
         Appends all kinds of emphasis marks to attribute '_emphasis'.
         '''
         #-----------------------------------------------------------------
-        def _append(indx:int, emph_car:str, count:int):
+        def _append(indx:int, emph_char:str, count:int):
             end_point = LineColumn( num_line, indx+count )
             if emph_char == '~':
                 if count == 2:
@@ -306,19 +326,19 @@ class MDtoHTML:
             if indx == 0 or indx+count >= line_length:
                 return False
             else:
-                return line[index-1] == line[index+count] == ' '
+                return line[indx-1] == line[indx+count] == ' '
         #-----------------------------------------------------------------
         i = 0
         line_length = len( line )
         while i < line_length:
-           if line[i] in ['*_~'] and (i == 0 or line[i-1] != '\\'):
-               if i+1 < line_length and line[i+1] == line[i]:
-                   if not _check_spaces(i, 2, line_length):
-                       _append( i, line[i], 2 )
-                       i += 1
-               else:
-                   if not _check_spaces(i, 1, line_length):
-                       _append( i, line[i], 1 )
+            if line[i] in ['*_~'] and (i == 0 or line[i-1] != '\\'):
+                if i+1 < line_length and line[i+1] == line[i]:
+                    if not _check_spaces(i, 2, line_length):
+                        _append( i, line[i], 2 )
+                        i += 1
+                else:
+                    if not _check_spaces(i, 1, line_length):
+                        _append( i, line[i], 1 )
             i += 1
 
     #-------------------------------------------------------------------------
@@ -351,10 +371,10 @@ class MDtoHTML:
                         if image_class:
                             text = text[1].split( '"' )
                             if len(text) == 1:
-                                link_txt = text
+                                link_text = text
                                 title_text = None
                             else:
-                                link_txt = text[0].rstrip()
+                                link_text = text[0].rstrip()
                                 title_text = text[1]
                                 
                             self._images.append( image_class( LineColumn(num_line, start),
@@ -457,7 +477,7 @@ class MDtoHTML:
                                        title_text[0] == '(' and title_text[-1] == ')':
                                         title = title_text[1:-1]
                                 self._refs.append( MDReference( LineColumn(num_line, 0),
-                                                                LineCOlumn(num_line, len(line)),
+                                                                LineColumn(num_line, len(line)),
                                                                 brackets_text.lower(),
                                                                 url_ref,
                                                                 title ) )
