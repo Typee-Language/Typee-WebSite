@@ -94,6 +94,9 @@ line, from which every preceeding and ending hashes are removed. Finally,
 instances of class `MDHeader` embed the level of the header.  
 (_atx headers are from \<H1> to \<H6>; Setext ones are either \<H1> or 
 \<H2>_)
+Please notice that for every detected header, two marks are generated. The 
+first one marks the starting point of the header, the second one marks its 
+ending point. A boolean remembers this status.
 
 `MDBlockQuote` memorizes blockquote MD tags. Start and end of related tag is 
 stored in there, plus the level of nesting of the quote.

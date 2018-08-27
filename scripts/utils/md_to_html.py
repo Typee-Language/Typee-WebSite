@@ -66,8 +66,8 @@ class MDtoHTML:
         '''
         self._marks = MDMarksList()
         self._refs  = MDMarksList()
+        self._to_be_removed_lines = []
 
-        setext_header = False
         current_indent = 0
         lines_count = len( md_lines )
         for num_line, line in enumerate( md_lines ):
@@ -76,10 +76,13 @@ class MDtoHTML:
             
             ##--- first, parses block elements ---
             ## checks headers
-            header_level, setext_header = self._check_header( line,
-                                                              md_lines[num_line+1] if num_line + 1 < lines_count else None )
+            header_level, is_setext_header = self._check_header( line,
+                                                                 md_lines[num_line+1] if num_line + 1 < lines_count else None )
             if header_level > 0:
-                self._marks.append( MDHeader( LineColumn(num_line, 0), header_level, setext_header ) )
+                self._marks.append( MDHeader( LineColumn(num_line, 0), header_level, True, is_setext_header ) )
+                self._marks.append( MDHeader( LineColumn(num_line, len(line)), header_level, False, is_setext_header ) )
+                if is_setext_header:
+                    self._to_be_removed_lines.append( num_line + 1 )
             
             else:
                 ## checks blockquotes (never present in headers)
@@ -141,16 +144,19 @@ class MDtoHTML:
         '''
         self._marks = sorted( self._marks )
         
-        self.is_currently_emph    = False
-        self.is_currently_strong  = False
-        self.is_in_code_block     = False
-        self.current_header_level = 0
+        self._is_currently_emph    = False
+        self._is_currently_strong  = False
+        self._is_in_code_block     = False
         
         for mark in self._marks:
             self._translate_mark( mark, md_text_lines )
                 
         # end of MD text translating
+        for i in reversed( self._to_be_removed_lines ):
+            del md_text_lines[ i ]
         return '\n'.join( md_text_lines )
+        ## return '\n'.join( [line for i,line in enumerate(md_text_lines) if i not in self._to_be_removed_lines] )
+
     
 
     #=========================================================================
@@ -566,8 +572,13 @@ class MDtoHTML:
             return _modify_em( line )
 
     #-------------------------------------------------------------------------
-    def _translate_header(self, hdr_level:int, hdr_text:str) -> str:
-        return "<h{:d}>{:s}</h{:d}>".format( hdr_level, hdr_text, hdr_level )
+    def _translate_header(self, mark:MDHeader, md_text_lines:list):
+        hdr_txt = '<{:s}h{:d}>'.format( '/' if mark.is_entering_point else '', mark.hdr_num )
+        num_line = mark.start.line
+        if mark.is_entering_point:
+            md_text_lines[ num_line ] = '{}{}'.format( hdr_txt, md_text_lines[num_line] )
+        else:
+            md_text_lines[ num_line ] = '{}{}'.format( hdr_txt, md_text_lines[num_line].strip( ' #' ) )
 
     #-------------------------------------------------------------------------
     def _translate_mark(self, mark:MDMark, md_text_lines:list):
@@ -580,6 +591,7 @@ class MDtoHTML:
     #-------------------------------------------------------------------------
     _MD_CLASSES_TRANSLATION = {
         'BRKLN': _translate_breakline,
+        'HDR':   _translate_header,
     }
     
 #=====   end of   scripts.utils.md_to_html   =====#

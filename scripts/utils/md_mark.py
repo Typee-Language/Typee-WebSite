@@ -211,20 +211,21 @@ class MDFootnoteRef( MDMarkText ):
 
 
 #=============================================================================
-class MDHeader( MDMarkText ):
+class MDHeader( MDMark ):
     '''
     The class of MD headers.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, hdr_num:int, line:str, is_setext:bool ):
+    def __init__(self, start:LineColumn, hdr_num:int, is_entering_point:bool, is_setext:bool ):
         if is_setext:
             end = LineColumn( start.line + 2, 0 )
         else:
-            end = LineColumn( start.line, len(line) )
+            end = LineColumn( start.line, hdr_num+1 )
             
-        super().__init__( start, end, line.strip('#') )
-        self.is_setext = is_setext
-        self.hdr_num   = hdr_num
+        super().__init__( start, end )
+        self.hdr_num           = hdr_num
+        self.is_setext         = is_setext
+        self.is_entering_point = is_entering_point
     #-------------------------------------------------------------------------
     CLASS = 'HDR'
 
