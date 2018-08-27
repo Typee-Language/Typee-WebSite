@@ -211,15 +211,20 @@ class MDFootnoteRef( MDMarkText ):
 
 
 #=============================================================================
-class MDHeader( MDMark ):
+class MDHeader( MDMarkText ):
     '''
     The class of MD headers.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:LineColumn, hdr_num:int, two_lines:bool ):
-        super().__init__( start, start+(0,hdr_num) )
-        self.hdr_num = hdr_num
-        self.two_lines = two_lines
+    def __init__(self, start:LineColumn, hdr_num:int, line:str, is_setext:bool ):
+        if is_setext:
+            end = LineColumn( start.line + 2, 0 )
+        else:
+            end = LineColumn( start.line, len(line) )
+            
+        super().__init__( start, end, line.strip('#') )
+        self.is_setext = is_setext
+        self.hdr_num   = hdr_num
     #-------------------------------------------------------------------------
     CLASS = 'HDR'
 
@@ -270,6 +275,30 @@ class MDInlineDeletion( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'INLDEL'
+
+
+#=============================================================================
+class MDIsolatedAmpersand( MDMark ):
+    '''
+    The class of HTML isolated ampersand characters.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'ISLAMP'
+
+
+#=============================================================================
+class MDIsolatedLT( MDMark ):
+    '''
+    The class of HTML isolated '<' characters.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:LineColumn):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'ISLLT'
 
 
 #=============================================================================

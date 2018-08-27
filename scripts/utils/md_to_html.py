@@ -42,9 +42,10 @@ class MDtoHTML:
         method `translate()` on created instance.
                 
         Args:
-            md_text: str
+            md_text_lines: list
                 A reference to the text to be translated from  Markdown  to
-                HTML conforming with WordPress pages content.
+                HTML conforming with WordPress pages content, splitted in a
+                list of lines of text.
         '''
         self.html_text = None if md_text_lines is None else self.translate( md_text_lines )
 
@@ -64,16 +65,14 @@ class MDtoHTML:
         Implementation of the first phase of the MD to HTML translation
         '''
         self._marks = MDMarksList()
-        self._refs  = dict()
+        self._refs  = MDMarksList()
 
         setext_header = False
         current_indent = 0
         lines_count = len( md_lines )
         for num_line, line in enumerate( md_lines ):
             
-            if setext_header:  ## set to True while checking for a Setext MD header, see below
-                setext_header = False
-                continue
+            line = line.rstrip( ' \n' )
             
             ##--- first, parses block elements ---
             ## checks headers
@@ -86,48 +85,44 @@ class MDtoHTML:
                 ## checks blockquotes (never present in headers)
                 blockquote_level, my_line = self._check_blockquote( line, current_indent )
                 if blockquote_level > 0:
-                    self.marks.append( MDBlockQuote( LineColumn(num_line, 0), blockquote_level ) )
+                    self._marks.append( MDBlockQuote( LineColumn(num_line, 0), blockquote_level ) )
                 
                 ## checks list items (never present in headers)
                 nested_level, start_item, is_unordered_list = self._check_list( my_line )
                 if nested_level > 0:
                     if is_unordered_list:
-                        self.marks.append( MDListItem(LineColumn(num_line, 0),
-                                                      LineColumn(num_line, start_item-1), nested_level) )
+                        self._marks.append( MDListItem(LineColumn(num_line, 0),
+                                                       LineColumn(num_line, start_item-1), nested_level) )
                     else:
-                        self.marks.append( MDListNumItem(LineColumn(num_line, 0),
-                                                         LineColumn(num_line, start_item-1), nested_level) )
+                        self._marks.append( MDListNumItem(LineColumn(num_line, 0),
+                                                          LineColumn(num_line, start_item-1), nested_level) )
                     current_indent = nested_level * 4
                 
                 ## checks code line
                 if self._check_code_line( my_line, current_indent ):
-                    self.marks.append( MDCodeLine( LineColumn(num_line, 0) ) )
+                    self._marks.append( MDCodeLine( LineColumn(num_line, 0) ) )
                 
                 ## checks horizontal roules (never present in headers)
                 if self._check_hrule( line ):
-                    self.marks.append( MDHRule( LineColumn(num_line, 0) ) )
+                    self._marks.append( MDHRule( LineColumn(num_line, 0) ) )
             
             self._parse_local_block( num_line, line, md_lines )
 
             ##--- second, parses span elements ---
-            self._automatic_links = MDMarksList()
-            self._links           = MDMarksList()
-            self._refs            = MDMarksList()
-            self._backslashes     = MDMarksList()
-            self._emphasis        = MDMarksList()
-            self._inlined_code    = MDMarksList()
-            self._images          = MDMarksList()
-
             self._evaluate_emphasis_marks( num_line, line )
             self._evaluate_inlined_code( num_line, line )
             self._evaluate_links_and_refs( num_line, line )
             self._evaluate_image_marks( num_line, line )
+            self._evaluate_isolated_ampersands( num_line, line )
+            self._evaluate_isolated_lt( num_line, line )
+            
             self._parse_local_scan( num_line, line )
 
     #-------------------------------------------------------------------------
     def _parse_local_block(self, num_line, line, md_lines):
         '''
         Protected method, to be implemented by inheriting classes.
+        Should implement extensions to MD.
         '''
         pass
 
@@ -135,6 +130,7 @@ class MDtoHTML:
     def _parse_local_scan(self, num_line, line_parse_local_scan):
         '''
         Protected method, to be implemented by inheriting classes.
+        Should implement extensions to MD.
         '''
         pass
     
@@ -143,10 +139,18 @@ class MDtoHTML:
         '''
         Implementation of the second phase of the MD to HTML translation
         '''
-        html_text = ''
+        self._marks = sorted( self._marks )
+        
+        self.is_currently_emph    = False
+        self.is_currently_strong  = False
+        self.is_in_code_block     = False
+        self.current_header_level = 0
+        
+        for mark in self._marks:
+            self._translate_mark( mark, md_text_lines )
                 
         # end of MD text translating
-        return html_text
+        return '\n'.join( md_text_lines )
     
 
     #=========================================================================
@@ -302,9 +306,9 @@ class MDtoHTML:
             if line[i] == '<':
                 end = line[i:].find( '>' )
                 if end != -1 and '://' in line[i:end] and ' ' not in line[i:end]:
-                    self._automatic_links.append( MDLinkAuto( LineColumn(num_line, i),
-                                                              LineColumn(num_line, end),
-                                                              line[i+1:end] ) )
+                    self._marks.append( MDLinkAuto( LineColumn(num_line, i),
+                                                    LineColumn(num_line, end),
+                                                    line[i+1:end] ) )
 
     #-------------------------------------------------------------------------
     def _evaluate_emphasis_marks(self, num_line:int, line:str):
@@ -316,11 +320,11 @@ class MDtoHTML:
             end_point = LineColumn( num_line, indx+count )
             if emph_char == '~':
                 if count == 2:
-                    self._emphasis.append( MDStrikethrough( LineColumn(num_line, indx), end_point ) )
+                    self._marks.append( MDStrikethrough( LineColumn(num_line, indx), end_point ) )
             elif count == 1:
-                self._emphasis.append( MDEmphasis( LineColumn(num_line, indx), end_point ) )
+                self._marks.append( MDEmphasis( LineColumn(num_line, indx), end_point ) )
             else:
-                self._emphasis.append( MDStrong( LineColumn(num_line, indx), end_point ) )
+                self._marks.append( MDStrong( LineColumn(num_line, indx), end_point ) )
         #-----------------------------------------------------------------
         def _check_spaces(indx:int, count:int, line_length:int)-> bool:
             if indx == 0 or indx+count >= line_length:
@@ -377,7 +381,7 @@ class MDtoHTML:
                                 link_text = text[0].rstrip()
                                 title_text = text[1]
                                 
-                            self._images.append( image_class( LineColumn(num_line, start),
+                            self._marks.append( image_class( LineColumn(num_line, start),
                                                               LineColumn(num_line, start+length),
                                                               alt_text,
                                                               link_text,
@@ -402,16 +406,51 @@ class MDtoHTML:
                 if i < line_length-1 and line[i+1] == '`':
                     if entering_double_backticks:
                         entering_double_backticks = False
-                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i+1) ) )
+                        self._marks.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i+1) ) )
                         i += 1
                     else:
                         entering_double_backticks = True
-                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i-1), LineColumn(num_line, i) ) )
+                        self._marks.append( MDCodeInlined( LineColumn(num_line, i-1), LineColumn(num_line, i) ) )
                         i += 1
                 else:
                     if entering_double_backticks:
-                        self._inlined_code.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i) ) )
+                        self._marks.append( MDCodeInlined( LineColumn(num_line, i), LineColumn(num_line, i) ) )
             i += 1
+
+    #-------------------------------------------------------------------------
+    def _evaluate_isolated_ampersands(self, num_line:int, line:str ):
+        '''
+        Appends isolated ampersand HTML tags to attribute '_ampersands'.
+        '''
+        line_length = len( line )
+        splt = line.split( '&' )
+        if len( splt ) > 1:
+            i = len(splt[0]) + 1
+            k = 1
+            while i < line_length:
+                end = splt[k].find( ';' )
+                if end == -1 or ' ' in splt[k][:end]:
+                    self._marks.append( MDIsolatedAmpersand( LineColumn(num_line, i) ) )
+                i += len( splt[k] ) + 1
+                k += 1
+
+    #-------------------------------------------------------------------------
+    def _evaluate_isolated_angle_brackets(self, num_line:int, line:str ):
+        '''
+        Appends isolated characters '<' to attribute '_angle_brackets'.
+        '''
+        line_length = len( line )
+        splt = line.split( '<' )
+                
+        if len(splt) > 1:
+            i = len( splt[0] )
+            k = 1
+            while i < line_length:
+                end = splt[k].find( '>' )
+                if end != -1:
+                    self._marks.append( MDIsolatedLT( LineColumn(num_line, i) ) )
+                i += len( splt[k] ) + 1
+                k += 1
 
     #-------------------------------------------------------------------------
     def _evaluate_links_and_refs(self, num_line:int, line:str):
@@ -449,7 +488,7 @@ class MDtoHTML:
                             splt = line[i+1:end].split( '"' )
                             link_text = splt[0]
                             title_text = splt[1] if len(splt) > 1 else None
-                            self._links.append( MDLinkTitle( LineColumn(num_line, start),
+                            self._marks.append( MDLinkTitle( LineColumn(num_line, start),
                                                              LineColumn(num_line, end),
                                                              brackets_text,
                                                              link_text,
@@ -458,11 +497,11 @@ class MDtoHTML:
                         # link by reference
                         end = line[i:].find( ']' )
                         if end != -1:
-                            ref_text = brackets_text if end == i+1 else line[i+1:end]
-                            self.l_inks.append( MDLinkRef( LineColumn(num_line, start),
+                            ref_text = (brackets_text if end == i+1 else line[i+1:end]).lower()
+                            self._marks.append( MDLinkRef( LineColumn(num_line, start),
                                                            LineColumn(num_line, end),
                                                            brackets_text,
-                                                           ref_text.lower() ) )
+                                                           ref_text ) )
                     elif line[i] == ':' and spaces == 0:
                         # reference
                         if self._count_leading_spaces(line) < 3:
@@ -476,13 +515,18 @@ class MDtoHTML:
                                        title_text[0] == title_text[-1] == "'" or \
                                        title_text[0] == '(' and title_text[-1] == ')':
                                         title = title_text[1:-1]
-                                self._refs.append( MDReference( LineColumn(num_line, 0),
-                                                                LineColumn(num_line, len(line)),
-                                                                brackets_text.lower(),
-                                                                url_ref,
-                                                                title ) )
+                                self._links.append( MDReference( LineColumn(num_line, 0),
+                                                                 LineColumn(num_line, len(line)),
+                                                                 brackets_text.lower(),
+                                                                 url_ref,
+                                                                 title ) )
+                                self._refs[ brackets_text.lower() ] = (url_ref, title)
                                 break
             i += 1
+
+    #-------------------------------------------------------------------------
+    def _translate_breakline(self, mark:MDBreakLine, md_text_lines:list):
+        md_text_lines[ mark.start.line ] = md_text_lines[ mark.start.line ].rstrip() + '<br />'
 
     #-------------------------------------------------------------------------
     def _tanslate_combined_emphasis(self, line:str) -> str:
@@ -525,6 +569,18 @@ class MDtoHTML:
     def _translate_header(self, hdr_level:int, hdr_text:str) -> str:
         return "<h{:d}>{:s}</h{:d}>".format( hdr_level, hdr_text, hdr_level )
 
+    #-------------------------------------------------------------------------
+    def _translate_mark(self, mark:MDMark, md_text_lines:list):
+        '''
+        Translates the MD mark into HTML code. 
+        '''
+        self._MD_CLASSES_TRANSLATION[ mark.CLASS ]( mark, md_text_lines )
 
+
+    #-------------------------------------------------------------------------
+    _MD_CLASSES_TRANSLATION = {
+        'BRKLN': _translate_breakline,
+    }
+    
 #=====   end of   scripts.utils.md_to_html   =====#
 

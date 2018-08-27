@@ -85,8 +85,13 @@ number and the column index in this line of the first character of the MD tag.
 _Setext_ headers are defined with two lines of MD text, while _atx_ ones are 
 defined with a single line of MD text. This is an important information to 
 keep in memory, since for _Setext_ headers the second defining line must be 
-skipped and not put in the resulting HTML text. Finally, instances of class 
-`MDHeader` embed the level of the header.  
+skipped and not put in the resulting HTML text. For _Setext_ headers, the 
+start point of the header is set to column zero of current line and end point 
+is set to current line +2 and column 0. For _atx_ headers, the start point is 
+set to current line and column equal to header level+1 and the end point is 
+set to the end of line. The text of the header is the text within current 
+line, from which every preceeding and ending hashes are removed. Finally, 
+instances of class `MDHeader` embed the level of the header.  
 (_atx headers are from \<H1> to \<H6>; Setext ones are either \<H1> or 
 \<H2>_)
 
@@ -118,6 +123,14 @@ done with the sole starting point of the mark. Ten ending points is set to
 Span elements are MD tags that are directly embedded in the text.
 
 Links are such elements of MD. They can be of different types.
+
+`MDIsolatedAmpersand` stores the exact position of isolated character '&' in 
+the MD text, when this character is not the starting point of an HTML tag. 
+This class inherits from `MDMark`.
+
+`MDIsolatedLT` stores the exact position of isolated character '<' in 
+the MD text, when this character is not the starting point of an HTML tag. 
+This class inherits from `MDMark`.
 
 `MDLink` is a base class that stores starting and ending points of the link MD 
 tag plus the link text that is associated with it and the source text that 
