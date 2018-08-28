@@ -18,67 +18,74 @@
 
 ## --- Elements --------------------------------------------------------------
 
-<block element>             ::= <header atx>        ## first = {'#'}
-                             |  <blockquote>        ## first = {"> "}
-                             |  <list>              ## first = {'-', '+', '*'}
-                             |  <horizontal rule>   ## first = {'-', '*'}
-                             |  <link or reference> ## first = {'['}
-                             |  <image>             ## first = {'!'}
-                 
-<text and span elements>    ::= <html entity>       ## first = {'&'}                ## CAUTION: ambiguity there
-                             |  <html tag>          ## first = {'<'}                ##  1. to be grouped with 8.
-                             |  <breakline>         ## first = {' '}                ##  2. to be grouped with 5., 6. and 11.
-                             |  <emphasis style>    ## first = {'*', '_'}           ##  3. to be grouped with 4
-                             |  <strong style>      ## first = {'*', '_'}           ##  4. to be grouped with 3
-                             |  <star>              ## first = {' '}                ##  5. to be grouped with 2., 6. and 11.
-                             |  <underscore>        ## first = {' '}                ##  6. to be grouped with 2., 5. and 11.
-                             |  <inlined code>      ## first = {'`'}                ##  7.
-                             |  <automatic link>    ## first = {'<'}                ##  8. to be grouped with 1.
-                             |  <escape>            ## first = {'\\'}               ##  9.
-                             |  <paragraph end>     ## first = {'\n'}               ## 10.
-                             |  <any chars not in [\' & < \n * _ ` \ # > [ ! ]>     ## 11. to be grouped with 2., 5. and 6.
+<block element>                 ::= <header atx>                    ## first = {'#'}
+                                 |  <blockquote>                    ## first = {"> "}
+                                 |  <list>                          ## first = {'-', '+', '*'}
+                                 |  <horizontal rule>               ## first = {'-', '*'}
+                                 |  <link or reference>             ## first = {'['}
+                                 |  <image>                         ## first = {'!'}
+                                                                                                ## CAUTION: ambiguities there:
+<text and span elements>        ::= <html entity>                   ## first = {'&'}
+                                 |  <html tag or automatic ilnk>    ## first = {'<'}
+                                 |  <breakline>                     ## first = {' '}                ##  2. to be grouped with 5., 6. and 11.
+                                 |  <emphasis or strong style>      ## first = {'*', '_'}
+                                 |  <star>                          ## first = {' '}                ##  5. to be grouped with 2., 6. and 11.
+                                 |  <underscore>                    ## first = {' '}                ##  6. to be grouped with 2., 5. and 11.
+                                 |  <inlined code>                  ## first = {'`'}                ##  7.
+                                 |  <escape>                        ## first = {'\\'}               ##  9.
+                                 |  <paragraph end>                 ## first = {'\n'}               ## 10.
+                                 |  <any chars not in ' & < \n * _ ` \ # \> [ ! >                    ## 11. to be grouped with 2., 5. and 6.
 
-                             
+
+
+<emphasis or strong style>      ::= '*' <emph or strong *>
+                                 |  '_' <emph or strong _>
+
+<emph or strong *>              ::= '*' <any chars but *> '*' '*'      ## i.e. strong
+                                 |  <any chars but *> '*'               ## i.e. emphasis
+
+<emph or strong _>              ::= '_' <any chars but *> '_' '_'      ## i.e. strong
+                                 |  <any chars but *> '_'               ## i.e. emphasis
+
+<html tag>                      ::= <any chars> <html tag'>
+<html tag'>                     ::= '/' '>'
+                                 |  '>'
+
+<html tag or automatic ilnk>    ::= '<' <html tag or automatic link'>
+<html tag or automatic link'>   ::= '/' <any chars> '>'
+                                 |  <any chars> <html tag or automatic link">
+<html tag or automatic link">   ::= <url'> '>'                                      ## first = {'://'}      ## (automatic link)
+                                 |  <html tag'>                                     ## first = {'/', '>'}   ## (HTML tag)
+
 <inlined link>              ::= '[' <url> <title> ']'
 
+<link>                      ::= <inlined link>                                      ## first = {'['}
+                             |  <referenced link>                                   ## first = {'('}
+
 <link or reference>         ::= '[' <linked text> ']' <link or reference'>
-<link or reference'>        ::= ':' <reference>
-                             |  <link>
+<link or reference'>        ::= ':' <reference>                                     ## first = {':'}}
+                             |  <link>                                              ## first = {'[', '('}
+
+<linked text>               ::= <any chars but ]> 
 
 <reference>                 ::= <spaces or not> <url> <spaces or not> <reference title> '\n'
 
-<reference title>       ::= '\n' <max 3 spaces> <reference title'>
-                         |  <reference title'>
-<reference title'>      ::= '"' <any chars but newline and '"'> '"' '\n'
+<referenced link>           ::= <spaces or not> '[' <referenced link'> ']'          ## first = {' ', '['}
+<reference linked'>         ::= <any chars but ]>
+                             |  EPS
 
-                             
-                             
-                             
-<link>                      ::= <inlined link>
-                             |  <referenced link>
-
-<linked text>               ::= <any chars but newline and ']'> 
+<reference title>           ::= '\n' <max 3 spaces> <reference title'>
+                             |  <reference title'>
+<reference title'>          ::= '"' <any chars but newline and "> '"' <spaces or not> '\n'  ## (maybe end of line not needed)
 
 <title>                     ::= '"' <any chars but newline and "> '"'
 
-<url>                       ::= <alphanum string> "://" <any chars but newline ] and ">
-
-
-
-
-
-
-<referenced link>       ::= <spaces or not> '[' <referenced link'> ']'
-<reference linked'>     ::= <any chars but newline and ]>  |  EPS
-
-
-           
+<url>                       ::= <alphanum chars> <url'>
+<url'>                      ::= "://" <any chars but ] and ">
 
 
 
 ## --- Markdown Tags ---------------------------------------------------------
-
-<automatic link>        ::= '<' <url> '>'
 
 <blockquotes>           ::= "> " <blockquotes'>
 <blockquotes'>          ::= "> " <blockquotes'>  |  <text with span elements> <blockquotes">
@@ -89,10 +96,6 @@
 
 <code block>            ::= <spaces 4> <text with span elements> <code block'>  |  <tab> <text with span elements> <code block'>
 <code block'>           ::= <spaces 4> <text with span elements> <code block'>  |  <tab> <text with span elements> <code block'>  |  '\n'  |  <ENDOFTEXT>
-
-<emphasis style>        ::= <emphasis star>  |  <emphasis underscore>
-<emphasis star>         ::= '*' <any chars but * and space> <any chars but *> '*'
-<emphasis underscore>   ::= '_' <any chars but _ and space> <any chars but _> '_'
 
 <escape>                ::= '\\' <escaped char>
 <escaped char>          ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'  |  '}'  |  '['  |  ']'  |  '('  |  ')'  |  '#'  |  '+'  |  '-'  |  '.'  |  '!'
@@ -152,10 +155,6 @@
 <spaces4>               ::= "    "
 
 <star>                  ::= " * "
-
-<strong style>          ::= <strong star>  |  <strong underscore>
-<strong star>           ::= '*' '*' <any chars but * and space> <any chars but *> '*' '*'
-<strong underscore>     ::= '_' '_' <any chars but _ and space> <any chars but _> '_' '_'
 
 <tab>                   ::= '\t'
 
