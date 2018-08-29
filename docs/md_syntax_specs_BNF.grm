@@ -1,4 +1,7 @@
 ## --- Markdown grammar specifications ---------------------------------------
+##
+## https://tools.ietf.org/html/rfc7764
+##
 
 <MD text>                       ::= <MD line> <MD text>
                                  | EPS
