@@ -1,6 +1,10 @@
 ## --- Markdown grammar specifications ---------------------------------------
 ##
-## https://tools.ietf.org/html/rfc7764
+## https://tools.ietf.org/html/rfc7764 (Markdown specs)
+##
+## https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/user/markdown.md#inline-diff
+## https://docs.gitlab.com/ee/user/markdown.html
+## https://help.github.com/articles/basic-writing-and-formatting-syntax/
 ##
 
 <MD text>                       ::= <MD line> <MD text>
