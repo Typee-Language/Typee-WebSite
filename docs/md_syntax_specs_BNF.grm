@@ -10,14 +10,14 @@
 <MD text>                       ::= <MD line> <MD text>
                                  | EPS
 
-<MD line>                       ::= <block element>
+<MD line>                       ::= <block elements>
                                  |  <space-starting elements>
                                  |  <text with span elements>
 
 
 ## --- Elements --------------------------------------------------------------
 
-<block element>                 ::= <blockquote>
+<block elements>                ::= <blockquote>
                                  |  <header atx>
                                  |  <header setext>
                                  |  <list>
