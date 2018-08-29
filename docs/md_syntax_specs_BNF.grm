@@ -1,51 +1,111 @@
 ## --- Markdown grammar specifications ---------------------------------------
 
-<MD text>       ::= <MD line> <MD text'>
-<MD text'>      ::= <MD line> <MD text'> | EPS
+<MD text>                       ::= <MD line> <MD text>
+                                 | EPS
 
-<MD line>       ::= <block element>   |  <text and span elements>
-                 |  ' ' <MD line'>
-
-<MD line'>      ::= <block element>   |  <text and span elements>
-                 |  ' ' <MD line''>
-
-<MD line''>     ::= <block element>   |  <text and span elements>
-                 |  ' ' <MD line'''>
-
-<MD line'''>    ::= <block element>   |  <text and span elements>
-                 |  ' ' <code block>
+<MD line>                       ::= <block element>
+                                 |  <space-starting elements>
+                                 |  <text with span elements>
 
 
 ## --- Elements --------------------------------------------------------------
 
-<block element>                 ::= <header atx>                    ## first = {'#'}
-                                 |  <blockquote>                    ## first = {"> "}
-                                 |  <list>                          ## first = {'-', '+', '*'}
-                                 |  <horizontal rule>               ## first = {'-', '*'}
-                                 |  <link or reference>             ## first = {'['}
-                                 |  <image>                         ## first = {'!'}
-                                                                                                ## CAUTION: ambiguities there:
-<text and span elements>        ::= <html entity>                   ## first = {'&'}
-                                 |  <html tag or automatic ilnk>    ## first = {'<'}
-                                 |  <breakline>                     ## first = {' '}                ##  2. to be grouped with 5., 6. and 11.
-                                 |  <emphasis or strong style>      ## first = {'*', '_'}
-                                 |  <star>                          ## first = {' '}                ##  5. to be grouped with 2., 6. and 11.
-                                 |  <underscore>                    ## first = {' '}                ##  6. to be grouped with 2., 5. and 11.
-                                 |  <inlined code>                  ## first = {'`'}                ##  7.
-                                 |  <escape>                        ## first = {'\\'}               ##  9.
-                                 |  <paragraph end>                 ## first = {'\n'}               ## 10.
-                                 |  <any chars not in ' & < \n * _ ` \ # \> [ ! >                    ## 11. to be grouped with 2., 5. and 6.
+<block element>                 ::= <blockquote>
+                                 |  <header atx>
+                                 |  <header setext>
+                                 |  <list>
+                                 |  <horizontal rule>
+                                 |  <link or reference>
+                                 |  <image>
+ 
+ 
+<space-starting elements>       ::= ' ' <space elements'>
+                                 |  '\t' <code block>
+<space elements'>               ::= ' ' <space elements''>
+                                 |  '\t' <code block>
+                                 |  <maybe star>
+                                 |  <maybe underscore>
+                                 |  <text with span elements>
+<space elements''>              ::= ' ' <space elements'''>
+                                 |  '\t' <code block>
+                                 |  '\n'                                                ## breakline! - CAUTION: maybe context sensitive...
+                                 |  <maybe star>
+                                 |  <maybe underscore>
+                                 |  <text with span elements>
+<space elements'''>             ::= ' ' <code block>                
+                                 |  '\t' <code block>
+                                 |  <maybe star>
+                                 |  <maybe underscore>
+                                 |  <text with span elements>
+
+                                 
+<text with span elements>       ::= <html entity> <maybe setext header>
+                                 |  <html tag or automatic link> <maybe setext header>
+                                 |  <emphasis or strong style> <maybe setext header>
+                                 |  <inlined code> <maybe setext header>
+                                 |  <escape> <maybe setext header>
+                                 |  <line or paragraph end>
+                                 |  <any chars but & < * _ ` \\ \n> <maybe setext header>
 
 
+
+
+## --- Markdown Tags ---------------------------------------------------------
+
+<blockquotes>                   ::= "> " <blockquotes'>
+<blockquotes'>                  ::= "> " <blockquotes'>  |  <text with span elements> <blockquotes">
+<blockquotes">                  ::= <text with span elements> <blockquotes">
+                                 |  '\n'
+                                 |  <ENDOFTEXT>
+
+<code block>                    ::= <text with span elements> <code block'>
+<code block'>                   ::= <text with span elements> <code block'>
+                                 |  '\n'
+                                 |  <ENDOFTEXT>
+
+<emph or strong *>              ::= '*' <any chars but *> '*' '*'                       ## i.e. strong
+                                 |  <any chars but *> '*'                               ## i.e. emphasis
+
+<emph or strong _>              ::= '_' <any chars but *> '_' '_'                       ## i.e. strong
+                                 |  <any chars but *> '_'                               ## i.e. emphasis
 
 <emphasis or strong style>      ::= '*' <emph or strong *>
                                  |  '_' <emph or strong _>
 
-<emph or strong *>              ::= '*' <any chars but *> '*' '*'      ## i.e. strong
-                                 |  <any chars but *> '*'               ## i.e. emphasis
+<escape>                        ::= '\\' <escaped char>
+<escaped char>                  ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'
+                                 |  '}'   |  '['  |  ']'  |  '('  |  ')'
+                                 |  '#'   |  '+'  |  '-'  |  '.'  |  '!'
 
-<emph or strong _>              ::= '_' <any chars but *> '_' '_'      ## i.e. strong
-                                 |  <any chars but *> '_'               ## i.e. emphasis
+<header atx>                    ::= '#' <header atx'>
+<header atx'>                   ::= '#' <header atx'>
+                                 |  ' ' <text with span elements>
+
+<maybe setext header>           ::= '\n' <header setext'>
+<header setext'>                ::= '=' <header setext h1>
+                                 |  '-' <header setext h2>
+                                 |  EPS
+                  
+<header setext h1>              ::= '=' <spaces or not> <header setext h1'>             ## CAUTION: previous line of MD text was then H1
+<header setext h1'>             ::= '=' <spaces or not> <header setext h1'>
+                                 |  '\n'
+
+<header setext h2>              ::= '-' <spaces or not> <header setext h2'>             ## CAUTION: previous line of MD text was then H2
+<header setext h2'>             ::= '-' <spaces or not> <header setext h2'>
+                                 |  '\n'
+
+<horizontal rule>               ::= <hrule star>
+                                 |  <hrule hyphen'>
+
+<hrule hyphen>                  ::= '-' <spaces or not> '-' <spaces or not> '-' <hrule hyphen'>
+<hrule hyphen'>                 ::= <spaces or not> '-' <hrule hyphen'>
+                                 |  '\n'
+
+<hrule star>                    ::= '*' <spaces or not> '*' <spaces or not> '*' <hrule star'>
+<hrule star'>                   ::= <spaces or not> '*' <hrule star'>
+                                 |  '\n'
+
+<html entity>                   ::= '&' <non space chars> ';'
 
 <html tag>                      ::= <any chars> <html tag'>
 <html tag'>                     ::= '/' '>'
@@ -54,114 +114,94 @@
 <html tag or automatic ilnk>    ::= '<' <html tag or automatic link'>
 <html tag or automatic link'>   ::= '/' <any chars> '>'
                                  |  <any chars> <html tag or automatic link">
-<html tag or automatic link">   ::= <url'> '>'                                      ## first = {'://'}      ## (automatic link)
-                                 |  <html tag'>                                     ## first = {'/', '>'}   ## (HTML tag)
+<html tag or automatic link">   ::= <url'> '>'
+                                 |  <html tag'>
 
-<inlined link>              ::= '[' <url> <title> ']'
+<image>                         ::= '!' <link>
 
-<link>                      ::= <inlined link>                                      ## first = {'['}
-                             |  <referenced link>                                   ## first = {'('}
+<inlined code>                  ::= '`' <any char but `> '`'
+                                 |  "``" <inlined code'>
+<inlined code'>                 ::= <any chars but `>
+                                 |  '`' <inlined code">
+<inlined code">                 ::= <any chars but `> <inlined code'>
+                                 |  '`'
 
-<link or reference>         ::= '[' <linked text> ']' <link or reference'>
-<link or reference'>        ::= ':' <reference>                                     ## first = {':'}}
-                             |  <link>                                              ## first = {'[', '('}
+<inlined link>                  ::= '[' <url> <title> ']'
 
-<linked text>               ::= <any chars but ]> 
+<item'>                         ::= <text with span elements> <line'>
+                                 |  '\n'
 
-<reference>                 ::= <spaces or not> <url> <spaces or not> <reference title> '\n'
+<link>                          ::= <inlined link>
+                                 |  <referenced link>
 
-<referenced link>           ::= <spaces or not> '[' <referenced link'> ']'          ## first = {' ', '['}
-<reference linked'>         ::= <any chars but ]>
-                             |  EPS
+<link or reference>             ::= '[' <linked text> ']' <link or reference'>
+<link or reference'>            ::= ':' <reference>
+                                 |  <link>
 
-<reference title>           ::= '\n' <max 3 spaces> <reference title'>
-                             |  <reference title'>
-<reference title'>          ::= '"' <any chars but newline and "> '"' <spaces or not> '\n'  ## (maybe end of line not needed)
+<linked text>                   ::= <any chars but ]> 
 
-<title>                     ::= '"' <any chars but newline and "> '"'
+<list>                          ::= <ordered list>
+                                 |  <unordered list>                    ## CAUTION: "paragraphed" list items are not addressed there
 
-<url>                       ::= <alphanum chars> <url'>
-<url'>                      ::= "://" <any chars but ] and ">
+<list bullet>                   ::= '*'
+                                 | '+'
+                                 | '-'
 
+<list'>                         ::= <text with span elements> <list'>
+                                 | '\n'
 
+<max 3 spaces>                  ::= ' ' <max 3'>
+                                 |  EPS
+<max 3'>                        ::= ' ' <max 3''>
+                                 |  EPS
+<max 3''>                       ::= ' '
+                                 |  EPS
+                         
+<maybe star>                    ::= '*' <maybe star'>
+<maybe star'>                   ::= ' '
+                                 |  <text with span elements>
 
-## --- Markdown Tags ---------------------------------------------------------
+<maybe underscore>              ::= '_'
+                                 |  <text with span elements>
+                         
+<line or paragraph end>         ::= '\n' <line or paragraph end'>
+<line or paragraph end'>        ::= '\n'                                ## paragraph end
+                                 |  EPS                                 ## line end
 
-<blockquotes>           ::= "> " <blockquotes'>
-<blockquotes'>          ::= "> " <blockquotes'>  |  <text with span elements> <blockquotes">
-<blockquotes">          ::= <text with span elements> <blockquotes">  |  '\n'  |  <ENDOFTEXT>
+<ordered item>                  ::= <number> '.' <rest of line> <item'>
 
-<breakline>             ::= "  "  <breakline'>
-<breakline'>            ::= ' ' <breakline'>  |  '\n'
+<ordered list>                  ::= <ordered item> <ordered list'>
+<ordered list'>                 ::= <ordered item> <ordered list'>
+                                 | '\n'
+                                 |  <ENDOFTEXT>
 
-<code block>            ::= <spaces 4> <text with span elements> <code block'>  |  <tab> <text with span elements> <code block'>
-<code block'>           ::= <spaces 4> <text with span elements> <code block'>  |  <tab> <text with span elements> <code block'>  |  '\n'  |  <ENDOFTEXT>
+<paragraph end>                 ::= '\n' '\n'
 
-<escape>                ::= '\\' <escaped char>
-<escaped char>          ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'  |  '}'  |  '['  |  ']'  |  '('  |  ')'  |  '#'  |  '+'  |  '-'  |  '.'  |  '!'
+<reference>                     ::= <spaces or not> <url> <spaces or not> <reference title> '\n'
 
-<header>                ::= <header atx>  |  <header setext>
+<referenced link>               ::= <spaces or not> '[' <referenced link'> ']'
+<reference linked'>             ::= <any chars but ]>
+                                 |  EPS
 
-<header atx>            ::= '#' <header atx'>
-<header atx'>           ::= '#' <header atx'>  |  ' ' <text with span elements>
+<reference title>               ::= '\n' <max 3 spaces> <reference title'>                      ## CAUTION: may lead to backward scanning if no '"' in next 4 chars
+                                 |  <reference title'>
+<reference title'>              ::= '"' <any chars but newline and "> '"' <spaces or not> '\n'  ## (maybe end-of-line is not needed)
 
-<header setext>         ::= <text with span elements> <header setext'>
-<header setext'>        ::= '=' <header setext h1>
-                         |  '-' <header setext h2>
-                  
-<header setext h1>      ::= '=' <header setext h1>  |  '\n'
-<header setext h2>      ::= '-' <header setext h2>  |  '\n'
+<spaces or not>                 ::= ' ' <spaces or not>
+                                 |  EPS
 
-<horizontal rule>       ::= <hrule star>  |  <hrule hyphen'>
+<tab>                           ::= '\t'
 
-<hrule hyphen>          ::= '-' <spaces or not> '-' <spaces or not> '-' <hrule hyphen'>
-<hrule hyphen'>         ::= <spaces or not> '*' <hrule hyphen'>  |  '\n'
+<title>                         ::= '"' <any chars but newline and "> '"'
 
-<hrule star>            ::= '*' <spaces or not> '*' <spaces or not> '*' <hrule star'>
-<hrule star'>           ::= <spaces or not> '*' <hrule star'>  |  '\n'
+<underscore>                    ::= " _ "
 
-<html entity>           ::= '&' <non space chars> ';'
+<unordered item>                ::= <list bullet> <text with span elements> <item'>
 
-<html tag>              ::= '<' <chars> '>'
+<unordered list>                ::= <unordered item> <unordered list'>
+<unordered list'>               ::= <unordered item> <unordered list'>
+                                 |  '\n'
+                                 |  <ENDOFTEXT>
 
-<image>                 ::= '!' <link>
-
-<inlined code>          ::= '`' <any char but `> '`'
-                         |  "``" <inlined code'>
-<inlined code'>         ::= <any chars but `>  |  '`' <inlined code">
-<inlined code">         ::= <any chars but `> <inlined code'>  |  '`'
-
-<item'>                 ::= <text with span elements> <line'>  |  '\n'
-
-<list>                  ::= <ordered list>  |  <unordered list>  ## CAUTION: "paragraphed" list items are not addressed there
-
-<list bullet>           ::= '*' | '+' | '-'
-
-<list'>                 ::= <text with span elements> <list'> | '\n'
-
-<max 3 spaces>          ::= ' ' <max 3'>  |  EPS
-<max 3'>                ::= ' ' <max 3''>  |  EPS
-<max 3''>               ::= ' '  |  EPS
-
-<ordered list>          ::= <ordered item> <ordered list'>
-<ordered list'>         ::= <ordered item> <ordered list'> | '\n'  |  <ENDOFTEXT>
-
-<ordered item>          ::= <number> '.' <rest of line> <item'>
-
-<paragraph end>         ::= '\n' '\n'
-
-<spaces or not>         ::= ' ' <spaces or not>  |  EPS                                         ### ok
-
-<spaces4>               ::= "    "
-
-<star>                  ::= " * "
-
-<tab>                   ::= '\t'
-
-<underscore>            ::= " _ "
-
-<unordered list>        ::= <unordered item> <unordered list'>
-<unordered list'>       ::= <unordered item> <unordered list'>  |  '\n'  |  <ENDOFTEXT>
-
-<unordered item>        ::= <list bullet> <text with span elements> <item'>
-
+<url>                           ::= <alphanum chars> <url'>
+<url'>                          ::= "://" <any chars but ] and ">
