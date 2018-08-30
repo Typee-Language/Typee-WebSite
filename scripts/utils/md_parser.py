@@ -171,7 +171,7 @@ class MDParser:
         #                      |  <maybe underscore>
         #                      |  <text with span elements>
         #=======================================================================
-        if self._current in ' \t':
+        if self._current in " \t":
             return self._code_block()
         else:
             return self._maybe_star() or \
@@ -191,7 +191,27 @@ class MDParser:
         else:
             return False
         
-        
+    #-------------------------------------------------------------------------
+    def _text_with_span_elements(self) -> bool:
+        #=======================================================================
+        # <text with span elements> ::= <html entity> <maybe setext header>
+        #                            |  <html tag or automatic link> <maybe setext header>
+        #                            |  <emphasis or strong style> <maybe setext header>
+        #                            |  <inlined code> <maybe setext header>
+        #                            |  <escape> <maybe setext header>
+        #                            |  <line or paragraph end>
+        #                            |  <any chars but & < * _ ` \\ \n> <maybe setext header>
+        #=======================================================================
+        if self._html_entity() or \
+            self._html_tag_or_automatic_link() or \
+            self._emphasis_or_strong_style() or \
+            self._inlined_code() or \
+            self._escape() or \
+                self._any_chars_but_1():
+            return self._maybe_setext_header()
+        else:
+            return self._line_or_paragraph_end()
+            return True
 
 
 #=====   end of   scripts.utils.md_parser   =====#
