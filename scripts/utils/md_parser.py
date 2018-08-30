@@ -89,17 +89,109 @@ class MDParser:
             #===================================================================
             # <MD text> ::= <MD line> <MD text> | EPS
             #===================================================================
-
         return self._parsed_text
 
 
     #=========================================================================
     #-------------------------------------------------------------------------
+    def _block_element(self) -> bool:
+        #=======================================================================
+        # <block elements> ::= <blockquote>
+        #                   |  <header atx>
+        #                   |  <header setext>
+        #                   |  <list>
+        #                   |  <horizontal rule>
+        #                   |  <link or reference>
+        #                   |  <image>
+        #=======================================================================
+        return self._blockquote() or \
+                self._header_atx() or \
+                self._header_setext() or \
+                self._list() or \
+                self._horizontal_rule() or \
+                self._link_or_reference() or \
+                self._image()
+
+    #-------------------------------------------------------------------------
     def _md_line(self) -> bool:
         #=======================================================================
         # <MD line> ::= <block element> | <space-starting elements> | <text with span elements>
         #=======================================================================
-        return self._block_elements() or self._spacestarting_elements() or self._text_with_span_elements()
+        return self._block_elements() or \
+                self._spacestarting_elements() or \
+                self._text_with_span_elements() or \
+                not self._end_of_text()
+
+    #-------------------------------------------------------------------------
+    def _space_element_1(self) -> bool:
+        #=======================================================================
+        # <space elements'> ::= ' ' <space elements''>
+        #                    |  '\t' <code block>
+        #                    |  <maybe star>
+        #                    |  <maybe underscore>
+        #                    |  <text with span elements>
+        #=======================================================================
+        if self._current == ' ':
+            return self._space_elements_2()
+        elif self._current == '\t':
+            return self._code_block()
+        else:
+            return self._maybe_star() or \
+                    self._maybe_underscore() or \
+                    self._text_with_span_elements()
+
+    #-------------------------------------------------------------------------
+    def _space_element_2(self) -> bool:
+        #=======================================================================
+        # <space elements''> ::= ' ' <space elements'''>
+        #                     |  '\t' <code block>
+        #                     |  '\n' ## breakline! - CAUTION: maybe context sensitive...
+        #                     |  <maybe star>
+        #                     |  <maybe underscore>
+        #                     |  <text with span elements>
+        #=======================================================================
+        if self._current == ' ':
+            return self._space_elements_3()
+        elif self._current == '\t':
+            return self._code_block()
+        elif self._current == '\n':
+            self.breakline()  ## breakline! - CAUTION: maybe context sensitive...
+            return True
+        else:
+            return self._maybe_star() or \
+                    self._maybe_underscore() or \
+                    self._text_with_span_elements()
+
+    #-------------------------------------------------------------------------
+    def _space_element_3(self) -> bool:
+        #=======================================================================
+        # <space elements'''> ::= ' ' <code block>                
+        #                      |  '\t' <code block>
+        #                      |  <maybe star>
+        #                      |  <maybe underscore>
+        #                      |  <text with span elements>
+        #=======================================================================
+        if self._current in ' \t':
+            return self._code_block()
+        else:
+            return self._maybe_star() or \
+                    self._maybe_underscore() or \
+                    self._text_with_span_elements()
+
+    #-------------------------------------------------------------------------
+    def _space_starting_elements(self) -> bool:
+        #=======================================================================
+        # <space-starting elements> ::= ' ' <space elements'>
+        #                            |  '\t' <code block>
+        #=======================================================================
+        if self._current == ' ':
+            return self._space_elements_1()
+        elif self._current == '\t':
+            return self._code_block()
+        else:
+            return False
+        
+        
 
 
 #=====   end of   scripts.utils.md_parser   =====#
