@@ -60,7 +60,8 @@
 ## --- Markdown Tags ---------------------------------------------------------
 
 <blockquotes>                   ::= "> " <blockquotes'>
-<blockquotes'>                  ::= "> " <blockquotes'>  |  <text with span elements> <blockquotes">
+<blockquotes'>                  ::= "> " <blockquotes'>
+								 |  <text with span elements> <blockquotes">
 <blockquotes">                  ::= <text with span elements> <blockquotes">
                                  |  '\n'
                                  |  <ENDOFTEXT>
@@ -70,11 +71,12 @@
                                  |  '\n'
                                  |  <ENDOFTEXT>
 
-<emph or strong *>              ::= '*' <any chars but *> '*' '*'                       ## i.e. strong
-                                 |  <any chars but *> '*'                               ## i.e. emphasis
+<emph or strong *>              ::= '*' <any chars but *> "**"
+								 |  <any chars but *> '*'
 
-<emph or strong _>              ::= '_' <any chars but *> '_' '_'                       ## i.e. strong
-                                 |  <any chars but *> '_'                               ## i.e. emphasis
+<emph or strong _>              ::= '_' <any chars but _> "__"
+								 |  <any chars but _> '_'
+
 
 <emphasis or strong style>      ::= '*' <emph or strong *>
                                  |  '_' <emph or strong _>
@@ -88,39 +90,42 @@
 <header atx'>                   ::= '#' <header atx'>
                                  |  ' ' <text with span elements>
 
-<maybe setext header>           ::= '\n' <header setext'>
-<header setext'>                ::= '=' <header setext h1>
+<header setext>                 ::= '=' <header setext h1>
                                  |  '-' <header setext h2>
                                  |  EPS
                   
-<header setext h1>              ::= '=' <spaces or not> <header setext h1'>             ## CAUTION: previous line of MD text was then H1
-<header setext h1'>             ::= '=' <spaces or not> <header setext h1'>
+<header setext h1>              ::= '=' <skip spaces> <header setext h1'>             ## CAUTION: previous line of MD text was then H1
+<header setext h1'>             ::= '=' <skip spaces> <header setext h1'>
                                  |  '\n'
+                                 |  <ENDOFTEXT>
 
-<header setext h2>              ::= '-' <spaces or not> <header setext h2'>             ## CAUTION: previous line of MD text was then H2
-<header setext h2'>             ::= '-' <spaces or not> <header setext h2'>
+<header setext h2>              ::= '-' <skip spaces> <header setext h2'>             ## CAUTION: previous line of MD text was then H2
+<header setext h2'>             ::= '-' <skip spaces> <header setext h2'>
                                  |  '\n'
+                                 |  <ENDOFTEXT>
 
 <horizontal rule>               ::= <hrule star>
                                  |  <hrule hyphen'>
 
-<hrule hyphen>                  ::= '-' <spaces or not> '-' <spaces or not> '-' <hrule hyphen'>
-<hrule hyphen'>                 ::= <spaces or not> '-' <hrule hyphen'>
+<hrule hyphen>                  ::= '-' <skip spaces> '-' <skip spaces> '-' <hrule hyphen'>
+<hrule hyphen'>                 ::= <skip spaces> '-' <hrule hyphen'>
                                  |  '\n'
+                                 |  <ENDOFTEXT>
 
-<hrule star>                    ::= '*' <spaces or not> '*' <spaces or not> '*' <hrule star'>
-<hrule star'>                   ::= <spaces or not> '*' <hrule star'>
+<hrule star>                    ::= '*' <skip spaces> '*' <skip spaces> '*' <hrule star'>
+<hrule star'>                   ::= <skip spaces> '*' <hrule star'>
                                  |  '\n'
+                                 |  <ENDOFTEXT>
 
 <html entity>                   ::= '&' <non space chars> ';'
 
-<html tag>                      ::= <any chars> <html tag'>
+<html tag>                      ::= <any chars but / \> '\n' > <html tag'>
 <html tag'>                     ::= '/' '>'
                                  |  '>'
 
-<html tag or automatic ilnk>    ::= '<' <html tag or automatic link'>
-<html tag or automatic link'>   ::= '/' <any chars> '>'
-                                 |  <any chars> <html tag or automatic link">
+<html tag or automatic link>    ::= '<' <html tag or automatic link'>
+<html tag or automatic link'>   ::= '/' <any chars but \> '\n' > '>'
+                                 |  <any chars but : / \> > <html tag or automatic link">
 <html tag or automatic link">   ::= <url'> '>'
                                  |  <html tag'>
 
@@ -163,7 +168,9 @@
                                  |  EPS
 <max 3''>                       ::= ' '
                                  |  EPS
-                         
+
+<maybe setext header>           ::= '\n' <header setext'>
+
 <maybe star>                    ::= '*' <maybe star'>
 <maybe star'>                   ::= ' '
                                  |  <text with span elements>
@@ -184,17 +191,17 @@
 
 <paragraph end>                 ::= '\n' '\n'
 
-<reference>                     ::= <spaces or not> <url> <spaces or not> <reference title> '\n'
+<reference>                     ::= <skip spaces> <url> <skip spaces> <reference title> '\n'
 
-<referenced link>               ::= <spaces or not> '[' <referenced link'> ']'
+<referenced link>               ::= <skip spaces> '[' <referenced link'> ']'
 <reference linked'>             ::= <any chars but ]>
                                  |  EPS
 
 <reference title>               ::= '\n' <max 3 spaces> <reference title'>                      ## CAUTION: may lead to backward scanning if no '"' in next 4 chars
                                  |  <reference title'>
-<reference title'>              ::= '"' <any chars but newline and "> '"' <spaces or not> '\n'  ## (maybe end-of-line is not needed)
+<reference title'>              ::= '"' <any chars but newline and "> '"' <skip spaces> '\n'    ## (maybe end-of-line is not needed)
 
-<spaces or not>                 ::= ' ' <spaces or not>
+<skip spaces>                   ::= ' ' <skip spaces>
                                  |  EPS
 
 <tab>                           ::= '\t'
