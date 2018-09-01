@@ -139,6 +139,7 @@ class MDParser:
             return self._blockquotes_2()
         else:
             return False
+
     #-------------------------------------------------------------------------
     def _blockquotes_2(self) -> bool:
         #=======================================================================
@@ -240,7 +241,7 @@ class MDParser:
         #=======================================================================
         if self._current == '\\':
             self._next()
-            if self._current in ["\\`*_{}[]()#+-.!"]:
+            if self._current in "\\`*_{}[]()#+-.!":
                 self._next()
                 return True
         return False
@@ -491,16 +492,6 @@ class MDParser:
             return self._html_tag_1()
 
     #-------------------------------------------------------------------------
-    def _md_line(self) -> bool:
-        #=======================================================================
-        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements>
-        #=======================================================================
-        return self._block_elements() or \
-                self._spacestarting_elements() or \
-                self._text_with_span_elements() or \
-                not self._end_of_text
-
-    #-------------------------------------------------------------------------
     def _image(self) -> bool:
         #=======================================================================
         # <image> ::= '!' <link>
@@ -571,6 +562,320 @@ class MDParser:
                 if self._current == ']':
                     return True
         return False
+
+    #-------------------------------------------------------------------------
+    def _line_or_paragraph_end(self) -> bool:
+        #=======================================================================
+        # <line or paragraph end> ::= '\n' <line or paragraph end'>
+        #=======================================================================
+        if self._current == '\n':
+            self._next()
+            return self._line_or_paragraph_end_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _line_or_paragraph_end_1(self) -> bool:
+        #=======================================================================
+        # <line or paragraph end'> ::= '\n'  ## paragraph end
+        #                           |  EPS   ## line end
+        #=======================================================================
+        if self._current == '\n':
+            ## paragraph end
+            self._next()
+            return True
+        else:
+            ## line end
+            return True
+
+    #-------------------------------------------------------------------------
+    def _link(self) -> bool:
+        #=======================================================================
+        # <link> ::= <inlined link>
+        #         |  <referenced link>
+        #=======================================================================
+        rturn self._inlined_link() or self.referenced_link()
+
+    #-------------------------------------------------------------------------
+    def _link_or_reference(self) -> bool:
+        #=======================================================================
+        # <link or reference> ::= '[' <linked text> ']' <link or reference'>
+        #=======================================================================
+        if self._current == '[':
+            self._next()
+            self._linked_text()
+            if self._current != ']':
+                return False
+            else:
+                return self._link_reference_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _link_reference_1(self) -> bool:
+        #=======================================================================
+        # <link or reference'> ::= ':' <reference>
+        #                       |  <link>
+        #=======================================================================
+        if self._current == ':':
+            return self._reference()
+        else:
+            return self._link()
+
+    #-------------------------------------------------------------------------
+    def _linked_text(self) -> bool:
+        #=======================================================================
+        # <linked text> ::= <any chars but ]> 
+        #=======================================================================
+        return self._any_chars_but( ']' )
+
+    #-------------------------------------------------------------------------
+    def _list(self) -> bool:
+        #=======================================================================
+        # <list> ::= <ordered list>
+        #         |  <unordered list> ## CAUTION: "paragraphed" list items are not addressed there
+        #=======================================================================
+        return self._ordered_list() or self._unordered_list()
+
+    #-------------------------------------------------------------------------
+    def _list_bullet(self) -> bool:
+        #=======================================================================
+        # <list bullet> ::= '*'
+        #                | '+'
+        #                | '-'
+        #=======================================================================
+        if self._current in "-+*":
+            self._next()
+            return True
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _max_3_spaces(self) -> bool:
+        #=======================================================================
+        # <max 3 spaces> ::= ' ' <max 3'>
+        #                 |  EPS
+        #=======================================================================
+        if self._current == ' ':
+            self._next()
+            return self._max_3_spaces_1()
+        else:
+            return True
+
+    #-------------------------------------------------------------------------
+    def _max_3_spaces_1(self) -> bool:
+        #=======================================================================
+        # <max 3'> ::= ' ' <max 3''>
+        #           |  EPS
+        #=======================================================================
+        if self._current == ' ':
+            self._next()
+            return self._max_3_spaces_2()
+        else:
+            return True
+
+    #-------------------------------------------------------------------------
+    def _max_3_spaces_2(self) -> bool:
+        #=======================================================================
+        # <max 3''> ::= ' '
+        #            |  EPS
+        #=======================================================================
+        if self._current == ' ':
+            self._next()
+        return True
+
+    #-------------------------------------------------------------------------
+    def _maybe_setext_header(self) -> bool:
+        #=======================================================================
+        # <maybe setext header> ::= '\n' <header setext'>
+        #=======================================================================
+        if self._current == '\n':
+            self._next()
+            return self._header_setext_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _maybe_star(self) -> bool:
+        #=======================================================================
+        # <maybe star> ::= '*' <maybe star'>
+        #=======================================================================
+        if self._current == '*':
+            self._next()
+            return self._maybe_star_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _maybe_star_1(self) -> bool:
+        #=======================================================================
+        # <maybe star'> ::= ' '
+        #                |  <text with span elements>
+        #=======================================================================
+        if self._current == ' ':
+            self._next()
+            return True
+        else:
+            return self._text_with_span_elements()
+
+    #-------------------------------------------------------------------------
+    def _maybe_underscore(self) -> bool:
+        #=======================================================================
+        # <maybe underscore> ::= '_' <maybe underscore'>
+        #=======================================================================
+        if self._current == '_':
+            self._next()
+            return self._maybe_underscore_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _maybe_underscore_1(self) -> bool:
+        #=======================================================================
+        # <maybe underscore'> ::= ' '
+        #                      |  <text with span elements>
+        #=======================================================================
+        if self._current == ' ':
+            self._next()
+            return True
+        else:
+            return self._text_with_span_elements()
+
+    #-------------------------------------------------------------------------
+    def _md_line(self) -> bool:
+        #=======================================================================
+        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements>
+        #=======================================================================
+        return self._block_elements() or \
+                self._spacestarting_elements() or \
+                self._text_with_span_elements() or \
+                not self._end_of_text
+
+    #-------------------------------------------------------------------------
+    def _number(self) -> bool:
+        b_num = False
+        while self._current in "0123456789":
+            self._next()
+            b_num = True
+        return b_num
+        
+    #-------------------------------------------------------------------------
+    def _ordered_item(self) -> self:
+        #=======================================================================
+        # <ordered item> ::= <number> '.' <text with span elements>
+        #=======================================================================
+        if self._number():
+            if self._current == '.':
+                self._next()
+                return self._text_with_span_elements()
+            else:
+                return False
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _ordered_list(self) -> bool:
+        #=======================================================================
+        # <ordered list> ::= <ordered item> <ordered list'>
+        #=======================================================================
+        if self._ordered_item():
+            return self._ordered_list_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _ordered_list_1(self) -> bool:
+        #=======================================================================
+        # <ordered list'> ::= <ordered item> <ordered list'>
+        #                  | '\n'
+        #                  |  <ENDOFTEXT>
+        #=======================================================================
+        while True:
+            if self._current == '\n':
+                self._next()
+                return True
+            elif self._end_of_text:
+                return True
+            elif not self._ordered_item():
+                return False
+
+    #-------------------------------------------------------------------------
+    def _reference(self) -> bool:
+        #=======================================================================
+        # <reference> ::= <skip spaces> <url> <skip spaces> <reference title> '\n'
+        #=======================================================================
+        self._skip_spaces()
+        if self._url():
+            self._skip_spaces()
+            self._reference_title()
+            if self._current == '\n':
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _referenced_link(self) -> bool:
+        #=======================================================================
+        # <referenced link> ::= <skip spaces> '[' <referenced link'> ']'
+        #=======================================================================
+        self._skip_spaces()
+        if self._current == '[':
+            self._next()
+            self._referenced_link_1()
+            if self._current == ']':
+                self._next()
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _referenced_link_1(self) -> bool:
+        #=======================================================================
+        # <reference linked'> ::= <any chars but ]>
+        #                      |  EPS
+        #=======================================================================
+        self._any_chars_but( ']' )
+        return True
+
+    #-------------------------------------------------------------------------
+    def _reference_title(self) -> bool:
+        #=======================================================================
+        # <reference title> ::= '\n' <max 3 spaces> <reference title'> ## CAUTION: may lead to backward scanning if no '"' in next 4 chars
+        #                    |  <reference title'>
+        #=======================================================================
+        if self._current == '\n':
+            self._next()
+            self._max_3_spaces()
+        return self._reference_title_1()
+
+    #-------------------------------------------------------------------------
+    def _reference_title_1(self) -> bool:
+        #=======================================================================
+        # <reference title'> ::= '"' <any chars but newline and "> '"' <skip spaces> '\n' ## (maybe end-of-line is not needed)
+        #=======================================================================
+        if self._current == '"':
+            self._next()
+        self._any_chars_but( '\n"' )
+        if self._current := '"':
+            return False
+        self._next()
+        self._skip_spaces()
+        if self._current == '\n':
+            self._next()
+        return True
+
+    #-------------------------------------------------------------------------
+    def _skip_spaces(self):
+        #=======================================================================
+        # <skip spaces> ::= ' ' <skip spaces>
+        #                |  EPS
+        #=======================================================================
+        while self._current == ' ':
+            self._next()
 
     #-------------------------------------------------------------------------
     def _space_element_1(self) -> bool:
@@ -668,8 +973,75 @@ class MDParser:
             return self._maybe_setext_header()
         else:
             return self._line_or_paragraph_end()
-            return True
+        
+    #-------------------------------------------------------------------------
+    def _title(self) -> bool:
+        #=======================================================================
+        # <title> ::= '"' <any chars but newline and "> '"'
+        #=======================================================================
+        if self._current == '"':
+            self._next()
+            self._any_chars_but( '\n"' )
+            if self._current == '"':
+                self._next()
+                return True
+        return False
+        
+    #-------------------------------------------------------------------------
+    def _unordered_item(self) -> bool:
+        #=======================================================================
+        # <unordered item> ::= <list bullet> <text with span elements>
+        #=======================================================================
+        if self._list_bullet():
+            return self._text_with_span_elements()
+        else:
+            return False
 
+    #-------------------------------------------------------------------------
+    def _unordered_list(self) -> bool:
+        #=======================================================================
+        # <unordered list> ::= <unordered item> <unordered list'>
+        #=======================================================================
+        if self._unordered_item():
+            return self._unordered_list_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _unordered_list_1(self) -> bool:
+        #=======================================================================
+        # <unordered list'> ::= <unordered item> <unordered list'>
+        #                    |  '\n'
+        #                    |  <ENDOFTEXT>
+        #=======================================================================
+        while self._unordered_item():
+            continue
+        return self._current == '\n' or self._end_of_text
+
+    #-------------------------------------------------------------------------
+    def _url(self) -> bool:
+        #=======================================================================
+        # <url> ::= <alphanum chars> <url'>
+        #=======================================================================
+        if 'a' <= self._current <= 'z' or \
+            'A' <= self._current <= 'Z' or \
+            '0' <= self._current <= '9':
+            self._next()
+            return self._url_1()
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
+    def _url_1(self) -> bool:
+        #=======================================================================
+        # <url'> ::= "://" <any chars but ] and ">
+        #=======================================================================
+        if self._current_3 == "://":
+            self._next( 3 )
+            self._any_chars_but( ']"' )
+            return True
+        else:
+            return False
 
     #=========================================================================
     #-------------------------------------------------------------------------
@@ -685,13 +1057,17 @@ class MDParser:
             return ''
     #-------------------------------------------------------------------------
     @property
-    def _end_of_text(self) -> bool: return self._current_index == len( self._md_text )
+    def _current_3(self) -> str:
+        try:
+            return self._md_text[ self._current_index:self._current_index+3 ]
+        except:
+            return ''
+    #-------------------------------------------------------------------------
+    @property
+    def _end_of_text(self) -> bool:
+        return self._current_index == len( self._md_text )
     #-------------------------------------------------------------------------
     def next(self, n:int=1):
         self._current_index += n
-    #-------------------------------------------------------------------------
-    def _skip_spaces(self):
-        while slef._current == ' ':
-            self._next()
         
 #=====   end of   scripts.utils.md_parser   =====#
