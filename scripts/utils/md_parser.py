@@ -441,7 +441,7 @@ class MDParser:
     def _html_tag_1(self) -> bool:
         #===============================================================================
         # <html tag'> ::= '/' '>'
-        #              |  '>'
+        #              |  '>' ## CAUTION: then, search for the paired HTML tag without parsing in-between text
         #===============================================================================
         if self._current == '>':
             self._next()

@@ -121,7 +121,7 @@
 
 <html tag>                      ::= <any chars but / \> '\n' > <html tag'>
 <html tag'>                     ::= '/' '>'
-                                 |  '>'
+                                 |  '>'				## CAUTION: then, search for the paired HTML tag without parsing in-between text
 
 <html tag or automatic link>    ::= '<' <html tag or automatic link'>
 <html tag or automatic link'>   ::= '/' <any chars but \> '\n' > '>'
