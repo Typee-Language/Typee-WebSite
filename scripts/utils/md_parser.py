@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 #=============================================================================
-# no import.
+from scripts.utils.md_marks_list import MDMarksList
 
 
 #=============================================================================
@@ -53,7 +53,7 @@ class MDParser:
             self.parse( filepath )
    
     #-------------------------------------------------------------------------
-    def parse(self, filepath:str) -> str:
+    def parse(self, filepath:str) -> MDMarksList:
         '''
         Constructor.
         
@@ -64,7 +64,7 @@ class MDParser:
                 The path to the file to be parsed.
         
         Returns:
-            The parsed text.
+            The list of MD marks detected in the parsed text.
 
         Raises:
             Any IOError if any file is not found or is inaccessible.
@@ -77,19 +77,19 @@ class MDParser:
 
     #=========================================================================
     #-------------------------------------------------------------------------
-    def _parse(self) -> str:
+    def _parse(self) -> MDMarksList:
         '''
         '''
-        self._parsed_text = ''
         self._current_index = 0
         self._mem_index = None
+        self._md_marks_list = MDMarksList()
         
         while self._md_line():
             continue
             #===================================================================
             # <MD text> ::= <MD line> <MD text> | EPS
             #===================================================================
-        return self._parsed_text
+        return self._md_marks_list
 
 
     #=========================================================================
@@ -99,7 +99,7 @@ class MDParser:
             self._next()
     
     #-------------------------------------------------------------------------
-    def _block_element(self) -> bool:
+    def _block_elements(self) -> bool:
         #=======================================================================
         # <block elements> ::= <blockquote>
         #                   |  <header atx>
@@ -109,7 +109,7 @@ class MDParser:
         #                   |  <link or reference>
         #                   |  <image>
         #=======================================================================
-        return self._blockquote() or \
+        return self._blockquotes() or \
                 self._header_atx() or \
                 self._header_setext() or \
                 self._list() or \
@@ -123,6 +123,8 @@ class MDParser:
         # <blockquotes> ::= "> " <blockquotes'>
         #=======================================================================
         if self._current_2 == "> ":
+            self._starting_blockquote = self._current_index
+            self._blockquote_level = 1
             self._next( 2 )
             return self._blockquotes_1()
         else:
@@ -144,18 +146,11 @@ class MDParser:
     def _blockquotes_2(self) -> bool:
         #=======================================================================
         # <blockquotes"> ::= <text with span elements> <blockquotes">
-        #                 |  '\n'
-        #                 |  <ENDOFTEXT>
+        #                 |  <line or paragraph end>
         #=======================================================================
         while self._text_with_span_elements():
             continue
-        if self._current == '\n':
-            self._next()
-            return True
-        elif self._end_of_text:
-            return True
-        else:
-            return False
+        return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
     def _code_block(self) -> bool:
@@ -171,16 +166,11 @@ class MDParser:
     def _code_block_1(self) -> bool:
         #===============================================================================
         # <code block'> ::= <text with span elements> <code block'>
-        #                |  '\n'
-        #                |  <ENDOFTEXT>
+        #                |  <line or paragraph end>
         #===============================================================================
         while self._text_with_span_elements():
             continue
-        if self._current == '\n':
-            self._next()
-            return True
-        else:
-            return self._end_of_text
+        return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
     def _emph_or_strong_star(self) -> bool:
@@ -301,17 +291,12 @@ class MDParser:
     def _header_setext_h1_1(self) -> bool:
         #=======================================================================
         # <header setext h1'> ::= '=' <skip spaces> <header setext h1'>
-        #                      |  '\n'
-        #                      |  <ENDOFTEXT>
+        #                      |  <line or paragraph end>
         #=======================================================================
         while self._current == '=':
             self._next()
             self._skip_spaces()
-        if self._current == '\n':
-            self._next()
-            return True
-        else:
-            return self._end_of_text            
+        return self._line_or_paragraph_end()            
 
     #-------------------------------------------------------------------------
     def _header_setext_h2(self) -> bool:
@@ -330,17 +315,12 @@ class MDParser:
     def _header_setext_h2_1(self) -> bool:
         #=======================================================================
         # <header setext h2'> ::= '-' <skip spaces> <header setext h2'>
-        #                      |  '\n'
-        #                      |  <ENDOFTEXT>
+        #                      |  <line or paragraph end>
         #=======================================================================
         while self._current == '-':
             self._next()
             self._skip_spaces()
-        if self._current == '\n':
-            self._next()
-            return True
-        else:
-            return self._end_of_text            
+        return self._line_or_paragraph_end()            
 
     #-------------------------------------------------------------------------
     def _horizontal_rule(self) -> bool:
@@ -369,8 +349,7 @@ class MDParser:
     def _hrule_hyphen_1(self) -> bool:
         #=======================================================================
         # <hrule hyphen'> ::= <skip spaces> '-' <hrule hyphen'>
-        #                  |  '\n'
-        #                  |  <ENDOFTEXT>
+        #                  |  <line or paragraph end>
         #=======================================================================
         while True:
             self._skip_spaces()
@@ -401,8 +380,7 @@ class MDParser:
     def _hrule_star_1(self) -> bool:
         #=======================================================================
         # <hrule star'> ::= <skip spaces> '-' <hrule star'>
-        #                |  '\n'
-        #                |  <ENDOFTEXT>
+        #                  |  <line or paragraph end>
         #=======================================================================
         while True:
             self._skip_spaces()
@@ -457,7 +435,8 @@ class MDParser:
         #=======================================================================
         # <html tag or automatic link> ::= '<' <html tag or automatic link'>
         #=======================================================================
-        if self._current == '>':
+        if self._current == '<':
+            self._next()
             return self.__html_tag_or_automatic_link_1()
         else:
             return False
@@ -567,22 +546,27 @@ class MDParser:
     def _line_or_paragraph_end(self) -> bool:
         #=======================================================================
         # <line or paragraph end> ::= '\n' <line or paragraph end'>
+        #                          | <ENDOFTEXT>  ## line end
         #=======================================================================
         if self._current == '\n':
             self._next()
             return self._line_or_paragraph_end_1()
+        elif self._end_of_text:
+            return True
         else:
             return False
 
     #-------------------------------------------------------------------------
     def _line_or_paragraph_end_1(self) -> bool:
         #=======================================================================
-        # <line or paragraph end'> ::= '\n'  ## paragraph end
+        # <line or paragraph end'> ::= '\n' | <ENDOFTEXT> ## paragraph end
         #                           |  EPS   ## line end
         #=======================================================================
         if self._current == '\n':
             ## paragraph end
             self._next()
+            return True
+        elif self._end_of_text:
             return True
         else:
             ## line end
@@ -687,11 +671,11 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _maybe_setext_header(self) -> bool:
         #=======================================================================
-        # <maybe setext header> ::= '\n' <header setext'>
+        # <maybe setext header> ::= '\n' <header setext>
         #=======================================================================
         if self._current == '\n':
             self._next()
-            return self._header_setext_1()
+            return self._header_setext()
         else:
             return False
 
@@ -744,12 +728,12 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _md_line(self) -> bool:
         #=======================================================================
-        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements>
+        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements> | <line or paragraph end>
         #=======================================================================
         return self._block_elements() or \
-                self._spacestarting_elements() or \
+                self._space_starting_elements() or \
                 self._text_with_span_elements() or \
-                not self._end_of_text
+                self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
     def _number(self) -> bool:
@@ -787,17 +771,11 @@ class MDParser:
     def _ordered_list_1(self) -> bool:
         #=======================================================================
         # <ordered list'> ::= <ordered item> <ordered list'>
-        #                  | '\n'
-        #                  |  <ENDOFTEXT>
+        #                  | <line or paragraph end>
         #=======================================================================
-        while True:
-            if self._current == '\n':
-                self._next()
-                return True
-            elif self._end_of_text:
-                return True
-            elif not self._ordered_item():
-                return False
+        while self._ordered_item():
+            continue
+        return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
     def _reference(self) -> bool:
@@ -961,7 +939,6 @@ class MDParser:
         #                            |  <emphasis or strong style> <maybe setext header>
         #                            |  <inlined code> <maybe setext header>
         #                            |  <escape> <maybe setext header>
-        #                            |  <line or paragraph end>
         #                            |  <any chars but & < * _ ` \\ \n> <maybe setext header>
         #=======================================================================
         if self._html_entity() or \
@@ -972,7 +949,7 @@ class MDParser:
                 self._any_chars_but( "&<*_`\\\n" ):
             return self._maybe_setext_header()
         else:
-            return self._line_or_paragraph_end()
+            return False
         
     #-------------------------------------------------------------------------
     def _title(self) -> bool:
@@ -1011,12 +988,11 @@ class MDParser:
     def _unordered_list_1(self) -> bool:
         #=======================================================================
         # <unordered list'> ::= <unordered item> <unordered list'>
-        #                    |  '\n'
-        #                    |  <ENDOFTEXT>
+        #                    |  <line or paragraph end> 
         #=======================================================================
         while self._unordered_item():
             continue
-        return self._current == '\n' or self._end_of_text
+        return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
     def _url(self) -> bool:
@@ -1067,7 +1043,7 @@ class MDParser:
     def _end_of_text(self) -> bool:
         return self._current_index == len( self._md_text )
     #-------------------------------------------------------------------------
-    def next(self, n:int=1):
+    def _next(self, n:int=1):
         self._current_index += n
         
 #=====   end of   scripts.utils.md_parser   =====#

@@ -30,7 +30,6 @@ SOFTWARE.
 MDMarksList = list  ## Class of the lists of Markdown marks detected in an MD text.
 
 
-
 #===============================================================================
 # class MDMarksList( list ):
 #     """
