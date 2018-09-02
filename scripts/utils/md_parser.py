@@ -176,7 +176,7 @@ class MDParser:
         #===============================================================================
         while self._text_with_span_elements():
             continue
-        elif self._current == '\n':
+        if self._current == '\n':
             self._next()
             return True
         else:
@@ -358,8 +358,8 @@ class MDParser:
         if self._current == '-':
             self._next()
             self._skip_spaces()
-            if self._current == '-:
-            self._skip_spaces()
+            if self._current == '-':
+                self._skip_spaces()
             if self._current == '-':
                 self.next()
                 return self._hrule_hyphen_1()
@@ -390,8 +390,8 @@ class MDParser:
         if self._current == '-':
             self._next()
             self._skip_spaces()
-            if self._current == '-:
-            self._skip_spaces()
+            if self._current == '-':
+                self._skip_spaces()
             if self._current == '-':
                 self.next()
                 return self._hrule_hyphen_1()
@@ -530,7 +530,7 @@ class MDParser:
         return False
 
     #-------------------------------------------------------------------------
-    def _inlined_code_2(self) > bool:
+    def _inlined_code_2(self) -> bool:
         #=======================================================================
         # <inlined code''> ::= <any chars but `> '`' <inlined code '''>
         #=======================================================================
@@ -594,7 +594,7 @@ class MDParser:
         # <link> ::= <inlined link>
         #         |  <referenced link>
         #=======================================================================
-        rturn self._inlined_link() or self.referenced_link()
+        return self._inlined_link() or self.referenced_link()
 
     #-------------------------------------------------------------------------
     def _link_or_reference(self) -> bool:
@@ -760,7 +760,7 @@ class MDParser:
         return b_num
         
     #-------------------------------------------------------------------------
-    def _ordered_item(self) -> self:
+    def _ordered_item(self) -> bool:
         #=======================================================================
         # <ordered item> ::= <number> '.' <text with span elements>
         #=======================================================================
@@ -860,7 +860,7 @@ class MDParser:
         if self._current == '"':
             self._next()
         self._any_chars_but( '\n"' )
-        if self._current := '"':
+        if self._current == '"':
             return False
         self._next()
         self._skip_spaces()

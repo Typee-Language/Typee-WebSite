@@ -38,13 +38,13 @@ class LineColumn:
         '''
         self.line, self.coln = line, coln
     #-------------------------------------------------------------------------
-    def __add__(self, other:(LineColumn,tuple)) -> LineColumn:
+    def __add__(self, other):
         if isinstance( other, tuple ):
             return LineColumn( self.line + other[0], self.coln + other[1] )
         else:
             return LineColumn( self.line + other.line, self.coln + other.coln )
     #-------------------------------------------------------------------------
-    def __gt__(self, other:LineColumn) -> bool:
+    def __gt__(self, other) -> bool:
         return self.line < other.line or (self.line == other.line and self.coln < other.coln)
 
 
@@ -70,7 +70,7 @@ class MDMark:
         '''
         self.start, self.end = start, end
     #-------------------------------------------------------------------------
-    def __gt__(self, other:MDMark) -> bool:
+    def __gt__(self, other) -> bool:
         return self.start < other.start
 
 
