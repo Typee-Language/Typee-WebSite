@@ -69,15 +69,15 @@
 <code block'>                   ::= <text with span elements> <code block'>
                                  |  <line or paragraph end>
 
-<emph or strong *>              ::= '*' $mark(Strng(es.start)); <any chars but *> "**" $mark(Strng(index-2);
-								 |  $mark(Emph(es.start)); <any chars but *> '*' $mark(Emph(index-1);
+<emph or strong *>              ::= '*' $mark(Strng(index-2)); <any chars but *> "**" $mark(Strng(index-2));
+								 |  $mark(Emph(es.start)); <any chars but *> '*' $mark(Emph(index-1));
 
-<emph or strong _>              ::= '_' $mark(Strng(es.start)); <any chars but _> "__" $mark(Strng(index-2);
-								 |  $mark(Emph(es.start)); <any chars but _> '_' $mark(Emph(index-1);
+<emph or strong _>              ::= '_' $mark(Strng(es.start)); <any chars but _> "__" $mark(Strng(index-2));
+								 |  $mark(Emph(es.start)); <any chars but _> '_' $mark(Emph(index-1));
 
 
-<emphasis or strong style>      ::= '*' $es.start=index; <emph or strong *>
-                                 |  '_' $es.start=index; <emph or strong _>
+<emphasis or strong style>      ::= '*' <emph or strong *>
+                                 |  '_' <emph or strong _>
 
 <escape>                        ::= '\\' <escaped char>
 <escaped char>                  ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'
@@ -86,19 +86,19 @@
 
 <header atx>                    ::= '#' $hdr=HdrAtx(index); <header atx'>
 <header atx'>                   ::= '#' $hdr.level++; <header atx'>
-                                 |  ' ' $mark(hdr); <text with span elements>
+                                 |  ' ' $mark(hdr); <text with span elements> $mark(HdrEnd(index));
 
-<header setext>                 ::= '=' $hdr=HdrStxH1(line.start); <header setext h1> $mark(hdr);
-                                 |  '-' $hdr=HdrStxH2(line.start); <header setext h2> $mark(hdr);
+<header setext>                 ::= '=' $mark(HdrStxH1(index)); <header setext h1>
+                                 |  '-' $mark(HdrStxH2(index)); <header setext h2>
                                  |  EPS
                   
 <header setext h1>              ::= '=' <skip spaces> <header setext h1'>
 <header setext h1'>             ::= '=' <skip spaces> <header setext h1'>
-                                 |  <line or paragraphe end>
+                                 |  <line or paragraphe end> $mark(HdrEndH1(index));
 
 <header setext h2>              ::= '-' <skip spaces> <header setext h2'>
 <header setext h2'>             ::= '-' <skip spaces> <header setext h2'>
-                                 |  <line or paragraphe end>
+                                 |  <line or paragraphe end> $mark(HdrEndH2(index));
 
 <horizontal rule>               ::= <hrule star>
                                  |  <hrule hyphen'>

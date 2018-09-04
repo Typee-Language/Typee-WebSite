@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 #=============================================================================
+from scripts.utils.md_mark       import *
 from scripts.utils.md_marks_list import MDMarksList
 
 
@@ -82,14 +83,15 @@ class MDParser:
         '''
         self._current_index = 0
         self._mem_index = None
-        self._md_marks_list = MDMarksList()
+        self._md_marks = MDMarksList()
         
+        self._line_start = self._current_index
         while self._md_line():
-            continue
+            self._line_start = self._current_index
             #===================================================================
             # <MD text> ::= <MD line> <MD text> | EPS
             #===================================================================
-        return self._md_marks_list
+        return sorted( self._md_marks )
 
 
     #=========================================================================
@@ -123,8 +125,8 @@ class MDParser:
         # <blockquotes> ::= "> " <blockquotes'>
         #=======================================================================
         if self._current_2 == "> ":
-            self._starting_blockquote = self._current_index
-            self._blockquote_level = 1
+            self._blockquote_start = self._current_index    ## $bq.start=index;
+            self._blockquote_level = 1                      ## bq.level=1;
             self._next( 2 )
             return self._blockquotes_1()
         else:
@@ -136,7 +138,9 @@ class MDParser:
         #                 |  <text with span elements> <blockquotes">
         #=======================================================================
         while self._current_2 == "> ":
+            self._blockquote_level += 1                     ## $bq.level++;
             self._next( 2 )
+        self._blockquote_end = self._current_index          ## $bq.end=index;
         if self._text_with_span_elements():
             return self._blockquotes_2()
         else:
@@ -150,7 +154,13 @@ class MDParser:
         #=======================================================================
         while self._text_with_span_elements():
             continue
-        return self._line_or_paragraph_end()
+        if self._line_or_paragraph_end():
+            self._append_mark( MDBlockQuote(self._blockquote_start,
+                                            self._blockquote_end  ,
+                                            self._blockquote_level ) )  ## $mark(bq);
+            return True
+        else:
+            return False 
 
     #-------------------------------------------------------------------------
     def _code_block(self) -> bool:
@@ -180,10 +190,12 @@ class MDParser:
         #=======================================================================
         if self._current == '*':
             self._next()
+            self._append_mark( MDStrongBegin(self._currrent_index-2) )      ## $mark(Strng(index-2));
             self._any_chars_but( '*' )
             self.next()
             if self._current_2 == "**":
                 self._next( 2 )
+                self._append_mark( MDStrongEnd(self._currrent_index-2))     ## $mark(Strng(index-2));
                 return True
             else:
                 return False
@@ -198,10 +210,12 @@ class MDParser:
         #=======================================================================
         if self._current == '_':
             self._next()
+            self._append_mark( MDStrongBegin(self._currrent_index-2) )      ## $mark(Strng(index-2));
             self._any_chars_but( '_' )
             self.next()
             if self._current_2 == "__":
                 self._next( 2 )
+                self._append_mark( MDStrongEnd(self._currrent_index-2))     ## $mark(Strng(index-2));
                 return True
             else:
                 return False
@@ -232,6 +246,7 @@ class MDParser:
         if self._current == '\\':
             self._next()
             if self._current in "\\`*_{}[]()#+-.!":
+                self._append_mark( MDEscape(self._current_index-1) )    ## $mark(Esc(index-1));
                 self._next()
                 return True
         return False
@@ -242,6 +257,7 @@ class MDParser:
         # <header atx> ::= '#' <header atx'>
         #=======================================================================
         if self._current == '#':
+            self._hdr = MDHeader(self._current_index, 1, True, False )  ## $hdr=HdrAtx(index);
             self._next()
             return self._header_atx_1()
         else:
@@ -254,9 +270,15 @@ class MDParser:
         #                |  ' ' <text with span elements>
         #=======================================================================
         while self._current == '#':
+            self._hdr.hdr_num += 1  ## $hdr.level++;
             self._next()
         if self._current == ' ':
-            return self._tect_with_span_elements()
+            self._append_mark( self._hdr )  ## $mark(hdr);
+            if self._text_with_span_elements():
+                self._append_mark( MDHeader(self._current_index, self._hdr.hdr_num, False, False) ) ## $mark(HdrEnd(index));
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -268,8 +290,10 @@ class MDParser:
         #                  |  EPS
         #=======================================================================
         if self._current == '=':
+            self._hdr = MDHeader(self._current_index, 1, False, True )  ## $mark(HdrStxH1(index));
             return self._header_setext_h1()
         elif self._current == '-':
+            self._hdr = MDHeader(self._current_index, 2, False, True )  ## $mark(HdrStxH2(index));
             return self._header_setext_h2()
         else:
             return False
@@ -296,7 +320,11 @@ class MDParser:
         while self._current == '=':
             self._next()
             self._skip_spaces()
-        return self._line_or_paragraph_end()            
+        if self._line_or_paragraph_end():
+            self._append_mark( MDHeader(self._current_index, 1, True, True) ) ## $mark(HdrEndH1(index));
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _header_setext_h2(self) -> bool:
@@ -320,7 +348,11 @@ class MDParser:
         while self._current == '-':
             self._next()
             self._skip_spaces()
-        return self._line_or_paragraph_end()            
+        if self._line_or_paragraph_end():
+            self._append_mark( MDHeader(self._current_index, 2, True, True) ) ## $mark(HdrEndH2(index));
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _horizontal_rule(self) -> bool:
@@ -355,25 +387,25 @@ class MDParser:
             self._skip_spaces()
             if self._current == '-':
                 continue
-            elif self._current == '\n':
-                self._next()
+            elif self._line_or_paragraph_end():
+                self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
                 return True
             else:
-                return self._end_of_text
+                return False
 
     #-------------------------------------------------------------------------
     def _hrule_star(self) -> bool:
         #=======================================================================
-        # <hrule star> ::= '-' <skip spaces> '-' <skip spaces> '-' <hrule star'>
+        # <hrule star> ::= '*' <skip spaces> '*' <skip spaces> '*' <hrule star'>
         #=======================================================================
-        if self._current == '-':
+        if self._current == '*':
             self._next()
             self._skip_spaces()
-            if self._current == '-':
+            if self._current == '*':
                 self._skip_spaces()
-            if self._current == '-':
+            if self._current == '*':
                 self.next()
-                return self._hrule_hyphen_1()
+                return self._hrule_star_1()
         return False
 
     #-------------------------------------------------------------------------
@@ -386,11 +418,11 @@ class MDParser:
             self._skip_spaces()
             if self._current == '-':
                 continue
-            elif self._current == '\n':
-                self._next()
+            elif self._line_or_paragraph_end():
+                self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
                 return True
             else:
-                return self._end_of_text
+                return False
 
     #-------------------------------------------------------------------------
     def _html_entity(self) -> bool:
@@ -398,11 +430,13 @@ class MDParser:
         # <html entity> ::= '&' <non space chars> ';'
         #=======================================================================
         if self._current == '&':
+            self._he_start = self._current_index
             self._next()
             while self._current != ' ':
                 self._next()
             if self._current == ';':
                 self._next()
+                self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )
                 return True
         return False
 
@@ -1020,6 +1054,9 @@ class MDParser:
             return False
 
     #=========================================================================
+    #-------------------------------------------------------------------------
+    def _append_mark(self, md_mark:MDMark):
+        self._md_marks.append( md_mark )
     #-------------------------------------------------------------------------
     @property
     def _current(self) -> str:
