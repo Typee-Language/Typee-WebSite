@@ -113,7 +113,7 @@
 
 <html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he);
 
-<html tag>                      ::= <any chars but / \> '\n' > <html tag'>
+<html tag>                      ::= <any chars but / \> > <html tag'>
 <html tag'>                     ::= '/' '>' $htm.end=index, mark(htm);
                                  |  '>'	$htm.end=index, searchEnd(htm), mark(htm);  ## CAUTION: then, search for the paired HTML tag without parsing in-between text
 

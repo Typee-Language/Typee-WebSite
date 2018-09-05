@@ -266,6 +266,18 @@ class MDHtmlEntity( MDMark ):
 
 
 #=============================================================================
+class MDHtmlTag( MDMark ):
+    '''
+    The class of HTML tags MD marks.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int) ):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'HTMTAG'
+
+
+#=============================================================================
 class MDLinebreak( MDMark ):
     '''
     The class of MD line breaks.

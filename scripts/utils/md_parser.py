@@ -430,22 +430,22 @@ class MDParser:
         # <html entity> ::= '&' <non space chars> ';'
         #=======================================================================
         if self._current == '&':
-            self._he_start = self._current_index
+            self._he_start = self._current_index    ## $he.start=index;
             self._next()
             while self._current != ' ':
                 self._next()
             if self._current == ';':
                 self._next()
-                self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )
+                self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )  ## $he.end=index, mark(he);
                 return True
         return False
 
     #-------------------------------------------------------------------------
     def _html_tag(self) -> bool:
         #=======================================================================
-        # <html tag> ::= <any chars but / \> '\n' > <html tag'>
+        # <html tag> ::= <any chars but / \> > <html tag'>
         #=======================================================================
-        while self._current not in "/>\n" and not self._end_of_text:
+        while self._current not in "/>" and not self._end_of_text:
             self._next()
         return self._html_tag_1()
 
@@ -457,9 +457,12 @@ class MDParser:
         #===============================================================================
         if self._current == '>':
             self._next()
+            self._current_index = self._search_html_end( self._he_start, self._current_index )  ## $htm.end=index, searchEnd(htm);
+            self._append_mark( MDHtmlTag(self._he_start, self._current_index) )                 ## mark(htm);
             return True
         elif self._current_2 == "/>":
             self._next( 2 )
+            self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )              ## $htm.end=index, mark(htm);
             return True
         else:
             return False
@@ -470,13 +473,15 @@ class MDParser:
         # <html tag or automatic link> ::= '<' <html tag or automatic link'>
         #=======================================================================
         if self._current == '<':
+            self._html_start = self._current_index      ## $htm.start=index;
+            self._html_open = True                      ## $htm.open=True;
             self._next()
             return self.__html_tag_or_automatic_link_1()
         else:
             return False
 
     #-------------------------------------------------------------------------
-    def __html_tag_or_automatic_link_1(self) -> bool:
+    def _html_tag_or_automatic_link_1(self) -> bool:
         #=======================================================================
         # <html tag or automatic link'> ::= '/' <any chars but \> '\n' > '>'
         #                                |  <any chars but : / \> > <html tag or automatic link">
@@ -484,13 +489,17 @@ class MDParser:
         if self._current == '/':
             self._next()
             self._any_chars_but( ">\n" )
-            return self._current == '>'
+            if self._current == '>':
+                self._next()
+                return True
+            else:
+                return False
         else:
             self._any_chars_but( ":/>" )
             return self.__html_tag_or_automatic_link_2()
 
     #-------------------------------------------------------------------------
-    def __html_tag_or_automatic_link_2(self) -> bool:
+    def _html_tag_or_automatic_link_2(self) -> bool:
         #=======================================================================
         # <html tag or automatic link"> ::= <url'> '>'
         #                                |  <html tag'>
@@ -498,6 +507,7 @@ class MDParser:
         if self._url_1():
             if self._current == '>':
                 self._next()
+                ## $url.start=htm.start, $url.end++, $mark(AutLnk(url));
                 return True
             else:
                 return False
@@ -1082,5 +1092,10 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _next(self, n:int=1):
         self._current_index += n
+    #-------------------------------------------------------------------------
+    def _search_html_end(self, start:int, end:int):
+        html_tag = self._md_text[start:end].split(' ', 1)[0]
+        html_end = self._md_text[end:].find( '</' + html_tag + '>')
+        return html_end + len(html_tag) + 3
         
 #=====   end of   scripts.utils.md_parser   =====#
