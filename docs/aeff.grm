@@ -23,13 +23,23 @@
 
 
 
-<html tag or automatic link>    ::= '<' <html tag or automatic link'>
+3:  <html tag or automatic link>    ::= '<' <html tag or automatic link'>
 
-<html tag or automatic link'>   ::= '/' <closing html tag>
-                                 |  <any chars but : / \> > <html tag or automatic link">
+4a: <html tag or automatic link'>   ::= '/' <closing html tag>
+4b:                                  |  <any chars but : / \> space> <html tag or automatic link">
 
-<html tag or automatic link">   ::= "://" <automatic link end>
-                                 |  "/>"
-                                 |  '>'
+5a: <html tag or automatic link">   ::= "://" <automatic link end>
+5b:                                  |  "/>"
+5c:                                  |  '>'
+5d:                                  |  ' ' <any chars but : / \> > <html tag or automatic link">
 
-<closing html tag>              ::= <any chars but \> '\n' > '>'
+6:  <closing html tag>              ::= <any chars but \> '\n' > '>'
+
+7:  <automatic link end>            ::= <any chars but \> > '>'
+
+
+"<a>"                       3   4b  5c
+"</a>"                      3   4a  6
+"<br />"                    3   4b  5d  5b
+"<img src="bib" />"         3   4b  5d  5b
+"<https://www.mhregq.com>"  3   4b  5a  7
