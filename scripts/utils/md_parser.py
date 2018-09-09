@@ -101,6 +101,27 @@ class MDParser:
             self._next()
     
     #-------------------------------------------------------------------------
+    def _automatic_link_end(self) -> bool:
+        #=======================================================================
+        # <automatic link end> ::= <any chars but space \> > <automatic link end'>
+        #=======================================================================
+        if self._any_chars_but( " >" ):
+            return self._automatic_link_end_1()
+        else:
+            return False
+    
+    #-------------------------------------------------------------------------
+    def _automatic_link_end_1(self) -> bool:
+        #=======================================================================
+        # <automatic link end'> ::= '>'
+        #=======================================================================
+        if self._current == '>':
+            self._next()
+            return True
+        else:
+            return False
+
+    #-------------------------------------------------------------------------
     def _block_elements(self) -> bool:
         #=======================================================================
         # <block elements> ::= <blockquote>
@@ -161,6 +182,17 @@ class MDParser:
             return True
         else:
             return False 
+
+    #-------------------------------------------------------------------------
+    def _closing_html_tag(self) -> bool:
+        #=======================================================================
+        # <closing html tag> ::= <any chars but \> \\n > '>'
+        #=======================================================================
+        if self._any_chars_but( ">\n" ) and self._current == '>':
+            self._next()
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _code_block(self) -> bool:
@@ -603,14 +635,19 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _line_or_paragraph_end_1(self) -> bool:
         #=======================================================================
-        # <line or paragraph end'> ::= '\n' | <ENDOFTEXT> ## paragraph end
-        #                           |  EPS   ## line end
+        # <line or paragraph end'> ::= '\n' <line or paragraph end'>
+        #                           | <ENDOFTEXT>
+        #                           |  EPS
         #=======================================================================
-        if self._current == '\n':
-            ## paragraph end
+        b_paragraph_end = False
+        while not self._end_of_text and self._current == '\n':
+            b_paragraph_end = True
             self._next()
+        if self._end_of_text:
+            ## paragraph end
             return True
-        elif self._end_of_text:
+        elif b_paragraph_end:
+            ## paragraph end
             return True
         else:
             ## line end

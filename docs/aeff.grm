@@ -26,10 +26,16 @@
 <html tag or automatic link>    ::= '<' <html tag or automatic link'>
 
 <html tag or automatic link'>   ::= '/' <closing html tag>
-                                 |  <any chars but : / \> > <html tag or automatic link">
+                                 |  <any chars but : / space \> > <html tag or automatic link">
 
 <html tag or automatic link">   ::= "://" <automatic link end>
                                  |  "/>"
                                  |  '>'
+                                 |  ' ' <any chars but : / \> > <html tag or automatic link">
 
-<closing html tag>              ::= <any chars but \> '\n' > '>'
+<automatic link end>            ::= <any chars but space \> > <automatic link end'>
+
+<automatic link end'>           ::= '>'
+
+<closing html tag>              ::= <any chars but \> \\n > '>'
+
