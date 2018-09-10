@@ -473,33 +473,6 @@ class MDParser:
         return False
 
     #-------------------------------------------------------------------------
-    def _html_tag(self) -> bool:
-        #=======================================================================
-        # <html tag> ::= <any chars but / \> > <html tag'>
-        #=======================================================================
-        while self._current not in "/>" and not self._end_of_text:
-            self._next()
-        return self._html_tag_1()
-
-    #-------------------------------------------------------------------------
-    def _html_tag_1(self) -> bool:
-        #===============================================================================
-        # <html tag'> ::= '/' '>'
-        #              |  '>' ## CAUTION: then, search for the paired HTML tag without parsing in-between text
-        #===============================================================================
-        if self._current == '>':
-            self._next()
-            self._current_index = self._search_html_end( self._he_start, self._current_index )  ## $htm.end=index, searchEnd(htm);
-            self._append_mark( MDHtmlTag(self._he_start, self._current_index) )                 ## mark(htm);
-            return True
-        elif self._current_2 == "/>":
-            self._next( 2 )
-            self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )              ## $htm.end=index, mark(htm);
-            return True
-        else:
-            return False
-
-    #-------------------------------------------------------------------------
     def _html_tag_or_automatic_link(self) -> bool:
         #=======================================================================
         # <html tag or automatic link> ::= '<' <html tag or automatic link'>
@@ -515,36 +488,40 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _html_tag_or_automatic_link_1(self) -> bool:
         #=======================================================================
-        # <html tag or automatic link'> ::= '/' <any chars but \> '\n' > '>'
-        #                                |  <any chars but : / \> > <html tag or automatic link">
+        # <html tag or automatic link'> ::= '/' <closing html tag>
+        #                                |  <any chars but : / space \> > <html tag or automatic link">
         #=======================================================================
         if self._current == '/':
             self._next()
-            self._any_chars_but( ">\n" )
-            if self._current == '>':
-                self._next()
-                return True
-            else:
-                return False
+            return self._closing_html_tag()
         else:
-            self._any_chars_but( ":/>" )
+            self._any_chars_but( ":/ >" )
             return self.__html_tag_or_automatic_link_2()
 
     #-------------------------------------------------------------------------
     def _html_tag_or_automatic_link_2(self) -> bool:
         #=======================================================================
-        # <html tag or automatic link"> ::= <url'> '>'
-        #                                |  <html tag'>
+        # <html tag or automatic link"> ::= "://" <automatic link end>
+        #                                |  "/>"
+        #                                |  ">"
+        #                                |  ' ' <any chars but : / \> > <html tag or automatic link">
         #=======================================================================
-        if self._url_1():
-            if self._current == '>':
-                self._next()
-                ## $url.start=htm.start, $url.end++, $mark(AutLnk(url));
-                return True
-            else:
-                return False
+        if self._current_3 == '://':
+            self._next( 3 )
+            ## $url.start=htm.start, $url.end++, $mark(AutLnk(url));
+            return self._automatic_link_end()
+        elif self._current_2 == "/>":
+            self._next( 2 )
+            return True
+        elif self._current == '>':
+            self._next()
+            return True
+        elif self._current == ' ':
+            self._next()
+            self._any_chars_but( ":/>" )
+            return self._html_tag_or_automatic_link_2()
         else:
-            return self._html_tag_1()
+            return False
 
     #-------------------------------------------------------------------------
     def _image(self) -> bool:

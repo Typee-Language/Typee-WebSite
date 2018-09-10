@@ -118,22 +118,13 @@
 
 <html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he);
 
-###<html tag>                      ::= <any chars but / \> > <html tag'>
-###<html tag'>                     ::= '/' '>' $htm.end=index, mark(htm);
-###                                 |  '>'	$htm.end=index, searchEnd(htm), mark(htm);  ## CAUTION: then, search for the paired HTML tag without parsing in-between text
-
-###<html tag or automatic link>    ::= '<' $htm.start=index, $htm.open=True; <html tag or automatic link'>
-###<html tag or automatic link'>   ::= '/' <any chars but \> '\n' > '>' $htm.end=index, htm.open=False, mark(htm);
-###                                 |  <any chars but : / \> > <html tag or automatic link">
-###<html tag or automatic link">   ::= <url'> '>' $url.start=htm.start, url.end++, mark(AutLnk(url));
-###                                 |  <html tag'>
-<html tag or automatic link>    ::= '<' <html tag or automatic link'>                               ###
-<html tag or automatic link'>   ::= '/' <closing html tag>                                          ###
-                                 |  <any chars but : / space \> > <html tag or automatic link">     ###
-<html tag or automatic link">   ::= "://" <automatic link end>                                      ###
-                                 |  "/>"                                                            ###
-                                 |  '>'                                                             ###
-                                 |  ' ' <any chars but : / \> > <html tag or automatic link">       ###
+<html tag or automatic link>    ::= '<' <html tag or automatic link'>
+<html tag or automatic link'>   ::= '/' <closing html tag>
+                                 |  <any chars but : / space \> > <html tag or automatic link">
+<html tag or automatic link">   ::= "://" <automatic link end>
+                                 |  "/>"
+                                 |  '>'
+                                 |  ' ' <any chars but : / \> > <html tag or automatic link">
 
 <image>                         ::= '!' $im.start=index; <link>
 
