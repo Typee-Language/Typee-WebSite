@@ -103,18 +103,9 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _automatic_link_end(self) -> bool:
         #=======================================================================
-        # <automatic link end> ::= <any chars but space \> > <automatic link end'>
+        # <automatic link end> ::= <any chars but space \> >  '>'
         #=======================================================================
-        if self._any_chars_but( " >" ):
-            return self._automatic_link_end_1()
-        else:
-            return False
-    
-    #-------------------------------------------------------------------------
-    def _automatic_link_end_1(self) -> bool:
-        #=======================================================================
-        # <automatic link end'> ::= '>'
-        #=======================================================================
+        self._any_chars_but( " >" )
         if self._current == '>':
             self._next()
             return True

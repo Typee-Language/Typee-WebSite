@@ -59,8 +59,7 @@
 
 ## --- Markdown Tags ---------------------------------------------------------
 
-<automatic link end>            ::= <any chars but space \> > <automatic link end'>
-<automatic link end'>           ::= '>'
+<automatic link end>            ::= <any chars but space \> >  '>'
 
 <blockquotes>                   ::= "> " $bq.start=index, bq.level=1; <blockquotes'>
 <blockquotes'>                  ::= "> " $bq.level++; <blockquotes'>
@@ -68,7 +67,7 @@
 <blockquotes">                  ::= <text with span elements> <blockquotes">
                                  |  <line or paragraph end> $mark(bq);
 
-<closing html tag>              ::= <any chars but \> \\n > '>'
+<closing html tag>              ::= <any chars but \> \\n > $htal.verify(index); '>'
 
 <code block>                    ::= <text with span elements> <code block'>
 <code block'>                   ::= <text with span elements> <code block'>
@@ -118,12 +117,12 @@
 
 <html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he);
 
-<html tag or automatic link>    ::= '<' <html tag or automatic link'>
-<html tag or automatic link'>   ::= '/' <closing html tag>
-                                 |  <any chars but : / space \> > <html tag or automatic link">
-<html tag or automatic link">   ::= "://" <automatic link end>
-                                 |  "/>"
-                                 |  '>'
+<html tag or automatic link>    ::= '<' $htal.start=index; <html tag or automatic link'>
+<html tag or automatic link'>   ::= '/' <closing html tag> $htal.end=index, mark(HT(htal));
+                                 |  <any chars but : / space \> > $htal.settag(index); <html tag or automatic link">
+<html tag or automatic link">   ::= "://" $htal.prefixend=index; <automatic link end> $htal.end=index, mark(AL(htal));
+                                 |  "/>" $htal.end=index, mark(HT(htal));
+                                 |  '>' $htal.end=index, mark(HT(htal));
                                  |  ' ' <any chars but : / \> > <html tag or automatic link">
 
 <image>                         ::= '!' $im.start=index; <link>
