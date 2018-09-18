@@ -180,6 +180,7 @@ class MDParser:
         # <closing html tag> ::= <any chars but \> \\n > '>'
         #=======================================================================
         if self._any_chars_but( ">\n" ) and self._current == '>':
+            self._htal_verify( self._current_index ) ## $htal.verify(index)
             self._next()
             return True
         else:
@@ -206,24 +207,32 @@ class MDParser:
         return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
-    def _emph_or_strong_star(self) -> bool:
+    def _emph_or_strong_star(self, md_tag:str) -> bool:
         #=======================================================================
         # <emph or strong *> ::= '*' <any chars but *> "**"
         #                     |  <any chars but *> '*'
+        # <emph or strong _> ::= '_' <any chars but *> "__"
+        #                     |  <any chars but _> '_'
         #=======================================================================
-        if self._current == '*':
+        if self._current == md_tag:
             self._next()
-            self._append_mark( MDStrongBegin(self._currrent_index-2) )      ## $mark(Strng(index-2));
-            self._any_chars_but( '*' )
-            self.next()
-            if self._current_2 == "**":
+            self._append_mark( MDStrongBegin(self._currrent_index - 2) )    ## $mark(Strng(index-2));
+            self._any_chars_but( md_tag )
+            if self._current_2 == md_tag+md_tag:
                 self._next( 2 )
-                self._append_mark( MDStrongEnd(self._currrent_index-2))     ## $mark(Strng(index-2));
+                self._append_mark( MDStrongEnd(self._currrent_index - 2))   ## $mark(Strng(index-2));
                 return True
             else:
                 return False
         else:
-            return False
+            self._append_mark( MDEmphasisBegin(self._current_index - 1) )   ## $mark(Emph(index-1));
+            self._any_chars_but( md_tag )
+            if self._current == md_tag:
+                self._next()
+                self._append_mark( MDEmphasisEnd(self._current_index - 1) ) ## $mark(Emph(index-1));
+                return True
+            else:
+                return False
 
     #-------------------------------------------------------------------------
     def _emph_or_strong_underscore(self) -> bool:

@@ -67,17 +67,17 @@
 <blockquotes">                  ::= <text with span elements> <blockquotes">
                                  |  <line or paragraph end> $mark(bq);
 
-<closing html tag>              ::= <any chars but \> \\n > $htal.verify(index); '>'
+<closing html tag>              ::= <any chars but \> \\n > $htal.verify(index); '>'    ###
 
 <code block>                    ::= <text with span elements> <code block'>
 <code block'>                   ::= <text with span elements> <code block'>
                                  |  <line or paragraph end>
 
 <emph or strong *>              ::= '*' $mark(Strng(index-2)); <any chars but *> "**" $mark(Strng(index-2));
-								 |  $mark(Emph(es.start)); <any chars but *> '*' $mark(Emph(index-1));
+								 |  $mark(Emph(index-1)); <any chars but *> '*' $mark(Emph(index-1));
 
 <emph or strong _>              ::= '_' $mark(Strng(es.start)); <any chars but _> "__" $mark(Strng(index-2));
-								 |  $mark(Emph(es.start)); <any chars but _> '_' $mark(Emph(index-1));
+								 |  $mark(Emph(index-1)); <any chars but _> '_' $mark(Emph(index-1));
 
 
 <emphasis or strong style>      ::= '*' <emph or strong *>

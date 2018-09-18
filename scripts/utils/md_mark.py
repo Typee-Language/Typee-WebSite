@@ -174,15 +174,27 @@ class MDCodeInlined( MDMark ):
 
 
 #=============================================================================
-class MDEmphasis( MDMark ):
+class MDEmphasisBegin( MDMark ):
     '''
     The class of MD emphasis.
     '''
     #-------------------------------------------------------------------------
-    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)):
-        super().__init__( start, end )
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)=None):
+        super().__init__( start, end if end is not None else start+1 )
     #-------------------------------------------------------------------------
-    CLASS = 'EMPH'
+    CLASS = 'EMPBGN'
+
+
+#=============================================================================
+class MDEmphasisEnd( MDMark ):
+    '''
+    The class of MD emphasis.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)=None):
+        super().__init__( start, end if end is not None else start+1 )
+    #-------------------------------------------------------------------------
+    CLASS = 'EMPEND'
 
 
 #=============================================================================
@@ -464,19 +476,6 @@ class MDStrikethrough( MDMark ):
 
 
 #=============================================================================
-class MDStrongEnd( MDMark ):
-    '''
-    The class of MD strong.
-    '''
-    #-------------------------------------------------------------------------
-    def __init__(self, start:(LineColumn,int)):
-        super().__init__( start, start+2 )
-        self.start = False
-    #-------------------------------------------------------------------------
-    CLASS = 'STGEND'
-
-
-#=============================================================================
 class MDStrongBegin( MDMark ):
     '''
     The class of MD strong.
@@ -487,6 +486,19 @@ class MDStrongBegin( MDMark ):
         self.start = True
     #-------------------------------------------------------------------------
     CLASS = 'STGBEG'
+
+
+#=============================================================================
+class MDStrongEnd( MDMark ):
+    '''
+    The class of MD strong.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int)):
+        super().__init__( start, start+2 )
+        self.start = False
+    #-------------------------------------------------------------------------
+    CLASS = 'STGEND'
 
 
 #=============================================================================
