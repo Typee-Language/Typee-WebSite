@@ -138,7 +138,7 @@ class MDParser:
         #=======================================================================
         if self._current_2 == "> ":
             self._blockquote_start = self._current_index    ## $bq.start=index;
-            self._blockquote_level = 1                      ## bq.level=1;
+            self._blockquote_level = 1                      ## $bq.level=1;
             self._next( 2 )
             return self._blockquotes_1()
         else:
