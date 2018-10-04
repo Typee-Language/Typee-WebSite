@@ -573,12 +573,11 @@ class MDtoHTML:
 
     #-------------------------------------------------------------------------
     def _translate_header(self, mark:MDHeader, md_text_lines:list):
-        hdr_txt = '<{:s}h{:d}>'.format( '/' if mark.is_entering_point else '', mark.hdr_num )
         num_line = mark.start.line
         if mark.is_entering_point:
-            md_text_lines[ num_line ] = '{}{}'.format( hdr_txt, md_text_lines[num_line] )
+            md_text_lines[ num_line ] = '{}{}'.format( '<h{:d}>'.format(mark.hdr_num), md_text_lines[num_line] )
         else:
-            md_text_lines[ num_line ] = '{}{}'.format( hdr_txt, md_text_lines[num_line].strip( ' #' ) )
+            md_text_lines[ num_line ] = '{}{}'.format( md_text_lines[num_line].strip(' #'), '</h{:d}>'.format(mark.hdr_num) )
 
     #-------------------------------------------------------------------------
     def _translate_mark(self, mark:MDMark, md_text_lines:list):
