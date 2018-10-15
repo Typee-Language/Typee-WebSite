@@ -68,22 +68,23 @@ class MDParser:
             The list of MD marks detected in the parsed text.
 
         Raises:
-            Any IOError if any file is not found or is inaccessible.
+            Any IOError if some file is not found or is inaccessible.
         '''
         with open( filepath ) as fp:
-            self._md_text = fp.read()
+            md_list = self._parse( fp.read() )
         
-        return self._parse()
+        return md_list
             
 
     #=========================================================================
     #-------------------------------------------------------------------------
-    def _parse(self) -> MDMarksList:
+    def _parse(self, text:str) -> MDMarksList:
         '''
         '''
+        self._md_text       = text
         self._current_index = 0
-        self._mem_index = None
-        self._md_marks = MDMarksList()
+        self._mem_index     = None
+        self._md_marks      = MDMarksList()
         
         self._line_start = self._current_index
         while self._md_line():
@@ -96,9 +97,12 @@ class MDParser:
 
     #=========================================================================
     #-------------------------------------------------------------------------
-    def _any_chars_but(self, unaccepted_chars:str):
+    def _any_chars_but(self, unaccepted_chars:str) -> bool:
+        found = False
         while not self._end_of_text and self._current not in unaccepted_chars:
+            found = True
             self._next()
+        return found
     
     #-------------------------------------------------------------------------
     def _automatic_link_end(self) -> bool:
@@ -179,10 +183,15 @@ class MDParser:
         #=======================================================================
         # <closing html tag> ::= <any chars but \> \\n > '>'
         #=======================================================================
-        if self._any_chars_but( ">\n" ) and self._current == '>':
-            self._htal_verify( self._current_index ) ## $htal.verify(index)
+        def _my_process() -> bool:
+            self._htal_verify( self._current_index )  ## $htal.verify(index)
             self._next()
             return True
+            
+        if self._any_chars_but( ">\n" ) and self._current == '>':
+            return _my_process()
+        elif self._current == '>':
+            return _my_process()
         else:
             return False
 
@@ -207,7 +216,7 @@ class MDParser:
         return self._line_or_paragraph_end()
 
     #-------------------------------------------------------------------------
-    def _emph_or_strong_star(self, md_tag:str) -> bool:
+    def _emph_or_strong(self, md_tag:str) -> bool:
         #=======================================================================
         # <emph or strong *> ::= '*' <any chars but *> "**"
         #                     |  <any chars but *> '*'
@@ -218,36 +227,9 @@ class MDParser:
             self._next()
             self._append_mark( MDStrongBegin(self._currrent_index - 2) )    ## $mark(Strng(index-2));
             self._any_chars_but( md_tag )
-            if self._current_2 == md_tag+md_tag:
+            if self._current_2 == md_tag + md_tag:
                 self._next( 2 )
                 self._append_mark( MDStrongEnd(self._currrent_index - 2))   ## $mark(Strng(index-2));
-                return True
-            else:
-                return False
-        else:
-            self._append_mark( MDEmphasisBegin(self._current_index - 1) )   ## $mark(Emph(index-1));
-            self._any_chars_but( md_tag )
-            if self._current == md_tag:
-                self._next()
-                self._append_mark( MDEmphasisEnd(self._current_index - 1) ) ## $mark(Emph(index-1));
-                return True
-            else:
-                return False
-
-    #-------------------------------------------------------------------------
-    def _emph_or_strong_underscore(self) -> bool:
-        #=======================================================================
-        # <emph or strong _> ::= '_' <any chars but *> "__"
-        #                     |  <any chars but _> '_'
-        #=======================================================================
-        if self._current == '_':
-            self._next()
-            self._append_mark( MDStrongBegin(self._currrent_index-2) )      ## $mark(Strng(index-2));
-            self._any_chars_but( '_' )
-            self.next()
-            if self._current_2 == "__":
-                self._next( 2 )
-                self._append_mark( MDStrongEnd(self._currrent_index-2))     ## $mark(Strng(index-2));
                 return True
             else:
                 return False
@@ -261,9 +243,9 @@ class MDParser:
         #                             |  '_' <emph or strong _>
         #=======================================================================
         if self._current == '*':
-            return self._emph_or_strong_star()
+            return self._emph_or_strong( '*' )
         elif self._current == '_':
-            return self._emph_or_strong_underscore()
+            return self._emph_or_strong( '_' )
         else:
             return False
 
@@ -304,6 +286,7 @@ class MDParser:
         while self._current == '#':
             self._hdr.hdr_num += 1  ## $hdr.level++;
             self._next()
+        self._hdr.hdr_num = min( 6, self._hdr.hdr_num )
         if self._current == ' ':
             self._append_mark( self._hdr )  ## $mark(hdr);
             if self._text_with_span_elements():
@@ -319,7 +302,6 @@ class MDParser:
         #=======================================================================
         # <header setext> ::= '=' <header setext h1>
         #                  |  '-' <header setext h2>
-        #                  |  EPS
         #=======================================================================
         if self._current == '=':
             self._hdr = MDHeader(self._current_index, 1, False, True )  ## $mark(HdrStxH1(index));
@@ -334,7 +316,6 @@ class MDParser:
     def _header_setext_h1(self) -> bool:
         #=======================================================================
         # <header setext h1> ::= '=' <skip spaces> <header setext h1'>
-        #    ## CAUTION: previous line of MD text was then H1
         #=======================================================================
         if self._current == '=':
             self._next()
@@ -362,7 +343,6 @@ class MDParser:
     def _header_setext_h2(self) -> bool:
         #=======================================================================
         # <header setext h2> ::= '-' <skip spaces> <header setext h2'>
-        #    ## CAUTION: previous line of MD text was then H2
         #=======================================================================
         if self._current == '-':
             self._next()
@@ -412,18 +392,18 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _hrule_hyphen_1(self) -> bool:
         #=======================================================================
-        # <hrule hyphen'> ::= <skip spaces> '-' <hrule hyphen'>
+        # <hrule hyphen'> ::= ' ' <skip spaces> '-' <hrule hyphen'>
         #                  |  <line or paragraph end>
         #=======================================================================
-        while True:
+        while self.current == ' ':
             self._skip_spaces()
-            if self._current == '-':
-                continue
-            elif self._line_or_paragraph_end():
-                self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
-                return True
-            else:
+            if self._current != '-':
                 return False
+        if self._line_or_paragraph_end():
+            self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _hrule_star(self) -> bool:
@@ -434,6 +414,7 @@ class MDParser:
             self._next()
             self._skip_spaces()
             if self._current == '*':
+                self._next()
                 self._skip_spaces()
             if self._current == '*':
                 self.next()
@@ -443,18 +424,18 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _hrule_star_1(self) -> bool:
         #=======================================================================
-        # <hrule star'> ::= <skip spaces> '-' <hrule star'>
-        #                  |  <line or paragraph end>
+        # <hrule star'> ::= ' ' <skip spaces> '-' <hrule star'>
+        #                |  <line or paragraph end>
         #=======================================================================
-        while True:
+        while self.current == ' ':
             self._skip_spaces()
-            if self._current == '-':
-                continue
-            elif self._line_or_paragraph_end():
-                self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
-                return True
-            else:
+            if self._current != '*':
                 return False
+        if self._line_or_paragraph_end():
+            self._append_mark( MDHRule(self._line_start, self._current_index) )     ## $mark(HR(line.start,index);
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _html_entity(self) -> bool:
@@ -478,10 +459,10 @@ class MDParser:
         # <html tag or automatic link> ::= '<' <html tag or automatic link'>
         #=======================================================================
         if self._current == '<':
-            self._html_start = self._current_index      ## $htm.start=index;
-            self._html_open = True                      ## $htm.open=True;
+            self._htal_start = self._current_index      ## $htm.start=index;
+            self._htal_open = True                      ## $htm.open=True;
             self._next()
-            return self.__html_tag_or_automatic_link_1()
+            return self._html_tag_or_automatic_link_1()
         else:
             return False
 
@@ -493,10 +474,16 @@ class MDParser:
         #=======================================================================
         if self._current == '/':
             self._next()
-            return self._closing_html_tag()
+            if self._closing_html_tag():
+                self._htal_end = self._current_index                             ## $htal.end=index;
+                self._append_mark( MDHtmlTag(self._htal_start, self._htal_end) ) ## $mark(HT(htal));
+                return True
+            else:
+                return False
         else:
             self._any_chars_but( ":/ >" )
-            return self.__html_tag_or_automatic_link_2()
+            self._htal_end = self._current_index    ## $htal.end=index;
+            return self._html_tag_or_automatic_link_2()
 
     #-------------------------------------------------------------------------
     def _html_tag_or_automatic_link_2(self) -> bool:
@@ -506,20 +493,30 @@ class MDParser:
         #                                |  ">"
         #                                |  ' ' <any chars but : / \> > <html tag or automatic link">
         #=======================================================================
+        while self._current == ' ':
+            self._next()
+            self._any_chars_but( ":/>" )
         if self._current_3 == '://':
             self._next( 3 )
-            ## $url.start=htm.start, $url.end++, $mark(AutLnk(url));
-            return self._automatic_link_end()
+            self._htal_prefix_end = self._current_index                                             ## $htal.prefixend=index;
+            if self._automatic_link_end():
+                self._htal_end = self._current_index                                                ## $htal.end=index;
+                self._append_mark( MDLinkAuto(self._htal_start, 
+                                              self._htal_end, 
+                                              self._md_text[self._htal_prefix_end:self._htal_end]) )## $mark(AL(htal));
+                return True
+            else:
+                return False
         elif self._current_2 == "/>":
             self._next( 2 )
+            self._htal_end = self._current_index                             ## $htal.end=index;
+            self._append_mark( MDHtmlTag(self._htal_start, self._htal_end) ) ## $mark(HT(htal));
             return True
         elif self._current == '>':
             self._next()
+            self._htal_end = self._current_index                             ## $htal.end=index;
+            self._append_mark( MDHtmlTag(self._htal_start, self._htal_end) ) ## $mark(HT(htal));
             return True
-        elif self._current == ' ':
-            self._next()
-            self._any_chars_but( ":/>" )
-            return self._html_tag_or_automatic_link_2()
         else:
             return False
 
@@ -530,6 +527,7 @@ class MDParser:
         #=======================================================================
         if self._current == '!':
             self._next()
+            self._im_start = self._current_index    ## $im.start=index;
             return self._link()
         else:
             return False
@@ -541,6 +539,7 @@ class MDParser:
         #=======================================================================
         if self._current == '`':
             self._next()
+            self._ic_start = self._current_index    ## $ic.start=index;
             return self._inlined_code_1()
         else:
             return False
@@ -548,8 +547,8 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _inlined_code_1(self) -> bool:
         #=======================================================================
-        # <inlined code'> ::= <any char but `> '`'
-        #                  |  '`' <inlined code''>
+        # <inlined code'> ::= '`' <inlined code''>
+        #                  |  <any char but `> '`'
         #=======================================================================
         if self._current == '`':
             self._next()
@@ -558,6 +557,8 @@ class MDParser:
             self._any_chars_but( '`' )
             if self._current == '`':
                 self._next()
+                self._ic_end = self._current_index                                ## $ic.end=index;
+                self._append_mark( MDCodeInlined(self._ic_start, self._ic_end) )  ## $mark(ic);
                 return True
         return False
 
@@ -580,6 +581,8 @@ class MDParser:
         #=======================================================================
         if self._current == '`':
             self._next()
+            self._ic_end = self._current_index                                ## $ic.end=index;
+            self._append_mark( MDCodeInlined(self._ic_start, self._ic_end) )  ## $mark(ic);
             return True
         else:
             return self._inlined_code_2()
@@ -587,11 +590,21 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _inlined_link(self) -> bool:
         #=======================================================================
-        # <inlined link> ::= '[' <url> <title> ']'
+        # <inlined link> ::= '(' <url> <title> ')'
         #=======================================================================
-        if self._current == '[':
-            if self._url() and self._title():
-                if self._current == ']':
+        if self._current == '(':
+            self._il_start = self._current_index                        ## $il.start=index;
+            if self._url():
+                self._il_url = self._url_data                           ## il.url=url;
+                self._title()
+                self._ref_title = self._ttl                             ## $il.title=title;
+                if self._current == ')':
+                    self._il_end = self._current_index                  ## $il.end=index;
+                    self._append_mark( MDLinkTitle(self._il_start,
+                                                   self._il_end,
+                                                   self._md_text[self._il_start+1:self._url_data[0]],
+                                                   self._url_data,
+                                                   self._ref_title) )    ## $mark(il);
                     return True
         return False
 
@@ -599,13 +612,13 @@ class MDParser:
     def _line_or_paragraph_end(self) -> bool:
         #=======================================================================
         # <line or paragraph end> ::= '\n' <line or paragraph end'>
-        #                          | <ENDOFTEXT>  ## line end
+        #                          |   <ENDOFTEXT>
         #=======================================================================
         if self._current == '\n':
             self._next()
             return self._line_or_paragraph_end_1()
         elif self._end_of_text:
-            return True
+            return self._finalize()     ## $finalize();
         else:
             return False
 
@@ -616,18 +629,12 @@ class MDParser:
         #                           | <ENDOFTEXT>
         #                           |  EPS
         #=======================================================================
-        b_paragraph_end = False
         while not self._end_of_text and self._current == '\n':
-            b_paragraph_end = True
             self._next()
         if self._end_of_text:
-            ## paragraph end
-            return True
-        elif b_paragraph_end:
-            ## paragraph end
-            return True
+            return self._finalize()                 ## $finalize();
         else:
-            ## line end
+            self._line_start = self._current_index  ## $line.start=index;
             return True
 
     #-------------------------------------------------------------------------
@@ -645,24 +652,38 @@ class MDParser:
         #=======================================================================
         if self._current == '[':
             self._next()
+            self._lire_text_start = self._current_index     ## $lire.start=index;
             self._linked_text()
-            if self._current != ']':
-                return False
+            if self._current == ']':
+                self._next()
+                self._lire_text_end = self._current_index   ## $lire.end=index;
+                return self._link_or_reference_1()
             else:
-                return self._link_reference_1()
+                return False
         else:
             return False
 
     #-------------------------------------------------------------------------
-    def _link_reference_1(self) -> bool:
+    def _link_or_reference_1(self) -> bool:
         #=======================================================================
         # <link or reference'> ::= ':' <reference>
         #                       |  <link>
         #=======================================================================
         if self._current == ':':
-            return self._reference()
-        else:
-            return self._link()
+            if self._reference():
+                self._append_mark( MDLinkRefTitle(self._lire_text_start-1,
+                                                  self._current_index,
+                                                  self._md_text[self._lire_text_start:self._lire_text_end],
+                                                  self._url_data,
+                                                  self._ref_title) )                ## $markRef(url,refTtl);
+                return True
+        elif self._link():
+            self._append_mark( MDLink(self._lire_text_start-1,
+                                      self._current_index,
+                                      self._md_text[self._lire_text_start:self._lire_text_end],
+                                      self._md_text[self._il_start:self._il_end]) )  ## $mark(lire,link);
+            return True
+        return False
 
     #-------------------------------------------------------------------------
     def _linked_text(self) -> bool:
@@ -675,16 +696,14 @@ class MDParser:
     def _list(self) -> bool:
         #=======================================================================
         # <list> ::= <ordered list>
-        #         |  <unordered list> ## CAUTION: "paragraphed" list items are not addressed there
+        #         |  <unordered list> ## CAUTION: "paragraphed" list items are not addressed here
         #=======================================================================
         return self._ordered_list() or self._unordered_list()
 
     #-------------------------------------------------------------------------
     def _list_bullet(self) -> bool:
         #=======================================================================
-        # <list bullet> ::= '*'
-        #                | '+'
-        #                | '-'
+        # <list bullet> ::= '*'  | '+'  | '-'
         #=======================================================================
         if self._current in "-+*":
             self._next()
@@ -729,13 +748,22 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _maybe_setext_header(self) -> bool:
         #=======================================================================
-        # <maybe setext header> ::= '\n' <header setext>
+        # <maybe setext header> ::= '\n' <maybe setext header'>
         #=======================================================================
         if self._current == '\n':
             self._next()
-            return self._header_setext()
+            return self._maybe_setext_header_1()
         else:
             return False
+
+    #-------------------------------------------------------------------------
+    def _maybe_setext_header_1(self) -> bool:
+        #=======================================================================
+        # <maybe setext header'> ::= <header setext>
+        #                         |  EPS
+        #=======================================================================
+        self._header_setext()
+        return True
 
     #-------------------------------------------------------------------------
     def _maybe_star(self) -> bool:
@@ -755,6 +783,7 @@ class MDParser:
         #                |  <text with span elements>
         #=======================================================================
         if self._current == ' ':
+            self._append_mark( MDStar(self._current_index) )    ## $mark(Str(index-1));
             self._next()
             return True
         else:
@@ -778,6 +807,7 @@ class MDParser:
         #                      |  <text with span elements>
         #=======================================================================
         if self._current == ' ':
+            self._append_mark( MDUnderscore(self._current_index) )  ## $mark(Und(index-1));
             self._next()
             return True
         else:
@@ -792,28 +822,18 @@ class MDParser:
                 self._space_starting_elements() or \
                 self._text_with_span_elements() or \
                 self._line_or_paragraph_end()
-
-    #-------------------------------------------------------------------------
-    def _number(self) -> bool:
-        b_num = False
-        while self._current in "0123456789":
-            self._next()
-            b_num = True
-        return b_num
         
     #-------------------------------------------------------------------------
     def _ordered_item(self) -> bool:
         #=======================================================================
         # <ordered item> ::= <number> '.' <text with span elements>
         #=======================================================================
-        if self._number():
-            if self._current == '.':
-                self._next()
-                return self._text_with_span_elements()
-            else:
-                return False
-        else:
-            return False
+        self._oi_start = self._current_index    ## $oi.start=index;
+        if self._number() and self._current == '.':
+            self._append_mark( MDOrderedItem( self._oi_start, self._current_index) )    ## $oi.end=index; $mark(oi);
+            self._next()
+            return self._text_with_span_elements()
+        return False
 
     #-------------------------------------------------------------------------
     def _ordered_list(self) -> bool:
@@ -821,6 +841,7 @@ class MDParser:
         # <ordered list> ::= <ordered item> <ordered list'>
         #=======================================================================
         if self._ordered_item():
+            self._ol_start = self._current_index    ## $ol.start=index;
             return self._ordered_list_1()
         else:
             return False
@@ -833,7 +854,11 @@ class MDParser:
         #=======================================================================
         while self._ordered_item():
             continue
-        return self._line_or_paragraph_end()
+        if self._line_or_paragraph_end():
+            self._append_mark( MDOrderedList(self._ol_start, self._current_index) ) ## $ol.end=index, mark(ol);
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _reference(self) -> bool:
@@ -843,13 +868,9 @@ class MDParser:
         self._skip_spaces()
         if self._url():
             self._skip_spaces()
-            self._reference_title()
-            if self._current == '\n':
-                return True
-            else:
-                return False
-        else:
-            return False
+            if self._reference_title():
+                return self._current == '\n'
+        return False
 
     #-------------------------------------------------------------------------
     def _referenced_link(self) -> bool:
@@ -863,10 +884,7 @@ class MDParser:
             if self._current == ']':
                 self._next()
                 return True
-            else:
-                return False
-        else:
-            return False
+        return False
 
     #-------------------------------------------------------------------------
     def _referenced_link_1(self) -> bool:
@@ -894,27 +912,30 @@ class MDParser:
         # <reference title'> ::= '"' <any chars but newline and "> '"' <skip spaces> '\n' ## (maybe end-of-line is not needed)
         #=======================================================================
         if self._current == '"':
+            self._ref_title = [self._current_index, 0]      ## $refTtl.start=index;
             self._next()
-        self._any_chars_but( '\n"' )
-        if self._current == '"':
-            return False
-        self._next()
-        self._skip_spaces()
-        if self._current == '\n':
-            self._next()
-        return True
+            self._any_chars_but( '\n"' )
+            if self._current == '"':
+                self._next()
+                self._ref_title[1] = self._current_index    ## $refTtl.end=index;
+                self._skip_spaces()
+                if self._current == '\n':
+                    self._next()
+                    return True
+        return False
 
     #-------------------------------------------------------------------------
-    def _skip_spaces(self):
+    def _skip_spaces(self) -> bool:
         #=======================================================================
         # <skip spaces> ::= ' ' <skip spaces>
         #                |  EPS
         #=======================================================================
         while self._current == ' ':
             self._next()
+        return True
 
     #-------------------------------------------------------------------------
-    def _space_element_1(self) -> bool:
+    def _space_elements_1(self) -> bool:
         #=======================================================================
         # <space elements'> ::= ' ' <space elements''>
         #                    |  '\t' <code block>
@@ -934,7 +955,7 @@ class MDParser:
                     self._text_with_span_elements()
 
     #-------------------------------------------------------------------------
-    def _space_element_2(self) -> bool:
+    def _space_elements_2(self) -> bool:
         #=======================================================================
         # <space elements''> ::= ' ' <space elements'''>
         #                     |  '\t' <code block>
@@ -950,7 +971,7 @@ class MDParser:
             return self._code_block()
         elif self._current == '\n':
             self._next()
-            self.breakline()  ## breakline! - CAUTION: maybe context sensitive...
+            ##self._breakline()  ## breakline! - CAUTION: maybe context sensitive...
             return True
         else:
             return self._maybe_star() or \
@@ -958,7 +979,7 @@ class MDParser:
                     self._text_with_span_elements()
 
     #-------------------------------------------------------------------------
-    def _space_element_3(self) -> bool:
+    def _space_elements_3(self) -> bool:
         #=======================================================================
         # <space elements'''> ::= ' ' <code block>                
         #                      |  '\t' <code block>
@@ -1013,14 +1034,21 @@ class MDParser:
     def _title(self) -> bool:
         #=======================================================================
         # <title> ::= '"' <any chars but newline and "> '"'
+        #          |  EPS $title=NULL;
         #=======================================================================
         if self._current == '"':
+            self._title_start = self._current_index     ## $title.start=index;
             self._next()
             self._any_chars_but( '\n"' )
             if self._current == '"':
                 self._next()
+                self._title_end = self._current_index   ## $title.end=index;
                 return True
-        return False
+            else:
+                return False
+        else:
+            self._title_start = None                        ## $title=Null;
+            return True
         
     #-------------------------------------------------------------------------
     def _unordered_item(self) -> bool:
@@ -1028,6 +1056,7 @@ class MDParser:
         # <unordered item> ::= <list bullet> <text with span elements>
         #=======================================================================
         if self._list_bullet():
+            self._append_mark( MDUnorderedItem(self._current_index) )
             return self._text_with_span_elements()
         else:
             return False
@@ -1038,6 +1067,7 @@ class MDParser:
         # <unordered list> ::= <unordered item> <unordered list'>
         #=======================================================================
         if self._unordered_item():
+            self._ul_start = self._current_index    ## $ul.start=index;
             return self._unordered_list_1()
         else:
             return False
@@ -1050,13 +1080,18 @@ class MDParser:
         #=======================================================================
         while self._unordered_item():
             continue
-        return self._line_or_paragraph_end()
+        if self._line_or_paragraph_end():
+            self._append_mark( MDUnorderedList( self._ul_start, self._current_index) )  ## $ul.end=index, mark(ul);
+            return True
+        else:
+            return False
 
     #-------------------------------------------------------------------------
     def _url(self) -> bool:
         #=======================================================================
         # <url> ::= <alphanum chars> <url'>
         #=======================================================================
+        self._url_data = [self._current_index, 0]   ## $url.start=index; 
         if 'a' <= self._current <= 'z' or \
             'A' <= self._current <= 'Z' or \
             '0' <= self._current <= '9':
@@ -1068,11 +1103,12 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _url_1(self) -> bool:
         #=======================================================================
-        # <url'> ::= "://" <any chars but ] and ">
+        # <url'> ::= "://" <any chars but ) and ">
         #=======================================================================
         if self._current_3 == "://":
             self._next( 3 )
-            self._any_chars_but( ']"' )
+            self._any_chars_but( ')"' )
+            self._url_data[1] = self._current_index     ## $url.end=index;
             return True
         else:
             return False
@@ -1104,8 +1140,19 @@ class MDParser:
     def _end_of_text(self) -> bool:
         return self._current_index == len( self._md_text )
     #-------------------------------------------------------------------------
+    def _finalize(self) -> bool:
+        self._md_marks = self._md_marks.sorted()
+        return False
+    #-------------------------------------------------------------------------
     def _next(self, n:int=1):
         self._current_index += n
+    #-------------------------------------------------------------------------
+    def _number(self) -> bool:
+        b_num = False
+        while self._current in "0123456789":
+            self._next()
+            b_num = True
+        return b_num
     #-------------------------------------------------------------------------
     def _search_html_end(self, start:int, end:int):
         html_tag = self._md_text[start:end].split(' ', 1)[0]

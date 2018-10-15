@@ -7,10 +7,10 @@
 ## https://help.github.com/articles/basic-writing-and-formatting-syntax/
 ##
 
-<MD text>                       ::= $line.start=index; <MD line> <MD text>
+<MD text>                       ::= $line.start=index; <MD line> <MD text>          ### ok
                                  | EPS
 
-<MD line>                       ::= <block elements>
+<MD line>                       ::= <block elements>                                ### ok
                                  |  <space-starting elements>
                                  |  <text with span elements>
                                  |  <line or paragraph end>
@@ -18,7 +18,7 @@
 
 ## --- Elements --------------------------------------------------------------
 
-<block elements>                ::= <blockquote>
+<block elements>                ::= <blockquote>    ### ok
                                  |  <header atx>
                                  |  <header setext>
                                  |  <list>
@@ -27,27 +27,27 @@
                                  |  <image>
  
  
-<space-starting elements>       ::= ' ' <space elements'>
+<space-starting elements>       ::= ' ' <space elements'>   ### ok
                                  |  '\t' <code block>
-<space elements'>               ::= ' ' <space elements''>
+<space elements'>               ::= ' ' <space elements''>  ### ok
                                  |  '\t' <code block>
                                  |  <maybe star>
                                  |  <maybe underscore>
                                  |  <text with span elements>
-<space elements''>              ::= ' ' <space elements'''>
+<space elements''>              ::= ' ' <space elements'''> ### ok
                                  |  '\t' <code block>
-                                 |  '\n'                                                ## breakline! - CAUTION: maybe context sensitive...
+                                 |  '\n'                                                ## breakline! - CAUTION: maybe context sensitive... TO BE CHECKED!!!
                                  |  <maybe star>
                                  |  <maybe underscore>
                                  |  <text with span elements>
-<space elements'''>             ::= ' ' <code block>                
+<space elements'''>             ::= ' ' <code block>         ### ok
                                  |  '\t' <code block>
                                  |  <maybe star>
                                  |  <maybe underscore>
                                  |  <text with span elements>
 
                                  
-<text with span elements>       ::= <html entity> <maybe setext header>
+<text with span elements>       ::= <html entity> <maybe setext header> ### ok
                                  |  <html tag or automatic link> <maybe setext header>
                                  |  <emphasis or strong style> <maybe setext header>
                                  |  <inlined code> <maybe setext header>
@@ -59,148 +59,150 @@
 
 ## --- Markdown Tags ---------------------------------------------------------
 
-<automatic link end>            ::= <any chars but space \> >  '>'
+<automatic link end>            ::= <any chars but space \> >  '>'  ### ok
 
-<blockquotes>                   ::= "> " $bq.start=index, bq.level=1; <blockquotes'>
-<blockquotes'>                  ::= "> " $bq.level++; <blockquotes'>
+<blockquotes>                   ::= "> " $bq.start=index, bq.level=1; <blockquotes'>    ### ok
+<blockquotes'>                  ::= "> " $bq.level++; <blockquotes'>    ### ok
 								 |  $bq.end=index; <text with span elements> <blockquotes">
-<blockquotes">                  ::= <text with span elements> <blockquotes">
+<blockquotes">                  ::= <text with span elements> <blockquotes">    ### ok
                                  |  <line or paragraph end> $mark(bq);
 
-<closing html tag>              ::= <any chars but \> \\n > $htal.verify(index); '>'    ###
+<closing html tag>              ::= <any chars but \> \\n > $htal.verify(index); '>'    ### ok - TO BE CHECKED
 
-<code block>                    ::= <text with span elements> <code block'>
-<code block'>                   ::= <text with span elements> <code block'>
+<code block>                    ::= <text with span elements> <code block'> ### ok
+<code block'>                   ::= <text with span elements> <code block'> ### ok
                                  |  <line or paragraph end>
 
-<emph or strong *>              ::= '*' $mark(Strng(index-2)); <any chars but *> "**" $mark(Strng(index-2));
+<emph or strong *>              ::= '*' $mark(Strng(index-2)); <any chars but *> "**" $mark(Strng(index-2));    ### ok
 								 |  $mark(Emph(index-1)); <any chars but *> '*' $mark(Emph(index-1));
 
-<emph or strong _>              ::= '_' $mark(Strng(es.start)); <any chars but _> "__" $mark(Strng(index-2));
+<emph or strong _>              ::= '_' $mark(Strng(es.start)); <any chars but _> "__" $mark(Strng(index-2));   ### ok
 								 |  $mark(Emph(index-1)); <any chars but _> '_' $mark(Emph(index-1));
 
 
-<emphasis or strong style>      ::= '*' <emph or strong *>
+<emphasis or strong style>      ::= '*' <emph or strong *>  ### ok
                                  |  '_' <emph or strong _>
 
-<escape>                        ::= '\\' <escaped char>
-<escaped char>                  ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'
+<escape>                        ::= '\\' <escaped char> ### ok
+<escaped char>                  ::= '\\'  |  '`'  |  '*'  |  '_'  |  '{'    ### ok
                                  |  '}'   |  '['  |  ']'  |  '('  |  ')'
                                  |  '#'   |  '+'  |  '-'  |  '.'  |  '!' $mark(Esc(index-1));
 
-<header atx>                    ::= '#' $hdr=HdrAtx(index); <header atx'>
-<header atx'>                   ::= '#' $hdr.level++; <header atx'>
+<header atx>                    ::= '#' $hdr=HdrAtx(index); <header atx'>   ## ok
+<header atx'>                   ::= '#' $hdr.level++; <header atx'> ### ok
                                  |  ' ' $mark(hdr); <text with span elements> $mark(HdrEnd(index));
 
-<header setext>                 ::= '=' $mark(HdrStxH1(index)); <header setext h1>
+<header setext>                 ::= '=' $mark(HdrStxH1(index)); <header setext h1>  ### ok
                                  |  '-' $mark(HdrStxH2(index)); <header setext h2>
-                                 |  EPS
                   
-<header setext h1>              ::= '=' <skip spaces> <header setext h1'>
+<header setext h1>              ::= '=' <skip spaces> <header setext h1'>   ### ok
 <header setext h1'>             ::= '=' <skip spaces> <header setext h1'>
-                                 |  <line or paragraphe end> $mark(HdrEndH1(index));
+                                 |  <line or paragraphe end> $mark(HdrEndH1(index));    ### ok
 
-<header setext h2>              ::= '-' <skip spaces> <header setext h2'>
-<header setext h2'>             ::= '-' <skip spaces> <header setext h2'>
+<header setext h2>              ::= '-' <skip spaces> <header setext h2'>   ### ok
+<header setext h2'>             ::= '-' <skip spaces> <header setext h2'>   ### ok
                                  |  <line or paragraphe end> $mark(HdrEndH2(index));
 
-<horizontal rule>               ::= <hrule star>
+<horizontal rule>               ::= <hrule star>    ### ok
                                  |  <hrule hyphen'>
 
-<hrule hyphen>                  ::= '-' <skip spaces> '-' <skip spaces> '-' <hrule hyphen'>
-<hrule hyphen'>                 ::= <skip spaces> '-' <hrule hyphen'>
+<hrule hyphen>                  ::= '-' <skip spaces> '-' <skip spaces> '-' <hrule hyphen'> ### ok
+<hrule hyphen'>                 ::= ' ' <skip spaces> '-' <hrule hyphen'>   ### ok
                                  |  <line or paragraphe end> $mark(HR(line.start,index);
 
-<hrule star>                    ::= '*' <skip spaces> '*' <skip spaces> '*' <hrule star'>
-<hrule star'>                   ::= <skip spaces> '*' <hrule star'>
+<hrule star>                    ::= '*' <skip spaces> '*' <skip spaces> '*' <hrule star'>   ### ok
+<hrule star'>                   ::= <skip spaces> '*' <hrule star'> ### ok
                                  |  <line or paragraphe end> $mark(HR(line.start,index);
 
-<html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he);
+<html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he); ### ok
 
-<html tag or automatic link>    ::= '<' $htal.start=index; <html tag or automatic link'>
-<html tag or automatic link'>   ::= '/' <closing html tag> $htal.end=index, mark(HT(htal));
+<html tag or automatic link>    ::= '<' $htal.start=index; <html tag or automatic link'>    ### ok
+<html tag or automatic link'>   ::= '/' <closing html tag> $htal.end=index, mark(HT(htal)); ### ok
                                  |  <any chars but : / space \> > $htal.settag(index); <html tag or automatic link">
-<html tag or automatic link">   ::= "://" $htal.prefixend=index; <automatic link end> $htal.end=index, mark(AL(htal));
+<html tag or automatic link">   ::= "://" $htal.prefixend=index; <automatic link end> $htal.end=index, mark(AL(htal));  ### ok
                                  |  "/>" $htal.end=index, mark(HT(htal));
                                  |  '>' $htal.end=index, mark(HT(htal));
                                  |  ' ' <any chars but : / \> > <html tag or automatic link">
 
-<image>                         ::= '!' $im.start=index; <link>
+<image>                         ::= '!' $im.start=index; <link> ### ok
 
-<inlined code>                  ::= '`' $ic.start=index, ic.dbl=False; <inlined code'>
-<inlined code'>                 ::= <any char but `> '`' $ic.end=index, mark(ic);
-								 |  '`' $ic.dbl=True; <inlined code''>
-<inlined code''>                ::= <any chars but `> '`' <inlined code '''>
-<inlined code '''>				::= '`' $ic.end=index, mark(ic);
+<inlined code>                  ::= '`' $ic.start=index, ic.dbl=False; <inlined code'>  ### ok
+<inlined code'>                 ::= '`' $ic.dbl=True; <inlined code''>  ### ok
+								 |  <any char but `> '`' $ic.end=index, mark(ic);
+<inlined code''>                ::= <any chars but `> '`' <inlined code '''>    ### ok
+<inlined code '''>				::= '`' $ic.end=index, mark(ic);    ### ok
 								 |  <inlined code''>
 
-<inlined link>                  ::= '[' $il.start=index; <url> $il.url=url; <title> $il.title=title; ']' $il.end=index, mark(il);
+<inlined link>                  ::= '(' $il.start=index; <url> $il.url=url; <title> $il.title=title; ')' $il.end=index, mark(il);   ### ok
                          
-<line or paragraph end>         ::= '\n' <line or paragraph end'>
+<line or paragraph end>         ::= '\n' <line or paragraph end'>   ### ok
                                  |  <ENDOFTEXT> $finalize();            ## line end
-<line or paragraph end'>        ::= '\n' <line or paragraph end'>       ## paragraph end
+<line or paragraph end'>        ::= '\n' <line or paragraph end'>   ### ok       ## paragraph end
                                  |  <ENDOFTEXT> $finalize();            ## paragraph end
                                  |  EPS $line.start=index;              ## line or paragraph end, context dependent
 
-<link>                          ::= <inlined link>
+<link>                          ::= <inlined link>  ### ok
                                  |  <referenced link>
 
-<link or reference>             ::= '[' $lire.start=index; <linked text> ']' $lire.end=index;  <link or reference'>
-<link or reference'>            ::= ':' <reference> $markRef(url,refTtl);
+<link or reference>             ::= '[' $lire.start=index; <linked text> ']' $lire.end=index;  <link or reference'>     ### ok
+<link or reference'>            ::= ':' <reference> $markRef(url,refTtl);   ### ok
                                  |  <link> $mark(lire,link);
 
-<linked text>                   ::= <any chars but ]> 
+<linked text>                   ::= <any chars but ]>   ### ok
 
-<list>                          ::= <ordered list>
-                                 |  <unordered list>                    ## CAUTION: "paragraphed" list items are not addressed there
+<list>                          ::= <ordered list>  ### ok
+                                 |  <unordered list>                    ## CAUTION: "paragraphed" list items are not addressed here
 
-<list bullet>                   ::= '*'
+<list bullet>                   ::= '*' ### ok
                                  |  '+'
                                  |  '-'
 
-<max 3 spaces>                  ::= ' ' <max 3'>
+<max 3 spaces>                  ::= ' ' <max 3 spaces'> ### ok
                                  |  EPS
-<max 3'>                        ::= ' ' <max 3''>
+<max 3 spaces'>                 ::= ' ' <max 3 spaces''>    ### ok
                                  |  EPS
-<max 3''>                       ::= ' '
+<max 3 spaces''>                ::= ' ' ### ok
                                  |  EPS
 
-<maybe setext header>           ::= '\n' <header setext>
+<maybe setext header>           ::= '\n' <maybe setext header'> ### ok
+<maybe setext header'>          ::= <header setext> ### ok
+                                 |  EPS
 
-<maybe star>                    ::= '*' <maybe star'>
-<maybe star'>                   ::= ' ' $mark(Str(index));
+<maybe star>                    ::= '*' <maybe star'>   ### ok
+<maybe star'>                   ::= ' ' $mark(Str(index-1));    ### ok
                                  |  <text with span elements>
 
-<maybe underscore>              ::= '_' <maybe underscore'>
-<maybe underscore'>				::= ' ' $mark(Und(index));
+<maybe underscore>              ::= '_' <maybe underscore'> ### ok
+<maybe underscore'>				::= ' ' $mark(Und(index-1));    ### ok
                                  |  <text with span elements>
 
-<ordered item>                  ::= $oi.start=index; <number> '.' $oi.end=index, mark(oi); <text with span elements>
+<ordered item>                  ::= $oi.start=index; <number> '.' $oi.end=index, mark(oi); <text with span elements>    ### ok
 
-<ordered list>                  ::= <ordered item> $ol.start=index; <ordered list'>
-<ordered list'>                 ::= <ordered item> <ordered list'>
+<ordered list>                  ::= <ordered item> $ol.start=index; <ordered list'> ### ok
+<ordered list'>                 ::= <ordered item> <ordered list'>  ### ok
                                  | <line or paragraph end> $ol.end=index, mark(ol);
 
-<reference>                     ::= <skip spaces> <url> <skip spaces> <reference title> '\n'
+<reference>                     ::= <skip spaces> <url> <skip spaces> <reference title> '\n'    ### ok
 
-<referenced link>               ::= <skip spaces> '[' <referenced link'> ']'
-<reference linked'>             ::= <any chars but ]>
+<referenced link>               ::= <skip spaces> '[' <referenced link'> ']'    ### ok
+<reference linked'>             ::= <any chars but ]>   ### ok
                                  |  EPS
 
-<reference title>               ::= '\n' <max 3 spaces> <reference title'>                      ## CAUTION: may lead to backward scanning if no '"' in next 4 chars
+<reference title>               ::= '\n' <max 3 spaces> <reference title'>  ### ok  ## CAUTION: may lead to backward scanning if no '"' in next 4 chars
                                  |  <reference title'>
-<reference title'>              ::= '"' $refTtl.start=index; <any chars but newline and "> '"'$refTtl.end=index; <skip spaces> '\n'    ## (maybe end-of-line is not needed)
+<reference title'>              ::= '"' $refTtl.start=index; <any chars but newline and "> '"' $refTtl.end=index; <skip spaces> '\n'    ### ok    ## (maybe end-of-line is not needed)
 
 <skip spaces>                   ::= ' ' <skip spaces>
                                  |  EPS
 
-<title>                         ::= '"' $title.start=index; <any chars but newline and "> '"' $title.end=index;
+<title>                         ::= '"' $title.start=index; <any chars but newline and "> '"' $title.end=index; ### ok
+                                 |  EPS $title=NULL;    ### added
 
-<unordered item>                ::= <list bullet> $mark(Uli(index)); <text with span elements>
+<unordered item>                ::= <list bullet> $mark(Uli(index)); <text with span elements>  ### ok
 
-<unordered list>                ::= <unordered item> $ul.start=index; <unordered list'>
+<unordered list>                ::= <unordered item> $ul.start=index; <unordered list'> ### ok
 <unordered list'>               ::= <unordered item> <unordered list'>
                                  |  <line or paragraph end> $ul.end=index, mark(ul);
 
 <url>                           ::= $url.start=index; <alphanum chars> <url'>
-<url'>                          ::= "://" <any chars but ] and "> $url.end=index;
+<url'>                          ::= "://" <any chars but ) and "> $url.end=index;     ### replaced ] w. )

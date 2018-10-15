@@ -105,7 +105,7 @@ class MDtoHTML:
                 if self._check_code_line( my_line, current_indent ):
                     self._marks.append( MDCodeLine( LineColumn(num_line, 0) ) )
                 
-                ## checks horizontal roules (never present in headers)
+                ## checks horizontal rules (never present in headers)
                 if self._check_hrule( line ):
                     self._marks.append( MDHRule( LineColumn(num_line, 0) ) )
             

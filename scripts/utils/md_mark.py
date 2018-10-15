@@ -23,10 +23,6 @@ SOFTWARE.
 """
 
 #=============================================================================
-# no import.
-
-
-#=============================================================================
 class LineColumn:
     """
     The class of line and column numbers in a text.
@@ -65,12 +61,14 @@ class MDMark:
         Sets the starting and the ending point od Markdown marks in an MD text.
         
         Args:
-            start: LineColumn
-                the line number and the column index in this line of the
-                starting point of the MD mark in the MD text.
-            end: LineColumn
-                the line number and the column index in this line of the
-                ending point of the MD mark in the MD text.
+            start: LineColumn or int
+                the line number and the column index in this line, or the index
+                in the whole text,  of the starting point of the MD mark in the 
+                MD text.
+            end: LineColumn or int
+                the line number and the column index in this line, or the index
+                in the whole text, of the ending point of the MD mark in the MD 
+                text.
         '''
         self.start, self.end = start, end
     #-------------------------------------------------------------------------
@@ -84,7 +82,6 @@ class MDMark:
     def index(self, ndx:int):
         self.start = ndx    
 
-
 #=============================================================================
 class MDMarkText( MDMark ):
     '''
@@ -94,7 +91,6 @@ class MDMarkText( MDMark ):
     def __init__(self, start:(LineColumn,int), end:(LineColumn,int), txt:str):
         super().__init__( start, end )
         self.txt = txt
-
 
 #=============================================================================
 class MDBlockQuote( MDMark ):
@@ -108,7 +104,6 @@ class MDBlockQuote( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'BLCK'
 
-
 #=============================================================================
 class MDBlockQuoteML( MDMark ):
     '''
@@ -121,7 +116,6 @@ class MDBlockQuoteML( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'BLCKML'
 
-
 #=============================================================================
 class MDBreakLine( MDMark ):
     '''
@@ -132,7 +126,6 @@ class MDBreakLine( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'BRKLN'
-
 
 #=============================================================================
 class MDCodeBlock( MDMarkText ):
@@ -148,7 +141,6 @@ class MDCodeBlock( MDMarkText ):
     #-------------------------------------------------------------------------
     CLASS = 'CODBLK'
 
-
 #=============================================================================
 class MDCodeLine( MDMark ):
     '''
@@ -159,7 +151,6 @@ class MDCodeLine( MDMark ):
         super().__init__( start, None )
     #-------------------------------------------------------------------------
     CLASS = 'CODLIN'
-
 
 #=============================================================================
 class MDCodeInlined( MDMark ):
@@ -172,7 +163,6 @@ class MDCodeInlined( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'CODINL'
 
-
 #=============================================================================
 class MDEmphasisBegin( MDMark ):
     '''
@@ -183,7 +173,6 @@ class MDEmphasisBegin( MDMark ):
         super().__init__( start, end if end is not None else start+1 )
     #-------------------------------------------------------------------------
     CLASS = 'EMPBGN'
-
 
 #=============================================================================
 class MDEmphasisEnd( MDMark ):
@@ -196,7 +185,6 @@ class MDEmphasisEnd( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'EMPEND'
 
-
 #=============================================================================
 class MDEscape( MDMark ):
     '''
@@ -207,7 +195,6 @@ class MDEscape( MDMark ):
         super().__init__( start, start+1 )
     #-------------------------------------------------------------------------
     CLASS = 'ESC'
-
 
 #=============================================================================
 class MDFootnote( MDMarkText ):
@@ -220,7 +207,6 @@ class MDFootnote( MDMarkText ):
     #-------------------------------------------------------------------------
     CLASS = 'FOOTNT'
 
-
 #=============================================================================
 class MDFootnoteRef( MDMarkText ):
     '''
@@ -231,7 +217,6 @@ class MDFootnoteRef( MDMarkText ):
         super().__init__( start, end, txt )
     #-------------------------------------------------------------------------
     CLASS = 'FOOTNT'
-
 
 #=============================================================================
 class MDHeader( MDMark ):
@@ -252,7 +237,6 @@ class MDHeader( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'HDR'
 
-
 #=============================================================================
 class MDHRule( MDMark ):
     '''
@@ -263,7 +247,6 @@ class MDHRule( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'HRUL'
-
 
 #=============================================================================
 class MDHtmlEntity( MDMark ):
@@ -276,7 +259,6 @@ class MDHtmlEntity( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'HTMENT'
 
-
 #=============================================================================
 class MDHtmlTag( MDMark ):
     '''
@@ -287,19 +269,6 @@ class MDHtmlTag( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'HTMTAG'
-
-
-#=============================================================================
-class MDLinebreak( MDMark ):
-    '''
-    The class of MD line breaks.
-    '''
-    #-------------------------------------------------------------------------
-    def __init__(self, start:(LineColumn,int)):
-        super().__init__( start, None )
-    #-------------------------------------------------------------------------
-    CLASS = 'LINBRK'
-
 
 #=============================================================================
 class MDInlineAddition( MDMark ):
@@ -312,7 +281,6 @@ class MDInlineAddition( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'INLADD'
 
-
 #=============================================================================
 class MDInlineDeletion( MDMark ):
     '''
@@ -323,7 +291,6 @@ class MDInlineDeletion( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'INLDEL'
-
 
 #=============================================================================
 class MDIsolatedAmpersand( MDMark ):
@@ -336,7 +303,6 @@ class MDIsolatedAmpersand( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'ISLAMP'
 
-
 #=============================================================================
 class MDIsolatedLT( MDMark ):
     '''
@@ -348,6 +314,16 @@ class MDIsolatedLT( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'ISLLT'
 
+#=============================================================================
+class MDLinebreak( MDMark ):
+    '''
+    The class of MD line breaks.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int)):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'LINBRK'
 
 #=============================================================================
 class MDLink( MDMarkText ):
@@ -361,7 +337,6 @@ class MDLink( MDMarkText ):
     #-------------------------------------------------------------------------
     CLASS = 'LNK'
 
-
 #=============================================================================
 class MDLinkAuto( MDLink ):
     '''
@@ -372,7 +347,6 @@ class MDLinkAuto( MDLink ):
         super().__init__( start, end, txt, txt )
     #-------------------------------------------------------------------------
     CLASS = 'LNKAUT'
-
 
 #=============================================================================
 class MDLinkTitle( MDLink ):
@@ -385,7 +359,6 @@ class MDLinkTitle( MDLink ):
         self.title = title
     #-------------------------------------------------------------------------
     CLASS = 'LNKTITL'
-
 
 #=============================================================================
 class MDLinkRef( MDLink ):
@@ -401,6 +374,16 @@ class MDLinkRef( MDLink ):
     #-------------------------------------------------------------------------
     CLASS = 'LNKREF'
 
+#=============================================================================
+class MDLinkRefTitle( MDLinkTitle ):
+    '''
+    The class of MD links with title.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int), txt:str, link:str, title:str):
+        super().__init__( start, end, txt, link, title )
+    #-------------------------------------------------------------------------
+    CLASS = 'LNKRFTL'
 
 #=============================================================================
 class MDLinkAutoRef( MDLinkRef ):
@@ -412,7 +395,6 @@ class MDLinkAutoRef( MDLinkRef ):
         super().__init__( start, end, txt, txt )
     #-------------------------------------------------------------------------
     CLASS = 'LNKARF'
-
 
 #=============================================================================
 class MDList( MDMark ):
@@ -426,7 +408,6 @@ class MDList( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'LST'
 
-
 #=============================================================================
 class MDListItem( MDList ):
     '''
@@ -437,7 +418,6 @@ class MDListItem( MDList ):
         super().__init__( start, end, nested_level )
     #-------------------------------------------------------------------------
     CLASS = 'LSTITM'
-
 
 #=============================================================================
 class MDListNumItem( MDList ):
@@ -450,6 +430,27 @@ class MDListNumItem( MDList ):
     #-------------------------------------------------------------------------
     CLASS = 'LSTNUM'
 
+#=============================================================================
+class MDOrderedItem( MDMark ):
+    '''
+    The class of ordered (numbered) items of lists.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'ORDITM'
+
+#=============================================================================
+class MDOrderedList( MDMark ):
+    '''
+    The class of ordered (numbered) lists.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'ORDLST'
 
 #=============================================================================
 class MDReference( MDLinkTitle ):
@@ -462,18 +463,27 @@ class MDReference( MDLinkTitle ):
     #-------------------------------------------------------------------------
     CLASS = 'RFR'
 
+#=============================================================================
+class MDStar( MDMark ):
+    '''
+    The class of MD stars (? don't know for what use).
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int)):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'STAR'
 
 #=============================================================================
 class MDStrikethrough( MDMark ):
     '''
-    The class of MD strikethrough.
+    The class of MD strike-through.
     '''
     #-------------------------------------------------------------------------
     def __init__(self, start:(LineColumn,int), end:(LineColumn,int)):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'STRKT'
-
 
 #=============================================================================
 class MDStrongBegin( MDMark ):
@@ -487,7 +497,6 @@ class MDStrongBegin( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'STGBEG'
 
-
 #=============================================================================
 class MDStrongEnd( MDMark ):
     '''
@@ -500,7 +509,6 @@ class MDStrongEnd( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'STGEND'
 
-
 #=============================================================================
 class MDTable( MDMark ):
     '''
@@ -511,7 +519,6 @@ class MDTable( MDMark ):
         super().__init__( start, end )
     #-------------------------------------------------------------------------
     CLASS = 'TABL'
-
 
 #=============================================================================
 class MDTableAlign( MDMark ):
@@ -535,7 +542,6 @@ class MDTableAlign( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'TBLALGN'
 
-
 #=============================================================================
 class MDTableRow( MDMark ):
     '''
@@ -548,7 +554,6 @@ class MDTableRow( MDMark ):
     #-------------------------------------------------------------------------
     CLASS = 'TBLROW'
 
-
 #=============================================================================
 class MDTableHeader( MDTableRow ):
     '''
@@ -560,6 +565,38 @@ class MDTableHeader( MDTableRow ):
     #-------------------------------------------------------------------------
     CLASS = 'TBLHDR'
 
+#=============================================================================
+class MDUnderscore( MDMark ):
+    '''
+    The class of MD underscores (? don't know for what use).
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int)):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'UNDRSC'
+
+#=============================================================================
+class MDUnorderedItem( MDMark ):
+    '''
+    The class of unordered (bulleted) items of lists.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int)):
+        super().__init__( start, None )
+    #-------------------------------------------------------------------------
+    CLASS = 'BLTITM'
+
+#=============================================================================
+class MDUnorderedList( MDMark ):
+    '''
+    The class of ordered (numbered) lists.
+    '''
+    #-------------------------------------------------------------------------
+    def __init__(self, start:(LineColumn,int), end:(LineColumn,int)):
+        super().__init__( start, end )
+    #-------------------------------------------------------------------------
+    CLASS = 'BLTLST'
 
 #=============================================================================
 class MDImage( MDLinkTitle ):
@@ -571,7 +608,6 @@ class MDImage( MDLinkTitle ):
         super().__init__( start, end, alt_txt, link, title )
     #-------------------------------------------------------------------------
     CLASS = 'IMG'
-
 
 #=============================================================================
 class MDImageRef( MDImage ):
@@ -587,6 +623,4 @@ class MDImageRef( MDImage ):
     #-------------------------------------------------------------------------
     CLASS = 'IMGREF'
 
-        
 #=====   end of   scripts.utils.md_mark   =====#
-

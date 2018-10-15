@@ -70,7 +70,7 @@
 <inlined code'> ::= <any chars but `>  |  '`' <inlined code">
 <inlined code"> ::= <any chars but `> <inlined code'>  |  '`'
 
-<inlined link> ::= '[' <url> <title> ']'
+<inlined link> ::= '(' <url> <title> ')'
 
 <item'> ::= <text with span elements> <line'>  |  '\n'
 
