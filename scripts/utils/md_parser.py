@@ -395,7 +395,7 @@ class MDParser:
         # <hrule hyphen'> ::= ' ' <skip spaces> '-' <hrule hyphen'>
         #                  |  <line or paragraph end>
         #=======================================================================
-        while self.current == ' ':
+        while self._current == ' ':
             self._skip_spaces()
             if self._current != '-':
                 return False
@@ -427,7 +427,7 @@ class MDParser:
         # <hrule star'> ::= ' ' <skip spaces> '-' <hrule star'>
         #                |  <line or paragraph end>
         #=======================================================================
-        while self.current == ' ':
+        while self._current == ' ':
             self._skip_spaces()
             if self._current != '*':
                 return False
