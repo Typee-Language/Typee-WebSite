@@ -33,7 +33,9 @@ if __name__ == '__main__':
     Test script for the validation of module md_to_html.py.
     """
     #-------------------------------------------------------------------------
-    MDParser().parse( './data/md_parser.md' )
+    md_marks_list = MDParser().parse( './data/md_parser.md' )
+    for md_mark in md_marks_list:
+        print( md_mark )
     pass
    
 

@@ -13,14 +13,13 @@
 <MD line>                       ::= <block elements>                                ### ok
                                  |  <space-starting elements>
                                  |  <text with span elements>
-                                 |  <line or paragraph end>
 
 
 ## --- Elements --------------------------------------------------------------
 
-<block elements>                ::= <blockquote>    ### ok
+<block elements>                ::= <line or paragraph end>    ### ok
+                                 |  <blockquote>
                                  |  <header atx>
-                                 |  <header setext>
                                  |  <list>
                                  |  <horizontal rule>
                                  |  <link or reference>
@@ -114,7 +113,7 @@
 <hrule star'>                   ::= <skip spaces> '*' <hrule star'> ### ok
                                  |  <line or paragraphe end> $mark(HR(line.start,index);
 
-<html entity>                   ::= '&' $he.start=index; <non space chars> ';' $he.end=index, mark(he); ### ok
+<html entity>                   ::= '&' $he.start=index; <any char but space or ';'> ';' $he.end=index, mark(he); ### ok
 
 <html tag or automatic link>    ::= '<' $htal.start=index; <html tag or automatic link'>    ### ok
 <html tag or automatic link'>   ::= '/' <closing html tag> $htal.end=index, mark(HT(htal)); ### ok
@@ -165,6 +164,7 @@
                                  |  EPS
 
 <maybe setext header>           ::= '\n' <maybe setext header'> ### ok
+                                 |  EPS
 <maybe setext header'>          ::= <header setext> ### ok
                                  |  EPS
 

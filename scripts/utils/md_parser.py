@@ -82,7 +82,7 @@ class MDParser:
         '''
         '''
         self._md_text       = text
-        self._current_index = 0
+        self._current_index = 0   
         self._mem_index     = None
         self._md_marks      = MDMarksList()
         
@@ -119,7 +119,8 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _block_elements(self) -> bool:
         #=======================================================================
-        # <block elements> ::= <blockquote>
+        # <block elements> ::= <line or paragraph end>
+        #                   |  <blockquote>
         #                   |  <header atx>
         #                   |  <header setext>
         #                   |  <list>
@@ -127,12 +128,13 @@ class MDParser:
         #                   |  <link or reference>
         #                   |  <image>
         #=======================================================================
-        return self._blockquotes() or \
-                self._header_atx() or \
-                self._header_setext() or \
-                self._list() or \
-                self._horizontal_rule() or \
-                self._link_or_reference() or \
+        return self._line_or_paragraph_end() or \
+                self._blockquotes()          or \
+                self._header_atx()           or \
+                self._header_setext()        or \
+                self._list()                 or \
+                self._horizontal_rule()      or \
+                self._link_or_reference()    or \
                 self._image()
 
     #-------------------------------------------------------------------------
@@ -149,6 +151,7 @@ class MDParser:
             return False
         
     #-------------------------------------------------------------------------
+    def _blockquotes_1(self) -> bool:
         #=======================================================================
         # <blockquotes'> ::= "> " <blockquotes'>
         #                 |  <text with span elements> <blockquotes">
@@ -184,7 +187,7 @@ class MDParser:
         # <closing html tag> ::= <any chars but \> \\n > '>'
         #=======================================================================
         def _my_process() -> bool:
-            self._htal_verify( self._current_index )  ## $htal.verify(index)
+            ##self._htal_verify( self._current_index )  ## $htal.verify(index)
             self._next()
             return True
             
@@ -225,11 +228,11 @@ class MDParser:
         #=======================================================================
         if self._current == md_tag:
             self._next()
-            self._append_mark( MDStrongBegin(self._currrent_index - 2) )    ## $mark(Strng(index-2));
+            self._append_mark( MDStrongBegin(self._current_index - 2) )    ## $mark(Strng(index-2));
             self._any_chars_but( md_tag )
             if self._current_2 == md_tag + md_tag:
                 self._next( 2 )
-                self._append_mark( MDStrongEnd(self._currrent_index - 2))   ## $mark(Strng(index-2));
+                self._append_mark( MDStrongEnd(self._current_index - 2))   ## $mark(Strng(index-2));
                 return True
             else:
                 return False
@@ -444,9 +447,8 @@ class MDParser:
         #=======================================================================
         if self._current == '&':
             self._he_start = self._current_index    ## $he.start=index;
-            self._next()
-            while self._current != ' ':
-                self._next()
+            ##self._next()
+            self._any_chars_but( " ;" )
             if self._current == ';':
                 self._next()
                 self._append_mark( MDHtmlEntity(self._he_start, self._current_index) )  ## $he.end=index, mark(he);
@@ -749,12 +751,13 @@ class MDParser:
     def _maybe_setext_header(self) -> bool:
         #=======================================================================
         # <maybe setext header> ::= '\n' <maybe setext header'>
+        #                        |  EPS
         #=======================================================================
         if self._current == '\n':
             self._next()
             return self._maybe_setext_header_1()
         else:
-            return False
+            return True
 
     #-------------------------------------------------------------------------
     def _maybe_setext_header_1(self) -> bool:
@@ -816,12 +819,11 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _md_line(self) -> bool:
         #=======================================================================
-        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements> | <line or paragraph end>
+        # <MD line> ::= <block element> | <space-starting elements> | <text with span elements>
         #=======================================================================
-        return self._block_elements() or \
+        return self._block_elements()           or \
                 self._space_starting_elements() or \
-                self._text_with_span_elements() or \
-                self._line_or_paragraph_end()
+                self._text_with_span_elements()
         
     #-------------------------------------------------------------------------
     def _ordered_item(self) -> bool:
@@ -950,7 +952,7 @@ class MDParser:
             self._next()
             return self._code_block()
         else:
-            return self._maybe_star() or \
+            return self._maybe_star()        or \
                     self._maybe_underscore() or \
                     self._text_with_span_elements()
 
@@ -974,7 +976,7 @@ class MDParser:
             ##self._breakline()  ## breakline! - CAUTION: maybe context sensitive...
             return True
         else:
-            return self._maybe_star() or \
+            return self._maybe_star()        or \
                     self._maybe_underscore() or \
                     self._text_with_span_elements()
 
@@ -991,7 +993,7 @@ class MDParser:
             self._next()
             return self._code_block()
         else:
-            return self._maybe_star() or \
+            return self._maybe_star()        or \
                     self._maybe_underscore() or \
                     self._text_with_span_elements()
 
@@ -1020,11 +1022,11 @@ class MDParser:
         #                            |  <escape> <maybe setext header>
         #                            |  <any chars but & < * _ ` \\ \n> <maybe setext header>
         #=======================================================================
-        if self._html_entity() or \
+        if self._html_entity()                 or \
             self._html_tag_or_automatic_link() or \
-            self._emphasis_or_strong_style() or \
-            self._inlined_code() or \
-            self._escape() or \
+            self._emphasis_or_strong_style()   or \
+            self._inlined_code()               or \
+            self._escape()                     or \
                 self._any_chars_but( "&<*_`\\\n" ):
             return self._maybe_setext_header()
         else:
@@ -1092,7 +1094,7 @@ class MDParser:
         # <url> ::= <alphanum chars> <url'>
         #=======================================================================
         self._url_data = [self._current_index, 0]   ## $url.start=index; 
-        if 'a' <= self._current <= 'z' or \
+        if 'a' <= self._current <= 'z'  or \
             'A' <= self._current <= 'Z' or \
             '0' <= self._current <= '9':
             self._next()

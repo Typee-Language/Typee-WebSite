@@ -34,7 +34,7 @@ class LineColumn:
         '''
         self.line, self.coln = line, coln
     #-------------------------------------------------------------------------
-    def __add__(self, other:LineColumn):
+    def __add__(self, other):
         if isinstance( other, tuple ):
             return LineColumn( self.line + other[0], self.coln + other[1] )
         else:
@@ -44,7 +44,7 @@ class LineColumn:
                 return LineColumn( self.line + int(other.line), self.coln )
 
     #-------------------------------------------------------------------------
-    def __gt__(self, other:LineColumn) -> bool:
+    def __gt__(self, other) -> bool:
         return self.line > other.line or (self.line == other.line and self.coln > other.coln)
 
 
@@ -72,8 +72,11 @@ class MDMark:
         '''
         self.start, self.end = start, end
     #-------------------------------------------------------------------------
-    def __gt__(self, other:MDMark) -> bool:
+    def __gt__(self, other) -> bool:
         return self.start > other.start
+    #-------------------------------------------------------------------------
+    def __repr__(self) -> str:
+        return "#{:s}:{}-{}".format( self.CLASS, self.start, self.end )
     #-------------------------------------------------------------------------
     @property
     def index(self) -> int:
@@ -81,6 +84,8 @@ class MDMark:
     @index.setter
     def index(self, ndx:int):
         self.start = ndx    
+    #-------------------------------------------------------------------------
+    CLASS = 'BASE'
 
 #=============================================================================
 class MDMarkText( MDMark ):
@@ -91,6 +96,8 @@ class MDMarkText( MDMark ):
     def __init__(self, start:(LineColumn,int), end:(LineColumn,int), txt:str):
         super().__init__( start, end )
         self.txt = txt
+    #-------------------------------------------------------------------------
+    CLASS = 'MTXT'
 
 #=============================================================================
 class MDBlockQuote( MDMark ):
@@ -226,9 +233,15 @@ class MDHeader( MDMark ):
     #-------------------------------------------------------------------------
     def __init__(self, start:(LineColumn,int), hdr_num:int, is_entering_point:bool, is_setext:bool ):
         if is_setext:
-            end = LineColumn( start.line + 2, 0 )
+            try:
+                end = LineColumn( start.line + 2, 0 )
+            except:
+                end = start + 2
         else:
-            end = LineColumn( start.line, hdr_num+1 )
+            try:
+                end = LineColumn( start.line, hdr_num+1 )
+            except:
+                end = start + hdr_num+1
             
         super().__init__( start, end )
         self.hdr_num           = hdr_num
@@ -493,7 +506,7 @@ class MDStrongBegin( MDMark ):
     #-------------------------------------------------------------------------
     def __init__(self, start:(LineColumn,int)):
         super().__init__( start, start+2 )
-        self.start = True
+        self.begin = True
     #-------------------------------------------------------------------------
     CLASS = 'STGBEG'
 
@@ -505,7 +518,7 @@ class MDStrongEnd( MDMark ):
     #-------------------------------------------------------------------------
     def __init__(self, start:(LineColumn,int)):
         super().__init__( start, start+2 )
-        self.start = False
+        self.begin = False
     #-------------------------------------------------------------------------
     CLASS = 'STGEND'
 
