@@ -201,8 +201,8 @@
 <unordered item>                ::= <list bullet> $mark(Uli(index)); <text with span elements>  ### ok
 
 <unordered list>                ::= <unordered item> $ul.start=index; <unordered list'> ### ok
-<unordered list'>               ::= <unordered item> <unordered list'>
+<unordered list'>               ::= <unordered item> <unordered list'>  ### ok
                                  |  <line or paragraph end> $ul.end=index, mark(ul);
 
-<url>                           ::= $url.start=index; <alphanum chars> <url'>
+<url>                           ::= $url.start=index; <alphanum chars> <url'>   ### ok
 <url'>                          ::= "://" <any chars but ) and "> $url.end=index;     ### replaced ] w. )
