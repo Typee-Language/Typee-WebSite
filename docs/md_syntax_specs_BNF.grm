@@ -103,7 +103,7 @@
                                  |  <line or paragraphe end> $mark(HdrEndH2(index));
 
 <horizontal rule>               ::= <hrule star>    ### ok
-                                 |  <hrule hyphen'>
+                                 |  <hrule hyphen>
 
 <hrule hyphen>                  ::= '-' <skip spaces> '-' <skip spaces> '-' <hrule hyphen'> ### ok
 <hrule hyphen'>                 ::= ' ' <skip spaces> '-' <hrule hyphen'>   ### ok
@@ -152,9 +152,9 @@
 <list>                          ::= <ordered list>  ### ok
                                  |  <unordered list>                    ## CAUTION: "paragraphed" list items are not addressed here
 
-<list bullet>                   ::= '*' ### ok
-                                 |  '+'
-                                 |  '-'
+<list bullet>                   ::= '* ' ### ok
+                                 |  '+ '
+                                 |  '- '
 
 <max 3 spaces>                  ::= ' ' <max 3 spaces'> ### ok
                                  |  EPS

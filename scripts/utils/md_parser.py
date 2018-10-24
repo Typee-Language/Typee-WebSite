@@ -131,7 +131,6 @@ class MDParser:
         return self._line_or_paragraph_end() or \
                 self._blockquotes()          or \
                 self._header_atx()           or \
-                self._header_setext()        or \
                 self._list()                 or \
                 self._horizontal_rule()      or \
                 self._link_or_reference()    or \
@@ -373,9 +372,9 @@ class MDParser:
     def _horizontal_rule(self) -> bool:
         #=======================================================================
         # <horizontal rule> ::= <hrule star>
-        #                    |  <hrule hyphen'>
+        #                    |  <hrule hyphen>
         #=======================================================================
-        return self._hrule_star() or self._hrule_hyphen_1()
+        return self._hrule_star() or self._hrule_hyphen()
 
     #-------------------------------------------------------------------------
     def _hrule_hyphen(self) -> bool:
@@ -386,10 +385,11 @@ class MDParser:
             self._next()
             self._skip_spaces()
             if self._current == '-':
+                self._next()
                 self._skip_spaces()
-            if self._current == '-':
-                self.next()
-                return self._hrule_hyphen_1()
+                if self._current == '-':
+                    self._next()
+                    return self._hrule_hyphen_1()
         return False
 
     #-------------------------------------------------------------------------
@@ -705,9 +705,9 @@ class MDParser:
     #-------------------------------------------------------------------------
     def _list_bullet(self) -> bool:
         #=======================================================================
-        # <list bullet> ::= '*'  | '+'  | '-'
+        # <list bullet> ::= '* '  | '+ '  | '- '
         #=======================================================================
-        if self._current in "-+*":
+        if self._current_2 in ('- ', '+ ', '* '):
             self._next()
             return True
         else:
