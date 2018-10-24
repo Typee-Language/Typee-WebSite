@@ -1,0 +1,5 @@
+http://www.realtimerendering.com/raytracing.html#recent
+http://www.pbr-book.org/
+http://www.pbr-book.org/3ed-2018/contents.html
+http://www.realtimerendering.com/raytracinggems/
+http://immersivemath.com/ila/index.html
