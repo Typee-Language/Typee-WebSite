@@ -205,11 +205,11 @@ Let's first describe the formal EBNF specification of functions calls:
 
 The <strong>identifier</strong> is the identifier of the function.
 It may be followed by <strong>template arguments</strong> if declared or defined so. Notice: templates arguments are enclosed within angle brackets <code style="font-size:115%;font-weght:bold;">&lt;</code> and <code style="font-size:115%;font-weght:bold;">&gt;</code> and are lists of types or constant values - more about templates later in this documentation.
-Next are the values, variables or references passed as arguments to the function at call-time. These arguments are seperated by commas and are enclosed between parenthesis: <code style="font-size:115%;font-weght:bold;">(</code> and <code style="font-size:115%;font-weght:bold;">)</code>. Their number and the ordered list of their types are part of the signature of the called function. Should any ambiguity be found at translation time, <strong>Typee</strong> translators will set an explicit error.
+Next are the values, variables or references passed as <strong>arguments</strong> to the function at call-time. These arguments are seperated by commas and are enclosed between parenthesis: <code style="font-size:115%;font-weght:bold;">(</code> and <code style="font-size:115%;font-weght:bold;">)</code>. Their number and the ordered list of their types are part of the signature of the called function. Should any ambiguity be found at translation time, <strong>Typee</strong> translators will set an explicit error.
 
 Finally, to fully evaluate the signature of the called function, its returned type is evaluated at translation time.
 
-A function that returns no value can only be called in a <strong style="font-size:105%;">function call statement</code>:
+A function that returns no value can only be called in a <code style="font-size:105%;">function call statement</code>:
 <pre>&lt;function call statement&gt; ::= &lt;function call&gt; '<strong>;</strong>'
 </pre>
 When a no-value returning function will be called in any arithmetic expression, assignment statement and conditional expression, <strong>Typee</strong> translators will set a type error.
@@ -218,15 +218,15 @@ The type of the value returned by a called function will be inferred at translat
 
 Meanwhile, it may happen that according to a same function identifier and types of arguments list, a couple of returned types could be inferred for the called function - see simple example below. <strong>Typee</strong> translators will then:
 <ul>
-    <li>either set a warning if all the possibly inferred returned types are all compatible together and with the expected type in the expression or assignment (e.g. integers and floats), informing that the <em>largest</em> type will be used:
+    <li>either set a <strong><em>warning</em></strong> if all the possibly inferred returned types are all compatible together and with the expected type in the expression or assignment (e.g. integers and floats), informing that the <em>largest</em> type will be used:
         <ol>
-          <li>floats first, 64-bits before 32-bits</li>;
-          <li>integers then, in this order: 64-, 32-, 16- and then 8- bits; signed types before unsigned types if any of the other types inferred in the expression cannot be clearly inferred as unsigned</li>;
-        <ol></li>
-    <li>or set an error if possibly inferred returned types are not compatible with the expectedtype</li>.
+          <li>floats first, 64-bits before 32-bits;</li>
+          <li>integers then, in this order: 64-, 32-, 16- and then 8- bits; signed types before unsigned types if any of the other types inferred in the expression cannot be clearly inferred as unsigned;</li>
+        </ol></li>
+    <li>or set an <strong><em>error</em></strong> if possibly inferred returned types are not compatible with the expectedtype.</li>
 </ul>
 
-Programmers are informed here that they should avoid as much as possible any ambiguity with signatures of called functions. Programming languages such as <em>C++</em> or <em>Java</em> do not allow functions with same identifier to return different types of values. <strong>Typee</strong> allows this. It is simply processed at translation time when translating Typee code to programming languages that do not allow it. Then, programmers have to be careful when using this Typee goody with such not permissive programming languages.
+Programmers are informed that they should avoid as much as possible any ambiguity with signatures of called functions. Programming languages such as <em>C++</em> or <em>Java</em> do not allow functions with same identifier to return different types of values. <strong>Typee</strong> allows this. It is simply processed at translation time when translating Typee code to programming languages that do not allow it. Then, programmers have to be careful when using this Typee goody in the context of its further translation to such not permissive programming languages.
 
 
 &nbsp;
