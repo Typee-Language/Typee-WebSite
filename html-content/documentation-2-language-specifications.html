@@ -1,0 +1,702 @@
+<h1>- Typee Documentation -</h1>
+
+<h2>2 - Language Grammar Specification</h2>
+
+<h3>2.1 - Get access to the grammar specification</h3>
+Well, the best we can propose you, to get a full access to the specification of <strong>Typee</strong> gramar, is to go to its dedicated directory in our GitHub repository: <a href="https://github.com/Typee-Language/Typee/tree/master/Language-specifications" target="_blank">https://github.com/Typee-Language/Language-specifications</a>. In this directory, you will find the successive releases of the language specifications. Actually, the newest one is version v8. It is specified in Backus-Naur Form (see <a href="http://matt.might.net/articles/grammars-bnf-ebnf/" target="_blank">here</a> an excellent presentation of what BNF is). For this last version, we provide the pure BNF specification and an easier to read one, its Extended BNF specification - see the 'EBNF' document extended name.
+
+Both documents are provided with extension '.grm'. We have created a dedicated profile for such files when read with Notepad++ (Windows users only, sorry). This notepad++ language profile is available for download on our GitHub repository too: <a href="https://github.com/Typee-Language/Typee/blob/master/Notepad%2B%2BXML-configs/grammars.xml" target="_blank">https://github.com/Typee-Language/Typee/Notepad++XML-configs/grammars.xml.</a> If you are not yet using Notepad++, we strongly recommend you to install it on your Windows machine. You will find it for download there: <a href="https://notepad-plus-plus.org/" target="_blank">https://notepad-plus-plus.org/</a>
+
+To take benefit of our language profile description, download the 'grammars.xml' file from our GitHub repository (right click on the link in previous paragraph) and save it on your machine in the directory where Notepad++ will have been installed (should be 'Program Files' or a name prefixed with this).
+
+Finally, to get an overview on Typee language specification, download the '...-v9-EBNF.grm' file (the easiest to read) and open it in Notepad++, or whatever text editor you prefer (but with no syntax coloring then...)
+
+You will then get an easy access to a formal specification of language <strong>Typee</strong> syntax.
+
+Well, we provide also a full copy of the grammar specification just at the end of this page.
+
+
+<h3>2.2 - We are not abandonning you here</h3>
+Getting access to the formal specification of a language grammar is NOT enough to learn a programming language. You will need more help for this. In next pages, you will get a full presentation of <strong>Typee</strong> programming language: instructions, types, object programming and the like. We will detail every part of the language and provide you with examples and code samples.
+
+Enjoy!
+
+(well, remember, this site is still under construction. Moreover, a version v9 of <strong>Typee</strong> grammar is currently under specification).
+
+<p style="text-align: center;"><a href="http://www.typee.ovh/index.php/documentation/doc-01-intro/">&lt; previous</a> (1. doc introduction) | (3. language description) <a href="http://www.typee.ovh/index.php/documentation/doc-03-language-descr/">next &gt;</a></p>
+&nbsp;
+
+<pre>/*****
+Copyright (c) 2018 Philippe Schmouker, Typee project, http://www.typee.ovh
+
+Permission is hereby granted,  free of charge,  to any person obtaining a copy
+of this software and associated documentation files (the "Software"),  to deal
+in the Software without restriction, including  without  limitation the rights
+to use,  copy,  modify,  merge,  publish,  distribute, sublicense, and/or sell
+copies of the Software,  and  to  permit  persons  to  whom  the  Software  is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS",  WITHOUT WARRANTY OF ANY  KIND,  EXPRESS  OR
+IMPLIED,  INCLUDING  BUT  NOT  LIMITED  TO  THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT  SHALL  THE
+AUTHORS  OR  COPYRIGHT  HOLDERS  BE  LIABLE  FOR  ANY CLAIM,  DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  TORT OR OTHERWISE, ARISING FROM,
+OUT  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*****/
+
+
+/*****   CODE FILE   ************************************************/
+
+&lt;code file&gt; ::=  [&lt;statements list&gt;] &lt;ENDOFFILE&gt;
+
+
+
+
+/*****   ATOMS   ****************************************************/
+
+&lt;atom element&gt;          ::= &lt;atom&gt;                           |
+                            &lt;dotted name&gt; [&lt;atom element'&gt;]  |
+                            [ &lt;const qualifier&gt; ] &lt;scalar type&gt; 
+                                &lt;scalar type casting&gt;
+                            
+&lt;atom element'&gt;         ::= &lt;is instance of&gt;  |
+                            &lt;scalar type casting&gt;  |
+                            ( &lt;function call&gt; | &lt;subscription or slicing&gt; )*
+
+&lt;atom&gt;                  ::= [&lt;decr&gt; | &lt;incr&gt;]  &lt;dotted name&gt;  [&lt;decr&gt; | &lt;incr&gt;]  |
+                            &lt;enclosure&gt;  |  &lt;reference&gt;  |  
+                            &lt;scalar&gt;  |  &lt;string&gt;  |  &lt;boolean&gt;
+
+&lt;boolean&gt;               ::= &lt;TRUE&gt;  |  &lt;FALSE&gt;
+
+&lt;bracket form&gt;          ::= '<strong>[</strong>' &lt;expression&gt; &lt;list or map form&gt; '<strong>]</strong>' 
+
+&lt;decr&gt;                  ::= '<strong>--</strong>' 
+
+&lt;enclosure&gt;             ::= &lt;bracket form&gt;  |  &lt;parenthesis form&gt;
+
+&lt;incr&gt;                  ::= '<strong>++</strong>' 
+
+&lt;is instance of&gt;        ::= '<strong>-&gt;</strong>' &lt;dotted name&gt;
+
+&lt;list or comprehension&gt; ::= [ ( '<strong>,</strong>' &lt;expression&gt; )*  |  &lt;for comprehension&gt; ]
+                 
+&lt;list or map form&gt;      ::= &lt;list form&gt;  |  &lt;map form&gt;
+
+&lt;list form&gt;             ::= '<strong>[</strong>' &lt;expression&gt; &lt;list or comprehension&gt; '<strong>]</strong>' 
+
+&lt;parenthesis form&gt;      ::= '<strong>(</strong>' &lt;expr list&gt; '<strong>)</strong>' 
+
+&lt;reference&gt;             ::= '<strong>@</strong>' &lt;dotted name&gt;
+
+&lt;scalar type casting&gt;   ::= '<strong>(</strong>' &lt;expression&gt; '<strong>)</strong>' 
+
+&lt;slice end&gt;             ::= '<strong>]</strong>'  |  '<strong>)</strong>' 
+
+&lt;slice form&gt;            ::= '<strong>:</strong>' [&lt;expression&gt;]  [ '<strong>:</strong>' [&lt;expression&gt;] ]
+
+&lt;subscription or slicing&gt;   ::= '<strong>[</strong>' &lt;expression&gt;  (( '<strong>,</strong>' &lt;expression&gt; )* '<strong>]</strong>'  |
+                                                        &lt;if comprehension&gt; '<strong>]</strong>'  |
+                                                        &lt;slice form&gt; &lt;slice end&gt; )
+
+
+
+/*****   CLASSES   *******************************************/
+
+&lt;class definition&gt;  ::= '<strong>class</strong>' &lt;identifier&gt; [&lt;template def&gt;] &lt;inheritance&gt;
+                            &lt;statements block&gt;
+
+&lt;inheritance&gt;       ::= [ '<strong>:</strong>' &lt;inheritance item&gt; (</strong>',</strong>' &lt;inheritence item&gt;)* ]
+
+&lt;inheritance item&gt;  ::= [&lt;access qualifier&gt;] &lt;dotted name&gt; [&lt;template args&gt;]
+
+
+
+/*****   COMPREHENSION   ********************************************/
+
+&lt;for comprehension&gt;     ::= '<strong>for</strong>' '<strong>(</strong>' &lt;target list&gt; 
+                                '<strong>in</strong>' &lt;or test&gt; &lt;iter comprehension&gt; '<strong>)</strong>' 
+
+&lt;if comprehension&gt;      ::= '<strong>if</strong>' '<strong>(</strong>' (&lt;or test&gt; | &lt;unnamed func&gt;) '<strong>)</strong>' 
+                                &lt;iter comprehension&gt;
+
+&lt;iter comprehension&gt;    ::= [ &lt;for comprehension&gt;  |  &lt;if comprehension&gt; ]
+
+
+
+
+/*****   CONDITIONS and COMPARISONS   *******************************/
+
+&lt;condition&gt;         ::= &lt;or test&gt;  [ '<strong>if</strong>' &lt;or test&gt; '<strong>else</strong>' &lt;expression&gt; ]
+
+&lt;and test&gt;          ::= &lt;not test&gt;  [ '<strong>and</strong>' &lt;not test&gt; ]
+
+&lt;comparison&gt;        ::= &lt;bitor expr&gt;  ( (&lt;comp operator&gt; [&lt;template args&gt;] |
+                                            &lt;comp operator'&gt; 
+                                            [&lt;spaced template args&gt;]) 
+                                            &lt;bitor expr&gt; )*
+
+&lt;comp operator&gt;     ::= '<strong>&lt;=</strong>'  |  '<strong>==</strong>'  |  '<strong>!=</strong>'  |  '<strong>&gt;=</strong>'  |
+                        '<strong>in</strong>'  |  '<strong>is</strong>' [ '<strong>not</strong>' ]  |  '<strong>not</strong>' '<strong>in</strong>' 
+
+&lt;comp operator'&gt;    ::=  '<strong>&lt;</strong>'  |  '<strong>&gt;</strong>' 
+ 
+&lt;not test&gt;          ::= '<strong>not</strong>' &lt;not test&gt;  |  &lt;comparison&gt;
+
+&lt;or test&gt;           ::= &lt;and test&gt;  [ '<strong>or</strong>' &lt;and test&gt; ]
+
+
+
+/*****   EXPRESSIONS   **********************************************/
+
+&lt;expression&gt;            ::= &lt;condition&gt;  |  &lt;unnamed func&gt;
+
+&lt;parenthesised expr&gt;    ::= '<strong>(</strong>' &lt;expression&gt; '<strong>)</strong>' 
+
+&lt;arithmetic expr&gt;       ::= &lt;term&gt;  ( &lt;op_add&gt; [&lt;template args&gt;] &lt;term&gt; )*
+
+&lt;expr list&gt;             ::= &lt;expression&gt;  ( '<strong>,</strong>' &lt;expression&gt; )*
+
+&lt;factor&gt;                ::= &lt;atom element&gt;
+                                ( &lt;op_power&gt; [&lt;template args&gt;] &lt;unary expr&gt; )*
+
+&lt;identifier&gt;            ::= ( &lt;alpha char&gt; | '<strong>_</strong>' )  ( &lt;alpha num char&gt; | '<strong>_</strong>' )*
+
+&lt;indexed expr list&gt;     ::= '<strong>indexed</strong>' '<strong>(</strong>' &lt;expr list&gt; '<strong>)</strong>'  |
+                            &lt;expr list&gt;
+
+&lt;map form&gt;              ::= '<strong>:</strong>' &lt;expression&gt; &lt;map list or comprehension&gt;
+
+&lt;map item&gt;              ::= &lt;expression&gt; '<strong>:</strong>' &lt;expression&gt;
+
+&lt;map list&gt;              ::= ( '<strong>,</strong>' &lt;map item&gt; )*
+             
+&lt;map list or comprehension&gt; ::= [ '<strong>,</strong>' &lt;map item&gt; ]  |  &lt;for comprehension&gt;
+
+&lt;bitand expr&gt;           ::= &lt;shift expr&gt; ( '<strong>&</strong>' [&lt;template args&gt;] &lt;shift expr&gt; )*
+
+&lt;bitor expr&gt;            ::= &lt;bitxor expr&gt; ( '<strong>|</strong>' [&lt;template args&gt;] &lt;bitxor expr&gt; )*
+
+&lt;bitxor expr&gt;           ::= &lt;bitand expr&gt; [ '<strong>^</strong>' [&lt;template args&gt;] &lt;bitand expr&gt; ]
+
+&lt;shift expr&gt;            ::= &lt;arithmetic expr&gt;
+                                ((( '<strong>&lt;&lt;</strong>' | '<strong>&lt;&lt;&lt;</strong>' ) [&lt;spaced template args&gt;]  |
+                                  ( '<strong>&gt;&gt;</strong>' | '<strong>&gt;&gt;&gt;</strong>' ) [&lt;template args&gt;]) 
+                                    &lt;arithmetic expr&gt;)*
+
+&lt;term&gt;                  ::= &lt;factor&gt; ( ( ((&lt;op_mul&gt; | &lt;op_user&gt;) 
+                                              [&lt;template args&gt;]) |
+                                         '<strong>&gt;&lt;</strong>' [&lt;spaced template args&gt;] )
+                                        &lt;factor&gt; )*
+             
+&lt;unary expr&gt;            ::= [ '<strong>+</strong>' | '<strong>-</strong>' | '<strong>~</strong>' | '<strong>#</strong>' ]  &lt;factor&gt;
+
+
+/*****   FUNCTIONS   ************************************************/
+
+&lt;function declaration&gt;      ::= [&lt;template def&gt;]  &lt;function args declaration&gt;
+
+&lt;function definition&gt;       ::= [&lt;template def&gt;]  &lt;function args declaration&gt;
+                                    &lt;statements block&gt;
+
+&lt;abstract or final qualif&gt;  ::= '<strong>abstract</strong>' | '<strong>final</strong>' 
+
+&lt;call operator&gt;             ::= '<strong>(</strong>' '<strong>)</strong>' 
+
+&lt;function args declaration&gt; ::= '<strong>(</strong>' [&lt;typed args list&gt;] '<strong>)</strong>' 
+
+&lt;function call&gt;             ::= [&lt;template args&gt;] '<strong>(</strong>' &lt;function call args&gt; '<strong>)</strong>' 
+
+&lt;function call args&gt;        ::= [ &lt;expression&gt; (&lt;function call&gt;)*
+                                    [ '<strong>,</strong>' ( &lt;expression&gt; (&lt;function call&gt;)*  |
+                                            &lt;ellipsis&gt; &lt;identifier&gt; )  |
+                                      &lt;for comprehension&gt;] ]
+
+&lt;op_add&gt;                    ::= '<strong>+</strong>'   |  '<strong>-</strong>' 
+&lt;op_mul&gt;                    ::= '<strong>*</strong>'   |  '<strong>/</strong>'  |  '<strong>%</strong>' 
+&lt;op_power&gt;                  ::= '<strong>**</strong>'  |  '<strong>^^</strong>' 
+&lt;op_user&gt;                   ::= '<strong>@</strong>'   |  '<strong>&gt;&lt;</strong>'  |  '<strong>!!</strong>'  |  '<strong>::</strong>' 
+
+&lt;operator&gt;                  ::= '<strong>&lt;=</strong>'  |  '<strong>==</strong>'  |  '<strong>!=</strong>'  |  '<strong>&gt;=</strong>'  |
+                            '<strong>&</strong>'   |  '<strong>|</strong>'   |  '<strong>^</strong>'  |
+                            '<strong>++</strong>'  |  '<strong>--</strong>'  |  '<strong>#</strong>'  |
+                            '<strong>in</strong>'  |
+                            &lt;op_add&gt;  |  &lt;op_mul&gt;  |  &lt;op_power&gt;  |
+                            &lt;op_user&gt;  |  '<strong>??</strong>'  |
+                            &lt;assign op&gt;  |
+                            &lt;cast op&gt;
+&lt;operator'&gt;                 ::= '<strong>&lt;</strong>'  |  '<strong>&gt;</strong>'  |  '<strong>&lt;&lt;</strong>'  |  '<strong>&gt;&gt;</strong>'  |  '<strong>&lt;&lt;&lt;</strong>'  |  '<strong>&gt;&gt;&gt;</strong>' 
+
+&lt;operator definition&gt;       ::= '<strong>operator</strong>' 
+                                    ( ( (&lt;operator&gt; [&lt;template def&gt;] |
+                                         &lt;operator'&gt; [&lt;spaced template def&gt;]) 
+                                      &lt;function args declaration&gt; )  |
+                                      ( &lt;call operator&gt; [&lt;template def&gt;] ) )
+                                    &lt;statements block&gt;
+
+&lt;typed args list&gt;           ::= &lt;TYPE&gt; &lt;identifier&gt; ( '<strong>,</strong>' &lt;TYPE&gt; &lt;identifier&gt; )*
+
+&lt;unnamed&gt;                   ::= '<strong>unnamed</strong>'  |  '<strong>lambda</strong>' 
+
+&lt;unnamed func&gt;              ::= &lt;unnamed&gt; [&lt;TYPE&gt;] &lt;function args declaration&gt;
+                                    &lt;statements block&gt;
+
+
+
+
+
+/*****   MISC   *****************************************************/
+
+&lt;alpha char&gt;                    ::= '<strong>A</strong>' ... '<strong>Z</strong>'  |  '<strong>a</strong>' ... '<strong>z</strong>'
+
+&lt;alpha num char&gt;                ::= &lt;alpha char&gt;   |  &lt;num char&gt;
+
+&lt;any embedded code char&gt;        ::= u0x0000...u0xFFFF - ( '<strong>}</strong>' )
+
+&lt;any escaped char&gt;              ::= '<strong>\\</strong>' u0x0000...u0xFFFF -
+                                        ( '<strong>\n</strong>', '<strong>\r</strong>', '<strong>\f</strong>', u0x00 )
+
+&lt;any non newline char&gt;          ::= u0x0000...u0xFFFF - ( '<strong>\n</strong>', '<strong>\r</strong>', '<strong>\f</strong>' )
+
+&lt;any non star char&gt;             ::= u0x0000...u0xFFFF - ( '<strong>*</strong>' )
+
+&lt;any string quote char&gt;         ::= u0x0000...u0xFFFF - 
+                                        ( "'", "\\", "\n", "\r", "\f", u0x00 )
+&lt;any string doublequote char&gt;   ::= u0x0000...u0xFFFF -
+                                        ( '<strong>"</strong>', '<strong>\\</strong>', '<strong>\n</strong>', '<strong>\r</strong>', '<strong>\f</strong>', u0x00 )
+
+&lt;binary char&gt;                   ::= '<strong>0</strong>'  |  '<strong>1</strong>' 
+
+&lt;ellipsis&gt;                      ::= '<strong>...</strong>' 
+
+&lt;line end&gt;                      ::= &lt;NEWLINE&gt;  |  &lt;ENDOFFILE&gt;
+
+&lt;ENDOFFILE&gt;                     ::= u0x00
+
+&lt;escaped char&gt;                  ::= '<strong>\\</strong>' ( &lt;alpha char&gt; | 
+                                           ( '<strong>0</strong>' &lt;octal or hexa char&gt; ) )
+
+&lt;octal or hexa char&gt;            ::= &lt;octal char&gt; &lt;octal char&gt; &lt;octal char&gt; | 
+                                    ( '<strong>x</strong>' | '<strong>X</strong>' ) &lt;hexa char&gt; &lt;hexa char&gt; 
+                                        [ &lt;hexa char&gt; &lt;hexa char&gt; ]
+
+&lt;FALSE&gt;                         ::= '<strong>False</strong>'  |  '<strong>false</strong>' 
+
+&lt;hexa char&gt;                     ::= &lt;num char&gt;  |  '<strong>A</strong>' ... '<strong>F</strong>'  |  '<strong>a</strong>' ... '<strong>f</strong>' 
+
+&lt;ME&gt;                            ::= '<strong>me</strong>' 
+
+&lt;NEWLINE&gt;                       ::= '<strong>\n</strong>'  |  '<strong>\r</strong>'  |  '<strong>\f</strong>' 
+
+&lt;NONE&gt;                          ::= '<strong>None</strong>'  |  '<strong>none</strong>' 
+
+&lt;num char&gt;                      ::= '<strong>0'...'9</strong>' 
+
+&lt;parenth close&gt;                 ::= '<strong>)</strong>' 
+&lt;parenth open&gt;                  ::= '<strong>(</strong>' 
+
+&lt;octal char&gt;                    ::= '<strong>0</strong>' ... '<strong>7</strong>' 
+
+&lt;single char&gt;                   ::= "'" (&lt;any escaped char&gt; |
+                                         &lt;any string quote char&gt;) "'"  |
+                                    '<strong>"</strong>' (&lt;any escaped char&gt; |
+                                         &lt;any string doublequote char&gt;) '<strong>"</strong>' 
+
+&lt;TRUE&gt;                          ::= '<strong>True</strong>'  |  '<strong>true</strong>' 
+
+
+
+
+/*****   SCALARS   **************************************************/
+
+&lt;scalar&gt;            ::= '<strong>0</strong>' &lt;octal hexa binary&gt;  |
+                        '<strong>1</strong>' ... '<strong>9</strong>' [&lt;decimal part&gt;]
+                            [&lt;fraction part&gt; [&lt;exponent part&gt;]]
+
+&lt;binary number&gt;     ::= &lt;binary char&gt; ([ '<strong>_</strong>' ] &lt;binary char&gt;)*
+                     
+&lt;decimal part&gt;      ::= &lt;num_char&gt; (['_'] &lt;num_char&gt;)*
+
+&lt;exponent part&gt;     ::= ( '<strong>e</strong>' | '<strong>E</strong>' )  [ '<strong>+</strong>' | '<strong>-</strong>' ] &lt;decimal part&gt;
+
+&lt;fraction part&gt;     ::= '<strong>.</strong>' &lt;decimal part&gt;
+
+&lt;hexadecimal number&gt;::= &lt;hexa char&gt; ( [ '<strong>_</strong>' ] &lt;hexa char&gt; )*
+
+&lt;integer number&gt;    ::= '<strong>1</strong>' ... '<strong>9</strong>' [&lt;decimal part&gt;]  |  '<strong>0</strong>' &lt;octal hexa binary&gt;
+             
+&lt;octal hexa binary&gt; ::= &lt;octal number&gt;  |
+                            ( '<strong>b</strong>' | '<strong>B</strong>' ) &lt;binary number&gt;  |
+                            ( '<strong>x</strong>' | '<strong>X</strong>' ) &lt;hexadecimal number&gt;
+
+&lt;octal number&gt;      ::= &lt;octal char&gt; ( [ '<strong>_</strong>' ] &lt;octal char&gt; )*
+
+
+
+
+/*****   STATEMENTS   ****************************************/
+
+&lt;statements list&gt;           ::= &lt;statement&gt;  ( &lt;statement&gt; )*
+
+&lt;statement&gt;                 ::= &lt;empty statement&gt;   |  &lt;compound statement&gt;  |
+                                &lt;simple statement&gt;  |  &lt;statements block&gt;
+
+&lt;compound statement&gt;        ::= &lt;assign decl def func-call statement&gt;  |
+                                &lt;embed statement&gt;                      |
+                                &lt;for statement&gt;                        |
+                                &lt;forever statement&gt;                    |
+                                &lt;if statement&gt;                         |
+                                &lt;repeat statement&gt;                     |
+                                &lt;switch statement&gt;                     |
+                                &lt;try statement&gt;                        |
+                                &lt;while statement&gt;                      |
+                                &lt;with statement&gt;
+
+&lt;empty statement&gt;           ::= &lt;comment&gt;  |  &lt;NEWLINE&gt;
+
+&lt;simple statement&gt;          ::= ( &lt;assert statement&gt; | &lt;del statement&gt;  |
+                                  &lt;ensure statement&gt; | &lt;flow statement&gt; |
+                                  &lt;import statement&gt; | &lt;nop statement&gt;  |
+                                  &lt;access protection statement&gt;         |
+                                  &lt;require statement&gt; )
+                                &lt;simple statement end&gt;
+
+&lt;simple statement end&gt;      ::= '<strong>;</strong>' 
+
+&lt;statements block&gt;          ::= '<strong>{</strong>' [&lt;statements list&gt;] '<strong>}</strong>'               |  
+                                &lt;compound statement&gt;                      |
+                                [&lt;nop statement&gt;] &lt;simple statement end&gt;  |
+                                &lt;simple statement&gt;
+
+
+&lt;access protection statement&gt;  ::= '<strong>:</strong>' &lt;access qualifier&gt; '<strong>:</strong>' 
+
+&lt;access qualifier&gt;          ::= '<strong>hidden</strong>'  |  '<strong>local</strong>'  |  '<strong>private</strong>'  |
+                                '<strong>protected</strong>'  |  '<strong>public</strong>' 
+
+&lt;assert statement&gt;          ::= '<strong>assert</strong>' &lt;expression&gt; ( '<strong>,</strong>' &lt;expression&gt;) *
+
+&lt;assign decl def func-call statement&gt;   ::= [&lt;access qualifier&gt;]
+                                                &lt;decl or def statement&gt;  |
+                                            &lt;dotted name&gt;
+                                                &lt;assign or func-call statement&gt; 
+                                                &lt;simple statement end&gt;
+
+&lt;assign op&gt;                 ::= '<strong>=</strong>'  |  &lt;augmented assign op&gt;
+
+&lt;assign or func-call statement&gt; ::= &lt;target list'&gt; &lt;assignment statement&gt;  |
+                                    &lt;function call&gt;
+
+&lt;assignment statement&gt;      ::= &lt;assign op&gt; &lt;expr list&gt;
+
+&lt;augmented assign op&gt;       ::= '<strong>+=</strong>'   |  '<strong>-=</strong>'   |  '<strong>*=</strong>'  |  '<strong>/=</strong>'   |  '<strong>%=</strong>'  |
+                                '<strong>&=</strong>'   |  '<strong>|=</strong>'   |  '<strong>^=</strong>'  |
+                                '<strong>&lt;&lt;=</strong>'  |  '<strong>&lt;&lt;&lt;=</strong>' |  '<strong>&gt;&gt;=</strong>' |  '<strong>&gt;&gt;&gt;=</strong>' |
+                                '<strong>**=</strong>'  |  '<strong>^^=</strong>'  |  '<strong>@=</strong>'  |
+                                '<strong>&gt;&lt;=</strong>'  |  '<strong>!!=</strong>'  |  '<strong>::=</strong>' |  '<strong>??=</strong>' 
+
+&lt;case&gt;                      ::= '<strong>case</strong>' &lt;expr list&gt; &lt;statements block&gt;
+
+&lt;cast op&gt;                   ::= '<strong>cast</strong>' &lt;identifier&gt;
+
+&lt;comment&gt;                   ::= '<strong>//</strong>' ( (&lt;any non newline char&gt;)* |
+                                            &lt;line end&gt; )  |
+                                '<strong>/*</strong>' &lt;multi lines comment&gt;
+
+&lt;decl constructor or decl end&gt;  ::= ( '<strong>.</strong>' &lt;identifier&gt; )*
+                                        &lt;decl or def statement'''&gt;  |
+                                    &lt;function definition'&gt;
+
+&lt;decl or def statement&gt;     ::= [&lt;static qualifier&gt;] &lt;decl or def statement'&gt; |  
+                                &lt;class definition&gt;                            |
+                                &lt;forward decl&gt;
+
+&lt;decl or def statement'&gt;    ::= &lt;abstract or final qualif&gt; 
+                                    &lt;method or operator definition&gt;           |
+                                &lt;volatile qualifier&gt; &lt;type&gt; &lt;identifier&gt; 
+                                    [&lt;memory address&gt;] &lt;simple statement end&gt; |
+                                &lt;enum decl or def&gt;                            |
+                                &lt;type alias&gt; &lt;simple statement end&gt;           |
+                                &lt;decl or def statement''&gt;
+
+&lt;decl or def statement''&gt;   ::= &lt;TYPE'&gt; &lt;decl or def statement'''&gt;  |  
+                                &lt;identifier&gt; &lt;decl constructor or decl end&gt;
+
+&lt;decl or def statement'''&gt;  ::= &lt;identifier&gt; &lt;decl or def statement''''&gt;  |
+                                &lt;operator definition&gt;
+
+&lt;decl or def statement''''&gt; ::= &lt;function definition&gt;  |  
+                                [&lt;var declaration or assignment&gt;]
+                                    &lt;simple statement end&gt;
+
+&lt;declaration statement&gt;     ::= '<strong>,</strong>' &lt;identifier&gt; ['=</strong>' &lt;expression&gt;] 
+                                    ( '<strong>,</strong>' &lt;identifier&gt; ['=</strong>' &lt;expression&gt;] *
+
+&lt;del statement&gt;             ::= ( '<strong>del</strong>' | '<strong>delete</strong>' ) &lt;identifiers list&gt;
+                      
+&lt;dotted as name&gt;            ::= &lt;dotted name&gt; [ '<strong>as</strong>' &lt;identifier&gt; ]
+
+&lt;dotted as names&gt;           ::= ( '<strong>.</strong>' )* &lt;dotted as name&gt; 
+                                    ( '<strong>,</strong>' ( '<strong>.</strong>' )* &lt;dotted as name&gt; )*
+
+&lt;dotted name&gt;               ::= &lt;identifier&gt; ( '<strong>.</strong>' &lt;identifier&gt; )*
+
+&lt;embed statement&gt;           ::= '<strong>embed</strong>' &lt;language&gt; (&lt;dotted name&gt;
+                                    &lt;simple statement end&gt;          |
+                                &lt;embedded language code&gt;)
+
+&lt;embedded language code&gt;    ::= '<strong>{{</strong>' &lt;embedded language code'&gt;
+&lt;embeded language code'&gt;    ::= &lt;any embedded code char&gt;
+                                    &lt;embeded language code'&gt;  |
+                                '<strong>}</strong>' &lt;embedded language code"&gt;
+&lt;embedded language code"&gt;   ::= &lt;any embedded code char&gt;
+                                    &lt;embeded language code'&gt;  |
+                                '<strong>}</strong>' 
+
+&lt;ensure statement&gt;          ::= '<strong>ensure</strong>' &lt;expression&gt; ( '<strong>,</strong>' &lt;expression&gt; )*
+
+&lt;enum decl or def&gt;          ::= &lt;enum type&gt; &lt;identifier&gt;
+                                    (&lt;enum declaration&gt; | &lt;enum definition&gt;)
+
+&lt;enum declaration&gt;          ::= &lt;identifier&gt; '<strong>;</strong>' 
+
+&lt;enum definition&gt;           ::= '<strong>{</strong>' &lt;enum item&gt; (</strong>',</strong>' &lt;enum item&gt;)* '<strong>}</strong>' 
+
+&lt;enum item&gt;                 ::= &lt;identifier&gt; [ '<strong>=</strong>' &lt;expression&gt; ]
+                             
+&lt;flow statement&gt;            ::= '<strong>break</strong>'  |  '<strong>continue</strong>'  |
+                                &lt;raise statement&gt;  |  &lt;return statement&gt;
+
+&lt;for statement&gt;             ::= '<strong>for</strong>' '<strong>(</strong>' &lt;typed targets list&gt;
+                                    '<strong>in</strong>' &lt;expr list&gt; '<strong>)</strong>' &lt;statements block&gt;
+                                    [ '<strong>otherwise</strong>' &lt;statements block&gt; ]
+
+&lt;forever statement&gt;         ::= '<strong>forever</strong>' '<strong>(</strong>' '<strong>)</strong>' &lt;statements block&gt;
+
+&lt;forward&gt;                   ::= '<strong>forward</strong>'  |  '<strong>fwd</strong>' 
+
+&lt;forward decl&gt;              ::= &lt;forward&gt; ( ([&lt;static qualifier&gt;] 
+                                                &lt;forward decl'&gt;) | 
+                                             &lt;fwd class decl&gt; )
+&lt;forward decl'&gt;             ::= &lt;volatile qualifier&gt; &lt;type&gt; &lt;identifier&gt;  |
+                                &lt;fwd type decl&gt;  |
+                                &lt;identifier&gt; &lt;fwd decl constructor&gt;  |
+                                &lt;TYPE'&gt; &lt;forward decl''&gt; 
+                                    ( &lt;operator declaration&gt;  |
+                                      &lt;identifier&gt;
+                                          (&lt;fwd var decl&gt; |
+                                           &lt;function declaration&gt;) )
+
+&lt;fwd class decl&gt;            ::= '<strong>class</strong>' &lt;identifier&gt;
+                                    &lt;template def&gt; [&lt;inheritance&gt;]
+
+&lt;fwd decl constructor&gt;      ::= ( '<strong>.</strong>' &lt;identifier&gt; )*
+                                    (&lt;operator declaration&gt; |
+                                     &lt;identifier&gt;
+                                         (&lt;fwd var decl&gt; | 
+                                          &lt;function declaration&gt;)) |
+                                &lt;function args declaration&gt;
+
+&lt;fwd var decl&gt;              ::= ( '<strong>,</strong>' &lt;identifier&gt; )*
+
+&lt;identifiers list&gt;          ::= &lt;dotted name&gt;  ( '<strong>,</strong>' &lt;dotted name&gt; )*
+
+&lt;if statement&gt;              ::= '<strong>if</strong>' &lt;parenthesised expr&gt;
+                                    &lt;statements block&gt; [&lt;elif statement'&gt;]
+&lt;elif statement'&gt;           ::= ( '<strong>elseif</strong>' &lt;parenthesised expr&gt;
+                                      &lt;statements block&gt; )*    |
+                                ( '<strong>elif</strong>' &lt;parenthesised expr&gt;
+                                      &lt;statements block&gt; )*    |
+                                ( '<strong>elsif</strong>' &lt;parenthesised expr&gt;
+                                      &lt;statements block&gt; )*    |
+                                '<strong>else</strong>' &lt;statements block&gt;
+
+&lt;import as name&gt;            ::= &lt;identifier&gt; [ '<strong>as</strong>' &lt;identifier&gt; ]
+
+&lt;import as names&gt;           ::= &lt;import as name&gt; ( '<strong>,</strong>' &lt;import as name&gt; )*
+
+&lt;import from&gt;               ::= '<strong>from</strong>' ( '<strong>.</strong>' )* &lt;dotted name&gt; '<strong>import</strong>'  
+                                    ( '<strong>all</strong>'                            |
+                                      &lt;parenth open&gt; &lt;import as names&gt;
+                                          &lt;parenth close&gt;              |
+                                      &lt;import as names&gt; )
+
+&lt;import name&gt;               ::= '<strong>import</strong>' &lt;dotted as names&gt;
+
+&lt;import statement&gt;          ::= &lt;import name&gt;  |  &lt;import from&gt;
+
+&lt;language&gt;                  ::= '<strong>cpp</strong>'  |  '<strong>java</strong>'  |  '<strong>python</strong>'  |  '<strong>py</strong>'
+
+&lt;memory address&gt;            ::= '<strong>@</strong>' &lt;integer number&gt;
+
+&lt;method or operator definition&gt; ::= [&lt;TYPE&gt;] (&lt;operator definition&gt; |
+                                    &lt;identifier&gt; &lt;function definition&gt;)                                 
+
+&lt;multi lines comment&gt;       ::= (&lt;any non star char&gt; | &lt;NEWLINE&gt;)*  |
+                                '<strong>*</strong>' ( '<strong>/</strong>' | &lt;multi lines comment&gt; )
+
+&lt;nop statement&gt;             ::= '<strong>nop</strong>'  |  '<strong>pass</strong>' 
+
+&lt;raise statement&gt;           ::= '<strong>raise</strong>' &lt;expression&gt; [ '<strong>from</strong>' &lt;expression&gt; ]
+
+&lt;repeat statement&gt;          ::= '<strong>repeat</strong>' &lt;statements block&gt; '<strong>until</strong>' 
+                                    &lt;parenthesised expr&gt; &lt;simple statement end&gt;
+
+&lt;require statement&gt;         ::= '<strong>require</strong>' &lt;expression&gt; [ '<strong>,</strong>' &lt;expression&gt; ]
+
+&lt;return statement&gt;          ::= ( '<strong>ret</strong>' | '<strong>return</strong>' ) &lt;expr list&gt;
+
+&lt;switch block&gt;              ::= (&lt;case&gt; [&lt;switch block&gt;])*
+
+&lt;switch statement&gt;          ::= '<strong>switch</strong>' &lt;parenthesised expr&gt;
+                                    '<strong>{</strong>' [&lt;switch block&gt;] '<strong>}</strong>' 
+                                    [ '<strong>otherwise</strong>' &lt;statements block&gt; ]
+
+&lt;target&gt;                    ::= &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;targets list&gt;              ::= &lt;target&gt; ( '<strong>,</strong>' &lt;target&gt; )*
+
+&lt;try else&gt;                  ::= '<strong>otherwise</strong>' 
+
+&lt;try except&gt;                ::= '<strong>except</strong>' '<strong>(</strong>' [( &lt;try except expr&gt; | '<strong>all</strong>' )] '<strong>)</strong>' 
+&lt;try except expr&gt;           ::= &lt;expression&gt; [ '<strong>as</strong>' &lt;identifier&gt; ]
+                                    ( '<strong>,</strong>' &lt;expression&gt; [ '<strong>as</strong>' &lt;identifier&gt; ] )*
+
+&lt;try finally&gt;               ::= '<strong>finally</strong>' 
+
+&lt;try statement&gt;             ::= '<strong>try</strong>' &lt;statements block&gt; &lt;try except&gt;
+                                    &lt;statements block&gt;
+                                    (&lt;try except&gt; &lt;statements block&gt;)*
+                                    [&lt;try else&gt; &lt;statements block&gt;]
+                                    [&lt;try finally&gt; &lt;statements block&gt;]
+
+&lt;type alias&gt;                ::= '<strong>type</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt;
+                                    ( '<strong>,</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt;) *
+
+&lt;typed target&gt;              ::= &lt;type'&gt; &lt;target&gt;  |
+                                &lt;dotted name&gt;
+                                    [&lt;dotted name&gt; | &lt;templated type spec&gt;]
+                                    (&lt;subscription or slicing&gt;)*
+
+&lt;typed targets list&gt;        ::= &lt;typed target&gt; ( '<strong>,</strong>' &lt;typed target&gt; )*
+
+&lt;var declaration or assignment&gt; ::= [ '<strong>=</strong>' &lt;expression&gt; ] '<strong>,</strong>' &lt;identifier&gt; 
+                                        ([ '<strong>=</strong>' &lt;expression&gt; ] '<strong>,</strong>' &lt;identifier&gt;)*
+
+&lt;while statement&gt;           ::= '<strong>while</strong>' &lt;parenthesised expr&gt; &lt;statements block&gt; 
+                                    [ '<strong>otherwise</strong>' &lt;statements block&gt; ]
+
+&lt;with item&gt;                 ::= &lt;expression&gt; [ '<strong>as</strong>' &lt;target&gt; ]
+
+&lt;with items list&gt;           ::= &lt;with item&gt; ( '<strong>,</strong>' &lt;with item&gt; )*
+
+&lt;with statement&gt;            ::= '<strong>with</strong>' &lt;with items list&gt; &lt;statements block&gt;
+
+
+
+
+/*****   STRINGS   **************************************************/
+
+&lt;string&gt;        ::= &lt;single string&gt; (&lt;single string&gt;)*
+                        ( '<strong>.</strong>' &lt;identifier&gt; &lt;function call&gt; )*
+
+
+&lt;single string&gt; ::= "'" (&lt;any escaped char&gt; | &lt;any string quote char&gt;)* "'"  |
+                    '<strong>"</strong>' (&lt;any escaped char&gt; | &lt;any string doublequote char&gt;)* '<strong>"</strong>' 
+
+
+
+
+
+/*****   TEMPLATES   *****************************************/
+
+&lt;spaced template args&gt;      ::= </strong>' &lt;</strong>' &lt;template args'&gt; '<strong>&gt;</strong>' 
+
+&lt;spaced template def&gt;       ::= </strong>' &lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+
+&lt;template args&gt;             ::= '<strong>&lt;</strong>' [&lt;condition&gt; ( '<strong>,</strong>' &lt;condition&gt; )*] '<strong>&gt;</strong>' 
+
+&lt;template def&gt;              ::= '<strong>&lt;</strong>' (&lt;identifier&gt; |
+                                     &lt;const qualifier&gt; &lt;template def const name&gt;) 
+                                        ( '<strong>,</strong>' (&lt;identifier&gt; | 
+                                          &lt;const qualifier&gt;
+                                               &lt;template def const name&gt;) )* '<strong>&gt;</strong>' 
+
+&lt;template def const name&gt;   ::= &lt;scalar type or dotted name&gt; &lt;identifier&gt;
+                                    [ '<strong>=</strong>' &lt;expression&gt; ]
+
+
+
+
+/*****   TYPES   ****************************************************/
+
+&lt;TYPE&gt;                  ::= [&lt;const qualifier&gt;] &lt;type&gt;             
+&lt;TYPE'&gt;                 ::= &lt;const qualifier&gt; &lt;type&gt;  |  &lt;type'&gt;
+
+&lt;type&gt;                  ::= &lt;type'&gt;  |  &lt;templated type&gt; [&lt;dimensions&gt;]
+&lt;type'&gt;                 ::= &lt;auto type&gt;                  |
+                            &lt;container type&gt;             |
+                            &lt;enum type&gt;                  |
+                            &lt;NONE&gt;                       |
+                            &lt;scalar type&gt; [&lt;dimensions&gt;] |
+                            &lt;enclosed types list&gt;     
+
+
+&lt;array type&gt;            ::= '<strong>array</strong>' &lt;contained type&gt;
+
+&lt;auto type&gt;             ::= '<strong>?</strong>' [ '<strong>in</strong>' &lt;enclosed types list&gt; ]
+
+&lt;const qualifier&gt;       ::= '<strong>const</strong>' 
+
+&lt;contained type&gt;        ::= '<strong>&lt;</strong>' &lt;types list&gt; '<strong>&gt;</strong>' 
+
+&lt;container type&gt;        ::= &lt;array_type&gt;  |  &lt;file type&gt;  |  &lt;list type&gt;  |
+                            &lt;map type&gt;    |  &lt;set type&gt;
+
+&lt;dimensions&gt;            ::= ( '<strong>[</strong>' &lt;integer number&gt; | &lt;dotted name&gt; '<strong>]</strong>' )*
+
+&lt;enclosed types list&gt;   ::= '<strong>(</strong>' &lt;types list&gt; '<strong>)</strong>' 
+
+&lt;scalar type or dotted name&gt;    ::= &lt;scalar type&gt;  |  &lt;dotted name&gt;
+
+&lt;enum type&gt;             ::= '<strong>enum</strong>' 
+
+&lt;file type&gt;             ::= '<strong>file</strong>' [&lt;contained type&gt;]
+
+&lt;list type&gt;             ::= '<strong>list</strong>' [&lt;contained type&gt;]
+
+&lt;map type&gt;              ::= '<strong>map</strong>' [&lt;contained type&gt;]
+
+&lt;scalar type&gt;           ::= '<strong>bool</strong>'    | '<strong>char</strong>'    | '<strong>char16</strong>' |
+                            '<strong>float32</strong>' | '<strong>float64</strong>' |
+                            '<strong>int8</strong>'    | '<strong>int16</strong>'   | '<strong>int32</strong>'  | '<strong>int64</strong>'  |
+                            '<strong>uint8</strong>'   | '<strong>uint16</strong>'  | '<strong>uint32</strong>' | '<strong>uint64</strong>' |
+                            '<strong>str</strong>'     | '<strong>str16</strong>' 
+
+&lt;set type&gt;              ::= '<strong>set</strong>' [&lt;contained type&gt;]
+
+&lt;static qualifier&gt;      ::= '<strong>static</strong>' 
+
+&lt;templated type&gt;        ::=  &lt;dotted name&gt; [&lt;templated type spec&gt;]
+&lt;templated type spec&gt;   ::= '<strong>&lt;</strong>' &lt;types and exprs list&gt; '<strong>&gt;</strong>' 
+
+&lt;types and exprs list&gt;  ::= (&lt;expression&gt; | 
+                             &lt;templated type&gt;) 
+                                 ( '<strong>,</strong>' (&lt;expression&gt; | &lt;templated type&gt;) )*
+
+&lt;types list&gt;            ::= &lt;TYPE&gt; ( '<strong>,</strong>' &lt;TYPE&gt; )*
+
+&lt;volatile qualifier&gt;    ::= '<strong>volatile</strong>' 
+
+
+/*============================================================*/
+</pre>
+
+<p style="text-align: center;"><a href="http://www.typee.ovh/index.php/documentation/doc-01-intro/">&lt; previous</a> (1. doc introduction) | (3. language description) <a href="http://www.typee.ovh/index.php/documentation/doc-03-language-descr/">next &gt;</a></p>
+&nbsp;
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

@@ -1,0 +1,279 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.9 - Declarations and Assignments</h3>
+
+Declarations and assignments in <strong>Typee</strong> are really simple to use, but the formal specification of the related grammar rules is a little bit more complex.
+
+In the document specifying these rules, their root rule is <code style="font-size:105%;">&lt;assign decl def func-call statement&gt;</code> which is one of the derivations of <code style="font-size:105%;">&lt;compound statements&gt;</code>.
+
+This root rule covers everything about assignments, declarations, definitions and function calls. We will explain all of this in this section and in the next one. Let's first focus here on declarations and assignments. These concepts are linked together since assignments can be done at declaration time. It will be easy to generalize assignments then.
+
+The rules (the ones that are part of the global rule) related to declarations and assignments, as formerly expressed in their extended Backus-Naur form, are:
+<pre>&lt;decl statement&gt;       ::= [&lt;access qualifier&gt;] [ '<strong>static</strong>' ] &lt;decl statement'&gt;
+
+&lt;decl statement'&gt;      ::= '<strong>volatile</strong>' &lt;type&gt; &lt;identifier&gt; 
+                               [&lt;memory address&gt;] '<strong>;</strong>'      |
+                                &lt;type alias&gt; '<strong>;</strong>'           |
+                           [ '<strong>const</strong>' ] &lt;type&gt; &lt;identifier&gt;
+                               [&lt;var declarations or assignments&gt;] '<strong>;</strong>' 
+
+&lt;memory address&gt;       ::= '<strong>@</strong>' &lt;integer number&gt;
+
+&lt;var declarations or assignments&gt; ::= [ '<strong>=</strong>' &lt;expression&gt; ]
+                                          [ ( '<strong>,</strong>' &lt;identifier&gt;
+                                                [ '<strong>=</strong>' &lt;expression&gt; ] )* ]
+
+&lt;access qualifier&gt;     ::= '<strong>hidden</strong>'  |  '<strong>local</strong>'  |  '<strong>private</strong>'  |
+                           '<strong>protected</strong>'  |  '<strong>public</strong>' 
+</pre>
+
+<pre>&lt;assignment statement&gt; ::= &lt;targets list&gt; &lt;assign statement&gt;
+
+&lt;assign statement&gt;     ::= &lt;assign op&gt; &lt;expr list&gt;
+
+&lt;expr list&gt;            ::= &lt;expression&gt;  ( '<strong>,</strong>' &lt;expression&gt; )*
+
+&lt;target&gt;               ::= &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;targets list&gt;         ::= &lt;target&gt; ( '<strong>,</strong>' &lt;target&gt; )*
+
+&lt;type alias&gt;           ::= '<strong>type</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt;
+                               ( '<strong>,</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt; )*
+</pre>
+
+
+&nbsp;
+<h4>3.9.1 Declarations</h4>
+
+<strong>Typee</strong> is a typed language. As such, any entity has to be declared with its own type. Auto-typing is allowed but even then a specific type sign is used to declare auto-typed variables.
+
+<strong>Typee</strong> accepts declarations and <em>forward</em> declarations. We discuss only declaration statement here. <em>Forward</em> declarations are discussed at a next sub-section.
+
+&nbsp;
+<strong><em>Access protection level</em></strong>
+Declarations are applied to variables. When declared at the highest level of nested blocks of statements in a module, these variables may be associated with an access protection qualifier. In this case, the used keyword qualifies the protection of the declared entity outside the module (i.e. the source code file) where this entity declared.
+
+The different levels of protection are:
+<pre>&lt;access qualifier&gt; ::= '<strong>hidden</strong>'  |  '<strong>local</strong>'  |  '<strong>private</strong>'  |
+                       '<strong>protected</strong>'  |  '<strong>public</strong>' 
+</pre>
+
+The default protection level is <code style="font-size:115%;font-weight:bold;">public</code>. It specifies that the declared entity can be used outside the module with no restriction. It can be read, assigned, modified within any other module belonging to the global software project (i.e. the developed program).
+
+The highest protection level is <code style="font-size:115%;font-weight:bold;">hidden</code>. It specifies that the declared entity cannot be accessed outside this module. Meanwhile, it is fully accessible to the whole module statements. Typee specifies two aliases, or wrappers, to <code style="font-size:115%;font-weight:bold;">hidden</code>:
+<code style="font-size:115%;font-weight:bold;">private</code>, which is a more used keyword but mainly for classes, and <code style="font-size:115%;font-weight:bold;">local</code>, which is also used in other programming languages and for the same purpose. Programmers are nevertheless strongly encouraged to use keyword <code style="font-size:115%;font-weight:bold;">hidden</code> in Typee.
+
+An intermediate protection level is <code style="font-size:115%;font-weight:bold;">protected</code>. This is a common keyword in OOP languages. Used at the highest module level, it gives full control on the declared entity to every other module that is contained in the same directory than the module it is declared in, and to every module that is contained in sub-directories of this directory. In <em>Java</em> and in <em>Python</em>, such modules are said to belong to a same <strong>package</strong>. There are restrictions however in these programming languages when using or declaring packages. In <strong>Typee</strong> there is nothing more to do to create a package than putting source code files (i.e. modules) in a same directory and in its sub-directories.
+Then, any <code style="font-size:115%;font-weight:bold;">protected</code> entity declared in a module cannot be accessed by any module that would not belong to the same <em>package</em>.
+
+When no access protection qualifier is used, what does happen? We have seen in the section about Simple Statements that an <code style="font-size:105%;">access protection statement</code> exists in Typee:
+<pre>&lt;access protection statement&gt;  ::= '<strong>:</strong>' &lt;access qualifier&gt; '<strong>:</strong>'
+</pre>
+When present at the highest level of a module, every declarations below this statement get the declared protection level unless they get an individual different one, directly at the beginning of their declaration.
+Finally, when no access protection level is specified, the declared entities are considered by default to be <code style="font-size:115%;font-weight:bold;">public</code>.
+
+
+&nbsp;
+<h4>3.9.2 Volatile Declarations</h4>
+
+Volatile declarations are well known by <em>Java</em>, <em>C</em> and <em>C++</em> programmers but not by <em>Python</em> programmers. It is a very specific declaration type.
+
+Its formal specification in Typee is:
+<pre>&lt;volatile decl&gt;  ::= '<strong>volatile</strong>' &lt;type&gt; &lt;identifier&gt; [&lt;memory address&gt;] '<strong>;</strong>' 
+
+&lt;memory address&gt; ::= '<strong>@</strong>' &lt;integer number&gt;
+</pre>
+
+When an entity is declared <code style="font-size:115%;font-weight:bold;">volatile</code>, the final compiler or interpreter of the targeted programming language is informed that this entity is subject to change of value at any time and from any hardware external source. Optimizations on the access to this entity should then be disabled. This is typically the case when accessing a hardware register on some board, for instance when reading the value of some measured physical event (level of registered sound, rounds per minute of a rotating object, pressure level or temperature value as measured by a sensor, etc.)
+
+We could have left this kind of declaration to the sole possibility of embedded code, since this kind of declaration is NOT available in every programming language. We have prefered to integrate it in Typee specifications. Programmers are informed that this keyword may not be used when translating Typee source code in some other programming languages and that Typee source code declaring such variables may not be ported the same way on different platforms due to the targeted programming languages capabilities.
+
+In <strong>Typee</strong> grammar specification, a memory address can be associated with a volatile declaration. The physical address of the related hardware register and the type of the data it controls can then be specified at declaration time. Token '<code style="font-size:115%;font-weight:bold;">@</code>' informs Typee translator that a memory address is specified. This address must be an integer. It can be then written in an hexadecimal form. Anything other than integer will set an error at Typee translation time.
+
+
+&nbsp;
+<h4>3.9.3 Type Aliasing</h4>
+
+<strong>Typee</strong> allows the renaming of types. This is type aliasing. The related syntax is very simple:
+
+<pre>&lt;type alias&gt; ::= '<strong>type</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt;
+                     ( '<strong>,</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt; )*
+</pre>
+
+First, keyword <code style="font-size:115%;font-weight:bold;">type</code> specifies the type aliasing statement. Then is specified the type to be aliased, keyword <code style="font-size:115%;font-weight:bold;">as</code> and finally the alias, i.e. the new name, of the aliased type.
+
+Examples:
+<pre><strong>type</strong> <strong>int32</strong> <strong>as</strong> int;                         // int is now a new name for int32
+<strong>type</strong> <strong>uint8</strong> <strong>as</strong> byte;
+<strong>type</strong> <strong>float32</strong> <strong>as</strong> float;                     // float and double
+<strong>type</strong> <strong>float64</strong> <strong>as</strong> double;                    // usual definitions
+<strong>forward</strong> <strong>class</strong> ThisIsAVeryLongClassName;
+<strong>type</strong> ThisIsAVeryLongClassName <strong>as</strong> TheClass; // shorter wrapper to class long name
+</pre>
+
+&nbsp;
+<h4>3.9.4 Forward Declarations</h4>
+
+A forward declaration is a declaration with no associated assignment or definition. It informs Typee translators that a declaration or a definition (of a class or a function, for instance) is to be provided later in a source code. It allows for the typed declaration of an entity that is to be appearing in some expression near below while it will be defined or fully declared later in the Typee source code.
+
+Since forward declaration lets declaring further definitions as well as further declarations, its syntax is a little bit more complex than the syntax of direct declarations. We fully explain it in this sub-section.
+
+The formal EBNF specification of forward declarations is:
+<pre>&lt;forward decl&gt;         ::= &lt;forward&gt; ( ([ '<strong>static</strong>' ] &lt;forward decl'&gt;) | 
+                                        &lt;fwd class decl&gt; ) '<strong>;</strong>'
+&lt;forward decl'&gt;        ::= &lt;volatile qualifier&gt; &lt;type&gt; &lt;identifier&gt; |
+                           &lt;fwd type decl&gt;                          |
+                           &lt;identifier&gt; &lt;fwd decl constructor&gt;      |
+                           &lt;TYPE&gt; ( &lt;operator declaration&gt;  |
+                                    (&lt;identifier&gt;
+                                         (&lt;fwd var decl&gt; |
+                                              &lt;function declaration&gt;)) )
+
+&lt;forward&gt;              ::= '<strong>forward</strong>'  |  '<strong>fwd</strong>' 
+
+&lt;fwd class decl&gt;       ::= '<strong>class</strong>' &lt;identifier&gt;
+                               &lt;template def&gt; [&lt;inheritance&gt;]
+
+&lt;fwd decl constructor&gt; ::= ( '<strong>.</strong>' &lt;identifier&gt; )*
+                               (&lt;operator declaration&gt; |
+                                &lt;identifier&gt;
+                                    (&lt;fwd var decl&gt; | 
+                                     &lt;function declaration&gt;)) |
+                           &lt;function args declaration&gt;
+
+&lt;fwd type decl&gt;        ::= '<strong>type</strong>' &lt;identifier&gt;
+
+&lt;fwd var decl&gt;         ::= ( '<strong>,</strong>' &lt;identifier&gt; )*
+
+&lt;TYPE&gt;                 ::= [ '<strong>const</strong>' ] &lt;type&gt;
+</pre>
+
+<pre>&lt;function declaration&gt;      ::= [&lt;template def&gt;]  &lt;function args declaration&gt;
+
+&lt;function args declaration&gt; ::= '<strong>(</strong>' [&lt;typed args list&gt;] '<strong>)</strong>' 
+
+&lt;typed args list&gt;           ::= &lt;TYPE&gt; &lt;identifier&gt;
+                                    ( '<strong>,</strong>' &lt;TYPE&gt; &lt;identifier&gt; )*
+</pre>
+
+<pre>&lt;inheritance&gt;       ::= [ '<strong>:</strong>' &lt;inheritance item&gt; (',</strong>' &lt;inheritence item&gt;)* ]
+
+&lt;access qualifier&gt;  ::= '<strong>hidden</strong>'  |  '<strong>local</strong>'  |  '<strong>private</strong>'  |
+                        '<strong>protected</strong>'  |  '<strong>public</strong>' 
+
+&lt;inheritance item&gt;  ::= [&lt;access qualifier&gt;] &lt;dotted name&gt; [&lt;template args&gt;]
+</pre>
+
+<pre>&lt;operator declaration&gt;  ::= '<strong>operator</strong>' 
+                                ( (&lt;operator&gt; [&lt;template def&gt;]
+                                      &lt;function args declaration&gt;)     |
+                                  (&lt;operator'&gt; [&lt;spaced template def&gt;] 
+                                      &lt;function args declaration&gt;)     |
+                                  (&lt;call operator&gt; &lt;template def&gt;) )
+
+&lt;operator&gt;              ::= '<strong>&lt;=</strong>'  |  '<strong>==</strong>'  |  '<strong>!=</strong>'  |  '<strong>&gt;=</strong>'  |
+                            '<strong>&</strong>'   |  '<strong>|</strong>'   |  '<strong>^</strong>'  |
+                            '<strong>++</strong>'  |  '<strong>--</strong>'  |  '<strong>#</strong>'  |
+                            '<strong>in</strong>'  |
+                            '<strong>+</strong>'   |  '<strong>-</strong>'   |  '<strong>*</strong>'   |  '<strong>/</strong>'  |  '<strong>%</strong>'  |
+                            &lt;op_user&gt;  |  '<strong>??</strong>'  |  '<strong>**</strong>'  |  '<strong>^^</strong>'  |
+                            &lt;assign op&gt;
+
+&lt;operator'&gt;             ::= '<strong>&lt;</strong>'  |  '<strong>&gt;</strong>'  |  '<strong>&lt;&lt;</strong>'  |  '<strong>&gt;&gt;</strong>'  |
+                            '<strong>&lt;&lt;&lt;</strong>'  |  '<strong>&gt;&gt;&gt;</strong>' 
+
+&lt;assign op&gt;             ::= '<strong>=</strong>'  |  &lt;augmented assign op&gt;
+
+&lt;augmented assign op&gt;   ::= '<strong>+=</strong>'   |  '<strong>-=</strong>'   |  '<strong>*=</strong>'  |
+                            '<strong>/=</strong>'   |  '<strong>%=</strong>'   |
+                            '<strong>&=</strong>'   |  '<strong>|=</strong>'   |  '<strong>^=</strong>'  |
+                            '<strong>&lt;&lt;=</strong>'  |  '<strong>&lt;&lt;&lt;=</strong>' |  '<strong>&gt;&gt;=</strong>' |  '<strong>&gt;&gt;&gt;=</strong>' |
+                            '<strong>**=</strong>'  |  '<strong>^^=</strong>'  |  '<strong>@=</strong>'  |
+                            '<strong>&gt;&lt;=</strong>'  |  '<strong>!!=</strong>'  |  '<strong>::=</strong>' |  '<strong>??=</strong>' 
+
+&lt;call operator&gt;         ::= '<strong>(</strong>' '<strong>)</strong>' 
+
+&lt;op_user&gt;               ::= '<strong>@</strong>'   |  '<strong>&gt;&lt;</strong>'  |  '<strong>!!</strong>'  |  '<strong>::</strong>' 
+</pre>
+
+<pre>&lt;template args&gt;           ::= '<strong>&lt;</strong>' &lt;template args'&gt; '<strong>&gt;</strong>' 
+&lt;template args'&gt;          ::= [&lt;condition&gt; ( '<strong>,</strong>' &lt;condition&gt; )*]
+
+&lt;template def&gt;            ::= '<strong>&lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+&lt;template def'&gt;           ::= (&lt;identifier&gt; |
+                                   &lt;const qualifier&gt;
+                                      &lt;template def const name&gt;) 
+                                      ( '<strong>,</strong>' (&lt;identifier&gt; | 
+                                        &lt;const qualifier&gt;
+                                             &lt;template def const name&gt;) )*
+
+&lt;scalar type&gt;               ::= '<strong>bool</strong>'    | '<strong>char</strong>'    | '<strong>char16</strong>' |
+                                '<strong>float32</strong>' | '<strong>float64</strong>' |
+                                '<strong>int8</strong>'    | '<strong>int16</strong>'   | '<strong>int32</strong>'  | '<strong>int64</strong>'  |
+                                '<strong>uint8</strong>'   | '<strong>uint16</strong>'  | '<strong>uint32</strong>' | '<strong>uint64</strong>' |
+                                '<strong>str</strong>'     | '<strong>str16</strong>' 
+
+&lt;spaced template args&gt;    ::= '<strong> &lt;</strong>' &lt;template args'&gt; '<strong>&gt;</strong>' 
+
+&lt;spaced template def&gt;     ::= '<strong> &lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+
+&lt;template def const name&gt; ::= (&lt;scalar type&gt; | &lt;dotted name&gt;) &lt;identifier&gt;
+                                  [ '<strong>=</strong>' &lt;expression&gt; ]
+</pre>
+"Very long, isn't it?" would have said Tex Avery. Nevertheless, aAll of this may be summarized quite simply.
+
+A forward declaration begins with keyword <code style="font-size:115%;font-weight:bold;">forward</code>, which can be shortened to <code style="font-size:115%;font-weight:bold;">fwd</code> also. Next is the forwarded declaration itself.
+<ul>
+<li>If it is about a <strong>variable</strong>, its type and its identifier are specified, maybe preceded by keywords <code style="font-size:115%;font-weight:bold;">const</code> or <code style="font-size:115%;font-weight:bold;">volatile</code> and any of the access protection levels.</li>
+<li>If it is about a <strong>class</strong>, the only "signature" of the class is provided: keyword <code style="font-size:115%;font-weight:bold;">class</code>, the identifier of the class and if needed the template arguments declaration associated with this class (more on this when discussing classes, later in this documentation) and finally its inheriting chain if any is needed (more on this also in the next further section about classes in this documentation). This signature may also be preceded by any of the access protection keywords.</li>
+<li>If it is about a <strong>function</strong>, the only signature of the function is provided: the returned type of the function, its identifier, its templated arguments if needed and the declaration of its arguments (more on this in next section on Functions).</li>
+<li>If it is about an <strong>operator</strong>, then again the only signature of the operator redefinition is provided: the returned type of the operator, its associated token (e.g. '<code style="font-size:115%;font-weight:bold;">+</code>' or '<code style="font-size:115%;font-weight:bold;">&lt;&lt;=</code>'), its templated arguments if needed and the declaration of its arguments (more on this later in this documentation, when presenting operators overloading).</li>
+<li>If it is about a <strong>type alias</strong>, keyword <code style="font-size:115%;font-weight:bold;">type</code> precedes the only identifier of the new alias for the type.</li>
+</ul>
+
+According to these typed forward declarations, Typee translators can process type checking on next statements while the needed full declarations have not yet been specified.
+
+
+&nbsp;
+<h4>3.9.4 Assignments</h4>
+
+Assignments in <strong>Typee</strong> appear in declarations as well as in assignment statements. They imply the use of an assignment operator which can only be <code style="font-size:115%;font-height:bold;">=</code> for declarations while it can also be <em>augmented assignment</em> operators in assignment statements.
+
+The formal EBNF specification for any assignment statement in Typee is:
+<pre>&lt;assignment statement&gt;  ::= &lt;targets list&gt; &lt;assign op&gt; &lt;expr list&gt;
+
+&lt;assign op&gt;             ::= '<strong>=</strong>'  |  &lt;augmented assign op&gt;
+
+&lt;augmented assign op&gt;   ::= '<strong>+=</strong>'  |  '<strong>-=</strong>'   |
+                            '<strong>*=</strong>'  |  '<strong>/=</strong>'   |  '<strong>%=</strong>'  |
+                            '<strong>**=</strong>' |  '<strong>^^=</strong>'  |  '<strong>??=</strong>' |
+                            '<strong>&=</strong>'  |  '<strong>|=</strong>'   |  '<strong>^=</strong>'  |
+                            '<strong>&lt;&lt;=</strong>' |  '<strong>&lt;&lt;&lt;=</strong>' |  '<strong>&gt;&gt;=</strong>' |  '<strong>&gt;&gt;&gt;=</strong>' |
+                            '<strong>&gt;&lt;=</strong>' |  '<strong>!!=</strong>'  |  '<strong>::=</strong>' |  '<strong>@=</strong>'  |
+
+&lt;expr list&gt;             ::= &lt;expression&gt;  ( '<strong>,</strong>' &lt;expression&gt; )*
+
+&lt;target&gt;                ::= &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;targets list&gt;          ::= &lt;target&gt; ( '<strong>,</strong>' &lt;target&gt; )*
+</pre>
+Reminder: this is not for declaration statement, only for assignment statement.
+
+Examples:
+<pre><strong>int32</strong>    a = 0;
+<strong>uint32</strong>   b = c = d = 1;
+<strong>float64</strong>  e = 2.718_281_828_459_045, f = 6.022_140_857e+23;
+</pre>
+
+<span style="font-size:85%">(do you know Amadeo Avogadro? Number <code style="font-size:105%;">f</code> above is his - a cool number from a cool looking guy)</span>
+[caption id="attachment_726" align="alignnone" width="220"]<img src="http://www.typee.ovh/wp-content/uploads/2018/11/220px-Avogadro_Amedeo.jpg" alt="[Amadeo Avogadro picture]" width="110" height="133" class="size-full wp-image-726" /><span style="font-size:85%">(Amadeo Avogadro)</span>[/caption]
+
+
+&nbsp;
+Next section formerly explains Functions definitions and calls.
+
+
+
+<center><a href="http://www.typee.ovh/index.php/doc-038-empty-statements/">&lt; previous</a> (3.8 empty statements) | (3.10 functions) <a href="http://www.typee.ovh/index.php/doc-0310-functions/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

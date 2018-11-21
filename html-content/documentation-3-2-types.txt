@@ -1,0 +1,340 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.2 - Types</h3>
+
+Here are the different kinds of types that are available in <strong>Typee</strong> - see below.
+
+<pre>&lt;TYPE&gt;           ::= ['<strong>const</strong>'] &lt;TYPE'&gt;   
+&lt;TYPE'&gt;          ::= &lt;auto type&gt;                  |
+                     &lt;container type&gt;             |
+                     &lt;enum type&gt;                  |
+                     &lt;NONE&gt;                       |
+                     &lt;scalar type&gt; [&lt;dimensions&gt;] |
+                     &lt;types list&gt;
+
+&lt;auto type&gt;      ::= '<strong>?</strong>' ['<strong>in</strong>' &lt;types list&gt;]
+
+&lt;container type&gt; ::= &lt;array_type&gt; | &lt;file type&gt; |
+                     &lt;list type&gt;  | &lt;map type&gt;  | &lt;set type&gt;
+&lt;array type&gt;     ::= '<strong>array</strong>' '<strong>&lt;</strong>' &lt;TYPE&gt; '<strong>&gt;</strong>'
+
+&lt;file type&gt;      ::= '<strong>file</strong>' ['<strong>&lt;</strong>' &lt;TYPE&gt; '<strong>&gt;</strong>']
+&lt;list type&gt;      ::= '<strong>list</strong>' ['<strong>&lt;</strong>' &lt;TYPE&gt; '<strong>&gt;</strong>']
+&lt;map type&gt;       ::= '<strong>map</strong>'  ['<strong>&lt;</strong>' &lt;TYPE&gt; '<strong>&gt;</strong>']
+&lt;set type&gt;       ::= '<strong>set</strong>'  ['<strong>&lt;</strong>' &lt;TYPE&gt; '<strong>&gt;</strong>']
+
+&lt;enum type&gt;      ::= '<strong>enum</strong>'
+
+&lt;NONE&gt;           ::= '<strong>None</strong>'  |  '<strong>none</strong>'    
+
+&lt;scalar type&gt;    ::= '<strong>bool</strong>'  |  '<strong>char</strong>'   |  '<strong>char16</strong>' |
+                     '<strong>float32</strong>' |  '<strong>float64</strong>' |
+                     '<strong>int8</strong>'  |  '<strong>int16</strong>'  |  '<strong>int32</strong>'  |  '<strong>int64</strong>'   |
+                     '<strong>uint8</strong>' |  '<strong>uint16</strong>' |  '<strong>uint32</strong>' |  '<strong>uint64</strong>'  |
+                     '<strong>str</strong>'   |  '<strong>str16</strong>'
+&lt;dimensions&gt;     ::= ( '<strong>[</strong>' &lt;integer number&gt; | &lt;dotted name&gt; '<strong>]</strong>' )*
+
+&lt;types list&gt;     ::= '<strong>(</strong>' &lt;TYPE&gt; ('<strong>,</strong>' &lt;TYPE&gt;)* '<strong>)</strong>'
+</pre>
+
+The reader is informed that some of those types may be </em>templated</em>. Templates are well known of <em>C++</em> programmers. In <em>Java</em> they are named <em>generics</em>. The equivalent in <em>Python</em> would be to pass a type or a class name as an argument of functions and methods.
+But we shall not describe any templated notation right now, since templates will be specified later in this documentation.
+
+This said, and before dealing with any other concept of <strong>Typee</strong>, we will first talk about built_in types. These are very simple to master. You will use them to specify the type of every variable (variables are described in next section) as well as the type of the returned value of every function and method of class.
+
+&nbsp;
+<h4>3.2.1 Booleans</h4>
+
+The boolean type in Typee is <code style="font-size:115%;"><strong>bool</strong></code>. This type is part of scalar types.
+
+Booleans take one from two values, <code style="font-size:115%;"><strong>True</strong></code> and <code style="font-size:115%;"><strong>False</strong></code>.
+To ease typing as well as to take into account programming habits, those language boolean constants may be written <code style="font-size:115%;"><strong>true</strong></code> and <code style="font-size:115%;"><strong>false</strong></code>.
+
+Booleans can only be compared with booleans. Some OOP languages consider <code style="font-size:115%;"><strong>False</strong></code> to be similar to&nbsp;<code style="font-size:115%;"><strong>0</strong></code> (e.g. in <em>C++</em>) or to <code style="font-size:115%;"><strong>None</strong></code> (e.g. in <em>Python</em>), while anything different will be considered similar to <code style="font-size:115%;"><strong>True</strong></code>. This is NOT the case in Typee for which boolean variables cannot be compared with variables of any other type.
+
+The only valid operators with booleans are:
+<ul>
+  <li>assignment operator</li>
+  <li>equality and non-equality operators</li>
+  <li>boolean operators <code style="font-size:115%;"><strong>and</strong></code>, <code style="font-size:115%;"><strong>or</strong></code> and <code style="font-size:115%;"><strong>not</strong></code></li>
+</ul>
+
+These are explained elsewhere but they act in Typee as in any programming language (same preceedence and same results).
+
+Typee make no assumption on used memory space for storing booleans. This is definitively dependent on the targetted programming language at translation then compilation time.
+
+&nbsp;
+<h4>3.2.2 Characters</h4>
+
+Typee defines two types of characters: <code style="font-size:115%;"><strong>char</strong></code> and <code style="font-size:115%;"><strong>char16</strong></code>. These types are part of scalar types.
+
+Characters are NOT strings. This type only defines variables which will contain a single character. Type <code style="font-size:115%;"><strong>char</strong></code> corresponds to 8-bits characters (e.g. ASCII ones). Type <code style="font-size:115%;"><strong>char16</strong></code> corresponds to 16-bits characters (e.g. Unicode ones).
+
+Characters can only be compared with characters and with strings (see below for strings). The only valid operators with characters are:
+<ul>
+  <li>assignment operator</li>
+  <li>all comparison operators</li>
+</ul>
+
+Assignment are valid when assigning a <code style="font-size:115%;"><strong>char</strong></code> to a <code style="font-size:115%;"><strong>char</strong></code> or a <code style="font-size:115%;"><strong>char16</strong></code>, and when assigning a <code style="font-size:115%;"><strong>char16</strong></code> to a <code style="font-size:115%;"><strong>char16</strong></code>.
+Assigning a <code style="font-size:115%;"><strong>char16</strong></code> to a <code style="font-size:115%;"><strong>char</strong></code> will raise an overflow error.
+
+Comparison between <code style="font-size:115%;"><strong>char</strong></code> and <code style="font-size:115%;"><strong>char16</strong></code> is always possible, but is strongly discouraged since chars coding may be really different, leading to unpredictable results.
+
+Constant values for characters are enclosed between either quotes or double-quotes; both notations are valid in Typee. A few examples of such constants are: <code>'a'</code>, <code>"Z"</code>, <code>'\n'</code>, <code>"\\"</code>, <code>'\0x08'</code>, <code>'\0x007f'</code>, <code>"\0377"</code>. This is much usual with programming languages and Typee does not much derogate from classical programming here. Formal specification of character constants can be found in the Extended BNF description of Typee.
+
+Type casting is possible on characters. Type casting is a programming concept that allows for the modification of the type of a constant or of a variable. The only allowed type casting with characters is their casting to integers. See an example in the sub-section on integers.
+A dedicated built-in function returns the 8-bits ou 16-bits coding of a character. This is function <code style="font-size:115%;"><strong>ord</strong></code>, which is usual also in programming languages. It returns an 8-bits or a 16-bits unsigned integer according to the type of the character.
+
+
+&nbsp;
+<h4>3.2.3 Strings</h4>
+
+Typee defines two types for strings: <code style="font-size:115%;"><strong>str</strong></code> and <code style="font-size:115%;"><strong>str16</strong></code>. These types are part of scalar types.
+Strings of type <code style="font-size:115%;"><strong>str</strong></code> may embed only characters ot type <code style="font-size:115%;"><strong>char</strong></code>. Strings of type <code style="font-size:115%;"><strong>str16</strong></code> may embed only characters ot type <code style="font-size:115%;"><strong>char16</strong></code>. They can be modified by applying to them built-in operators and functions. If a <code style="font-size:115%;"><strong>char</strong></code> is assigned to a string of type <code style="font-size:115%;"><strong>str16</strong></code>, it will be transformed into its 16-bits coded equivalent. On the opposite, no 16-bits character may be applied to an 8-bits string.
+
+Constant values for strings are embedded between quotes or double-quotes:
+<pre>'This is a valid string constant'
+"This is another valid string constant"</pre>
+
+Constant strings may also be split on many code lines:
+<pre>"This is a "
+"multi-lines string.\n"
+"This kind of notation is useful when "
+"specifying very long string constants."</pre>
+
+As shown in above example, classical escape characters may be used in strings: e.g. <pre>'\'', "\"", '\0xfe', '\0777'</pre>
+
+Avaliable operators for strings are:
+<ul>
+  <li>assignment operator</li>
+  <li>all comparison operators</li>
+  <li>concatenation operator</li>
+  <li>indexing operator</li>
+  <li>slicing operator</li>
+  <li>containing operator</li>
+</ul>
+
+Assignment, comparison, concatenation and containing operators may only be applied to same type of strings. Mixing <code style="font-size:115%;"><strong>str</strong></code> and <code style="font-size:115%;"><strong>str16</strong></code> variables with them will raise a type error at translation time.
+
+Let's have a very short explanation about concatenation, indexing, slicing and containing operators. These concepts will be fully explained later.
+
+The concatenation operator for string is operator <code style="font-size:115%;"><strong>+</strong></code>. It creates a new string which contains the left string content concatenated with the right string content next. Do not attempt to concatenate strings to different sizes. This will be an error type.
+
+The indexing operator is, as usual, <code style="font-size:115%;"><strong>[]</strong></code>. It is used at the right of a string and contains a single signed integer value. Examples: <code style="font-size:115%;">"abcdef"[0]</code> is character <code style="font-size:115%;">'a'</code>, <code style="font-size:115%;">"abcdef"[3]</code> is character <code style="font-size:115%;">'d'</code>, <code style="font-size:115%;">"abcdef"[-1]</code> is character <code style="font-size:115%;">"f"</code> (the last one), <code style="font-size:115%;">"abcdef"[-3]</code> is character <code style="font-size:115%;">'d'</code>. So, indexing a string returns a character : a <code style="font-size:115%;"><strong>char</strong></code> when indexing a <code style="font-size:115%;"><strong>str</strong></code>, or a <code style="font-size:115%;"><strong>char16</strong></code> when indexing a <code style="font-size:115%;"><strong>str16</strong></code>.
+
+The slicing operator will be of no difficulty for Python programmers. It returns a string of same type than the sliced string. This operator is the indexing one but with a slice specified in it. Examples:
+<code style="font-size:115%;">"abcdef"[0:2]</code> returns <code style="font-size:115%;">"abc"</code> (CAUTION : very different from Python for which last index is considered as being one above the targeted index); <code style="font-size:115%;">"abcdef"[0:5:2]</code> returns <code style="font-size:115%;">"ace"</code>; <code style="font-size:115%;">"abcdef"[5:3:-1]</code> returns <code style="font-size:115%;">"fed"</code>. To get slicing as usual in Python, one must use the specific indexing operator <code style="font-size:115%;"><strong>[)</strong></code> which is more usual in mathematics notation: last index is the excluded from the sliced interval. Examples: <code style="font-size:115%;">"abcdef"[0:2)</code> returns <code style="font-size:115%;">"ab"</code> (as with Python slicing expression <code style="font-size:115%;">[0:2]</code>); <code style="font-size:115%;">"abcdef"[5:3:-1)</code> returns <code style="font-size:115%;">"fe"</code>.
+
+The containing operator is <code style="font-size:115%;"><strong>in</strong></code>. It is used as with Python. Examples: <code style="font-size:115%;">'a' in "abcdef"</code> returns <code style="font-size:115%;">True</code>; <code style="font-size:115%;">'z' in "abcdef"</code> returns <code style="font-size:115%;">False</code>; <code style="font-size:115%;">"abc" in "abcdef"</code> returns <code style="font-size:115%;">True</code>; <code style="font-size:115%;">"cdez" in "abcdef"</code> returns <code style="font-size:115%;">False</code>; <code style="font-size:115%;">"fe" in "abcdef"[-1:0:-1]</code> returns <code style="font-size:115%;">True</code>. There, characters as well as sub-strings may be searched into a string, but characters and strings must be of the same characters size, either both 8-bits or both 16-bits. Any mixing of sizes will raise a type error.
+
+Finally, the built-in library <strong>String</strong> provides functions and methods for the manipulation of strings. For instance, to get the length (number of characters) of a string, to format it with values, to put it in upper case or lower case, to find first or all indexes of a sub-string in a string, etc. We describe library <strong>String</strong> later in this documentation. Just be aware that it exists.
+
+&nbsp;
+<h4>3.2.4 Integers</h4>
+
+Typee defines integers as coded on 8, 16, 32 and 64 bits, signed or unsigned. To be definitively unambiguous about size of storage and signed/unsigned status, 8 types names are specified which should be self explanatory. These types are part of scalar types.
+
+<ul>
+  <li><code style="font-size:115%;"><strong>int8</strong></code> and <code style="font-size:115%;"><strong>uint8</strong></code> - 8-bits coded, signed / unsigned</li>
+  <li><code style="font-size:115%;"><strong>int16</strong></code> and <code style="font-size:115%;"><strong>uint16</strong></code> - 16-bits coded, signed / unsigned</li>
+  <li><code style="font-size:115%;"><strong>int32</strong></code> and <code style="font-size:115%;"><strong>uint32</strong></code> - 32-bits coded, signed / unsigned</li>
+  <li><code style="font-size:115%;"><strong>int64</strong></code> and <code style="font-size:115%;"><strong>uint64</strong></code> - 64-bits coded, signed / unsigned</li>
+</ul>
+
+All integer types are compatible with all other integer types, but overflow may result at run-time when operating on integers. This is not managed by Typee. Integers may also be operated with floats (see next sub-section on floats). They will first be promoted to floats before operation takes place.
+
+Integer constants are coded as usual. They must begin with a digit (from 0 to 9), with digits again next and with allowed separating underscores, while they must be ended with a digit and not with an underscore. Constants may be binary, octal, decimal or hexadcimal. Here are Examples:
+<pre>binary     : 0b0101, 0b1111_1111
+octal      : 017, 0123_777
+decimal    : 123, 9_876_543_210
+hexadecimal: 0x1f, 0xffff_ffff_ffff_ffff</pre>
+
+Operators applicable on integers are:
+<ul>
+  <li>assignment operator</li>
+  <li>all comparison operators</li>
+  <li>artihmetic operators</li>
+  <li>bitwise operators</li>
+  <li>shifting operators</li>
+</ul>
+
+Precedence on operators are the same as for any other programming language. This is fully described later, when discussing Typee operators.
+
+&nbsp;
+<h4>3.2.5 Floats</h4>
+
+Floating numbers in Typee are 32- and 64- bits coded. Corresponding types are resp. <code style="font-size:115%;"><strong>float32</strong></code> and <code style="font-size:115%;"><strong>float64</strong></code>. These types are part of scalar types.
+
+Both types are compatible but overflow as well as underflow and precision loss may happen when mixing floating types. When integer and floating numbers appear in arithmetic expressions, integers are converted first into the largest floating type used in this expression.
+
+Floating constants are coded as usual, with separating underscores allowed as for integer constants. Examples are:
+<pre>0.1, 1., 1.5e-1, 123_456e+18, 5.678_901e207</pre>
+
+Operators applicable on floats are:
+<ul>
+  <li>assignment operator</li>
+  <li>all comparison operators</li>
+  <li>arithmetic operators</li>
+</ul>
+
+Precedence on operators are the same as for any other programming language. This is fully described later, when discussing Typee operators.
+
+The built-in library <strong>Maths</strong> defines many functions and methods that can be applied to floating numbers. This library is described later in this documentation.
+
+&nbsp;
+<h4>3.2.6 Specific Types</h4>
+
+Typee offers three other specific types that are also available in other computer languages, as does <em>C++</em> for instance.
+
+&nbsp;
+<strong><em>Automatic type evaluation at run time</em></strong>
+
+It may happen that a variable cannot get a static type at its declaration time. This is the case when keyword <code style="font-size:115%;">auto</code> is used in <em>C++</em>. We will later see this when explaining some of the looping Typee statements (<code style="font-size:115%;"><strong>for</strong></code>, just to name only one).
+
+The declaration of variables, functions and methods, for which type will be known at run-time only, use token <code style="font-size:115%;font-weight:bold;">?</code> preceeding the identifier of the variable, function or method in the declaration clause. A list of allowed types may be specified to limit possibilities and to help type checking at translation time. Formal EBNF Specification is:
+<pre>&lt;auto type&gt;      ::= '<strong>?</strong>' ['<strong>in</strong>' &lt;types list&gt;]
+&lt;types list&gt;     ::= '<strong>(</strong>' &lt;TYPE&gt; ('<strong>,</strong>' &lt;TYPE&gt;)* '<strong>)</strong>'
+</pre>
+
+Example:
+<pre>my_list = [0, 1., "a-string"];
+<strong>for</strong>( <strong>?</strong> obj <strong>in</strong> my_list )
+    <strong>print</strong>( obj );  // prints 0 1.0 a-string
+<strong>for</strong>( <strong>? in</strong> (<strong>float32</strong>, <strong>str</strong>) obj <strong>in</strong> my_list )
+    <strong>print</strong>( obj );  // prints 0.0 1.0 a-string due to integer
+                                    // promotion of value 0 to float 0.0
+</pre>
+Here, variable <code style="font-size:115%;">obj</code> will be first an integer, second a float and third a string. The <code style="font-size:115%;">for</strong></code> loop will be fully described later in this documentation and is used right now just for illustration purpose.
+
+&nbsp;
+<strong><em>Variable number of arguments</em></strong>
+
+This concept has been available for a while, starting with language <em>C</em> (<code style="font-size:115%;">varargs</code>). It allows the declaration of a variable number of arguments. In Typee, this is considered as a built-in type. It is named with ellipsis: <code style="font-size:115%;"><strong>...</strong></code>. This very specific type name has to preceede the identifier of the variable number of arguments, in the list of arguments of functions or methods.
+
+Example:
+<pre><strong>int32</strong> sum( <strong>...</strong> nums ){
+    <strong>int32</strong> s = 0;
+    <strong>for</strong>( <strong>int32</strong> num <strong>in</strong> nums )
+        s += num;
+    <strong>return</strong> s;
+}
+<strong>print</strong>( sum(1,2,3), sum(10,20), sum(100,110,120,130,140) );
+</pre>
+Above code, once translated in some other programming language and run, should print 
+<pre>6 30 600</pre>
+
+Here, variable num is declared as being of type <code style="font-size:115%;"><strong>int32</strong></code>, so variable argument <code style="font-size:115%;">nums</code> should only contain variables of types that are compatible with type <code style="font-size:115%;"><strong>int32</strong></code>. Type checking might not be possible at translation time. This is the reason why this kind of coding is discouraged. Nevertheless, it may be usefull also and provided for their convenience to careful programmers.
+
+When discussing functions, methods and arguments declaration, we will see that variable arguments have not to be the ending argument in the list of arguments but that this should be programmed with care.
+
+&nbsp;
+<strong><em>No returned value</em></strong>
+
+It will eventually happen that functions and methods run some task without returning any value. This is the case when printing values, for instance, or when displaying results. In such cases, keyword <code style="font-size:115%;font-weight:bold;">none</code> is used, preceeding the identifier of the function or of the method when it is declared. Keyword <code style="font-size:115%;font-weight:bold;">None</code> is also accepted, since this is a usual keyword in <em>Python</em> (but while this is not its use in this programming language).
+
+Example:
+<pre><strong>forward none print</strong>( <strong>...</strong>args );</pre>
+Well, we introduce here a new concept: <code style="font-size:115%;"><strong>forward</strong></code>. It will be fully explained later and is used here just for illustration purpose. <code style="font-size:115%;"><strong>forward</strong></code> allows forward declarations.
+
+<code style="font-size:115%;font-weight:bold;">none</code> is something like <code style="font-size:115%;font-weight:bold;">void</code> in <em>C</em> and <em>C++</em>. We have decided to force its use when functions or methods do not return any value. While it might appear to be a little bit verbose, it helps certifying that a function or a method will NOT return any value. In former versions of <em>C</em> and <em>C++</em>, not using keyword <code style="font-size:115%;"><strong>void</strong></code> could lead to ambiguities: a function or a method declared with no return type was supposed to return an integer value and if no value was returned, compiler was supposed to silently return <code style="font-size:115%;">0</code> which might not be used at function return-time. We prefer things to be very clear in Typee, event if they get more verbose.
+
+&nbsp;
+<h4>3.2.8 Enumerated Type</h4>
+
+Enumerations are sets of identifiers which each get a different internal value automatically set by the system (here, the Typee translator). Those identifiers may be considered as labels. These labels are not scalars, but can be compared for equality. Within containers (see next sub-section about containers types), stored items that have some enumerated labels as attributes may be clustered according to these labels (i.e. grouped together within the container by sorting them on the labels values).
+
+<pre>&lt;enum type&gt; ::= '<strong>enum</strong>'</pre>
+
+<code style="font-size:115%;font-weight:bold;">enum</code> declares an <em>enumerated</em> type. We will see  how enumerated types are declared when explaining what are <em>compound statements</em>. Let's first say that after keyword <code style="font-size:115%;font-weight:bold;">enum</code> should be placed the identifier of the enumerated type and then a list of identifiers - the "<i>labels</i>" - separated by commas and enclosed within curly brackets.
+
+
+&nbsp;
+<h4>3.2.9 Container Types</h4>
+
+Containers in <strong>Typee</strong> are of many kinds. They all share a same characteristic: they contain items. Contained items can be of any type. We describe here the containers types, not their use.
+
+<pre>&lt;container type&gt; ::= &lt;array_type&gt; | &lt;file type&gt; |
+                     &lt;list type&gt;  | &lt;map type&gt;  | &lt;set type&gt;
+
+&lt;array type&gt;     ::= '<strong>array</strong>' '<strong>&lt;</strong>' &lt;types args&gt; '<strong>&gt;</strong>'
+&lt;file type&gt;      ::= '<strong>file</strong>' ['<strong>&lt;</strong>' &lt;types args&gt; '<strong>&gt;
+</strong>']
+&lt;list type&gt;      ::= '<strong>list</strong>' ['<strong>&lt;</strong>' &lt;types args&gt; '<strong>&gt;</strong>']
+&lt;map type&gt;       ::= '<strong>map</strong>'  ['<strong>&lt;</strong>' &lt;types args&gt; '<strong>&gt;</strong>']
+&lt;set type&gt;       ::= '<strong>set</strong>'  ['<strong>&lt;</strong>' &lt;types args&gt; '<strong>&gt;</strong>']
+
+&lt;types args&gt;     ::= &lt;TYPE&gt; ('<strong>,</strong>' &lt;TYPE&gt;)*
+</pre>
+
+&nbsp;
+
+<code style="font-size:115%;font-weight:bold;">array</code> is a strongly typed container. The types of the contained items has to be declared, associated with the keyword. The declared types can be any kind of types: scalar types, container types, classes names and types aliases (<i>see next sub-section about types aliasing</i>).
+Arrays are one- and multi-dimensional containers. Items are stored contiguously in them. 2-dimensional arrays are well suited to store pixels of an image, while 1-dimensional arrays are vectors, for instance.
+Arrays are indexable, which means that the contained items can be directly accessed by indexing the array, one index per declared dimension.
+
+Within a single dimension of an array, items can be sorted if they are comparable - this is the case for scalar types for instance; we will see how instances of a class can be made comparable items when we will present classes in <strong>Typee</strong>, later in this documentation. We will see there also all the mechanisms and goodies associated with arrays when discussing containers.
+
+Notice: 1-dimensional arrays are somewhat lists with contained items forced to be typed, while this is not mandatory for lists.
+
+
+&nbsp;
+
+<code style="font-size:115%;font-weight:bold;">list</code> is the type of linear containers which may contain any type of objects. This is the equivalent of a 1-dimensional array with no constraints on types of contained items. Meanwhile, Typee specifies the possibility of declaring types for contained items.
+
+Lists may be sorted, as long as the contained items are comparable all together. Built-in operators and methods are specified for copying, referencing, manipulating and running-through lists. They will be described when describing lists in Typee.
+
+We will see how to declare lists variables and initialize them when presenting <em>compound statements</em>, later in this document.
+
+
+&nbsp;
+<code style="font-size:115%;font-weight:bold;">set</code> is the type of mathematical sets. A set is something like a bag. It contains definitively unordered items of any type. Moreover, it contains one and only one instance of each item. For instance, inserting twice in a set the integer <code style="font-size:115%;font-weight:bold;">1</code> will insert it only once. Meanwhile, Typee specifies also the declaration of types for the items that are inserted in a set.
+
+So, sets may not be sorted. Built-in operators and methods are specified for copying, referencing, manipulating and running-through sets. They will be described when describing sets in Typee.
+
+See the section <em>compound statements</em>, later in this documentation, to get an overview of how declaring and initializing sets.
+
+
+&nbsp;
+<code style="font-size:115%;font-weight:bold;">map</code> is the type of containers that index their content with keys. This is exactly as a dictionary: to a word corresponds its definition. In a map, every contained items correspond to their owned and unique keys. This way, maps may be indexed on the keys and items can be found back very easily.
+While contained items may be of any kind in a same map instance, Typee specifies also the declaration of types for the contained items as well as for their keys.
+
+Maps may be sorted, either on their keys or on their items as long as keys or items are comparable. Built-in operators and methods associated with maps will be described later in this document.
+
+The way to declare and to initialize maps will be described in later section <em>compound statements</em> of this documentation.
+
+Notice: it might be that in some future specific kinds of maps will be specified in Typee. The first one will be <code style="font-size:115%;font-weight:bold;">hashmap</code>, for which keys will automatically evaluated as the hash value of the inserted items.
+
+
+&nbsp;
+<code style="font-size:115%;font-weight:bold;">file</code> is a specific container type. As the reader may guess, files are linear structures that are stored on permanent memory. It deals with the file system of the Operating System. Files entities store characters but they may store any other kind of objects if the types of these objects are specified at declaration time. Furthermore, if contained objects are all of the same type, files may be indexed and items may be directly addressed.
+
+Files are not supposed to be sorted. They can be read and written, one item after the other or whole items at a time. Built-in operators and methods associated with maps will be described later in this document.
+
+Declaration of files will be described in later section <em>compound statements</em> of this documentation.
+
+
+&nbsp;
+<h4>3.2.10 Type aliasing</h4>
+
+In <strong>Typee</strong>, types may be aliased. A type alias is a declaration of a synonym for a type. This does ease the shortening of types names as well as does it allow the renaming of a built-in Typee type into some more conventional name.
+
+The formal EBNF specifcation for this is:
+<pre>&lt;type alias&gt; ::= '<strong>type</strong>' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt; 
+                     (',' &lt;TYPE&gt; '<strong>as</strong>' &lt;identifier&gt;)*
+</pre>
+
+Examples:
+<pre>
+<strong>type</strong> <strong>float32</strong> <strong>as</strong> float
+<strong>type</strong> <strong>float64</strong> <strong>as</strong> double
+<strong>type</strong> <strong>uint8</strong> <strong>as</strong> byte
+<strong>type</strong> ClassA.ClassB.ClassC <strong>as</strong> My_ClassABC
+</pre>
+
+&nbsp;
+Next section formerly explains the construction of literals - what we have named 'constants' up to now in current section.
+
+<center><a href="http://www.typee.ovh/index.php/doc-031-lang-generalities/">&lt; previous</a> (3.1 language generalities) | (3.3 literals) <a href="http://www.typee.ovh/index.php/doc-033-literals/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

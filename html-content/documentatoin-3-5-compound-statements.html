@@ -1,0 +1,279 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.5 - Compound Statements</h3>
+
+Let's first explain what are the different categories of statements in <strong>Typee</strong>.
+
+<pre>&lt;typee statement&gt; ::= &lt;compound statement&gt;  |
+                      &lt;empty statement&gt;     |
+                      &lt;simple statement&gt;    |
+                      &lt;statements block&gt;
+</pre>
+
+We first describe here the specification of compound statements, i.e. statements that are composed of many keywords.
+
+Here is the formal EBNF specification of compound statements in Typee:
+<pre>&lt;compound statement&gt; ::= &lt;assign decl def func-call statement&gt;  |
+                         &lt;embed statement&gt;                      |
+                         &lt;for statement&gt;                        |
+                         &lt;forever statement&gt;                    |
+                         &lt;if statement&gt;                         |
+                         &lt;repeat statement&gt;                     |
+                         &lt;switch statement&gt;                     |
+                         &lt;try statement&gt;                        |
+                         &lt;while statement&gt;                      |
+                         &lt;with statement&gt;
+</pre>
+
+We explain each of them in next sub-sections, classic statements first, specific to Typee ones then and finally the assignment, declaration, definition and function call statements which are specified the most voluminous rules of Typee grammar.
+
+&nbsp;
+<h4>3.5.1 <strong>for</strong> statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">for</code> statement creates an iteration over a list of typed items and processes its first block of statements for each of the items contained in the list. A second block of statements may be defined after a specific keyword, <code style="font-size:115%;font-weight:bold;">otherwise</code>.
+<em>Python</em> programmers: caution! Keyword <code style="font-size:115%;font-weight:bold;">otherwise</code> in <strong>Typee</strong> does NOT behave as keyword <code style="font-size:115%;font-weight:bold;">else</code> after <code style="font-size:115%;">for</code> in Python - see explanations below.
+
+Formal EBNF specification is provided below in a simplified form to be easier to understand
+<pre>&lt;for statement&gt;      ::= '<strong>for</strong>' '<strong>(</strong>' &lt;typed targets list&gt; 
+                               '<strong>in</strong>' &lt;indexed iterables list&gt; '<strong>)</strong>'
+                               &lt;statements block&gt;
+                               ['<strong>otherwise</strong>' &lt;statements block&gt;]
+
+&lt;typed targets list&gt; ::= &lt;typed target&gt; ('<strong>,</strong>' &lt;typed target&gt;)*
+
+&lt;typed target&gt;       ::= &lt;type&gt; &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;indexed iterables list&gt; ::= '<strong>indexed</strong>' '<strong>(</strong>' &lt;iterables list&gt; '<strong>)</strong>'  |
+                             &lt;iterables list&gt;
+&lt;iterables list&gt;     ::= &lt;iterable expression&gt;  ( '<strong>,</strong>' &lt;iterable expression&gt; )*
+</pre>
+
+If no item is finally processed, the block of statements after keyword <code style="font-size:115%;font-weight:bold;">otherwise</code> is processed.
+If at least one item has been processed by the 'for' block of statements, the 'otherwise' block of statements is not processed.
+<em>Python</em> programmers, CAUTION: this is <strong>not</strong> the behavior of keyword <code style="font-size:115%;font-weight:bold;">else</code> when associated with <code style="font-size:115%;font-weight:bold;">for</code>.
+
+Three <em>flow</em> keywords can be used within the block of statements of <code style="font-size:115%;font-weight:bold;">for</code>: <code style="font-size:115%;font-weight:bold;">break</code>, <code style="font-size:115%;font-weight:bold;">continue</code> and <code style="font-size:115%;font-weight:bold;">return</code>.
+
+<code style="font-size:115%;font-weight:bold;">break</code> immediately stops the processing within the statements block of <code style="font-size:115%;font-weight:bold;">for</code> and exits from it. If an <code style="font-size:115%;font-weight:bold;">else</code> statements block is present, it is not processed too.
+
+<code style="font-size:115%;font-weight:bold;">continue</code> skips the processing of the statements below it into the <code style="font-size:115%;font-weight:bold;">for</code> statements block and processing gets back to the start of this block, for a next iteration within the <code style="font-size:115%;font-weight:bold;">for</code> loop.
+
+<code style="font-size:115%;font-weight:bold;">return</code> may be used when the loop is present in the statements block of a function or of a method. The loop processing stops then immediately and control is given back to the caller of the function or method.
+
+&nbsp;
+<h4>3.5.2 <strong>forever</strong> statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">forever</code> keyword implements infinite loops. While this may sound strange, it avoids programming things like <code style="font-size:115%;font-weight:bold;">while(true)</code> and there are ways to exit such loops.
+
+The formal EBNF specification is:
+<pre>&lt;forever statement&gt; ::= '<strong>forever</strong>' '<strong>(</strong>' '<strong>)</strong>' &lt;statements block&gt;</pre>
+
+Notice: there is no <code style="font-size:115%;font-weight:bold;">else</code> alternative associated with <code style="font-size:115%;font-weight:bold;">forever</code> loops.
+
+<strong>Typee</strong> translators verify the presence of exiting keywords in infinite loops and raise a warning if none of them is detected within the block of statements.
+
+Exiting keywords are <code style="font-size:115%;font-weight:bold;">break</code>, and <code style="font-size:115%;font-weight:bold;">return</code> when the the loop is within a function or a method body. They act exactly as for <code style="font-size:115%;font-weight:bold;">for</code> loops.
+
+<code style="font-size:115%;font-weight:bold;">continue</code> may also be used in <code style="font-size:115%;font-weight:bold;">forever</code> loops and acts exactly as with <code style="font-size:115%;font-weight:bold;">for</code> loops.
+
+
+&nbsp;
+<h4>3.5.3 <strong>if</strong> statement</h4>
+
+Conditional branching in <strong>Typee</strong> is very classical. Its formal EBNF specification is:
+<pre>&lt;if statement&gt;       ::= '<strong>if</strong>' &lt;parenthesised expr&gt; 
+                             &lt;statements block&gt;
+                         &lt;elseif statement&gt;
+                         [&lt;else statement&gt;]
+
+&lt;elseif statement&gt;   ::= ( &lt;elseif&gt;  &lt;parenthesised expr&gt; 
+                             &lt;statements block&gt; )*
+
+&lt;else statement&gt;     ::= '<strong>else</strong>' &lt;statements block&gt;
+
+&lt;elseif&gt;             ::= '<strong>elseif</strong>' | '<strong>elsif</strong>'  | '<strong>elif</strong>'
+
+&lt;parenthesised expr&gt; ::= '<strong>(</strong>' &lt;expression&gt; '<strong>)</strong>'
+</pre>
+
+The parenthesised expressions are conditional expressions. They return either <code style="font-size:115%;font-weight:bold;">true</code> or <code style="font-size:115%;font-weight:bold;">false</code>.
+
+If the conditional expression after the <code style="font-size:115%;font-weight:bold;">if</code> evaluates to <code style="font-size:115%;font-weight:bold;">true</code>, the statements block of the <code style="font-size:115%;font-weight:bold;">if</code> is processed.
+If this conditional expression evaluates to <code style="font-size:115%;font-weight:bold;">false</code>, the <code style="font-size:115%;font-weight:bold;">if</code> statements block is ignored and the first <code style="font-size:115%;font-weight:bold;">elseif</code> conditional expression is evaluated.
+This process is repeated along the next <code style="font-size:115%;font-weight:bold;">elseif</code> clauses if present.
+If none of the preceeding conditional expression evaluate to <code style="font-size:115%;font-weight:bold;">true</code>, the block of statements asociated with <code style="font-size:115%;font-weight:bold;">else</code> is processed, if present.
+
+During this whole process, the first clause that evaluates to <code style="font-size:115%;font-weight:bold;">true</code> stops the processing. Its block of statements is processed and processing goes then straight to the first statement after the whole <code style="font-size:115%;font-weight:bold;">if</code> statement.
+
+
+&nbsp;
+<h4>3.5.4 <strong>repeat</strong> statement</h4>
+
+This type of loop first processes its statements block then evaluates a conditional expression and stops looping as soon as the conditional expression evaluates to <code style="font-size:115%;font-weight:bold;">true</code>.
+
+This is its formal EBNF specification:
+<pre>&lt;repeat statement&gt; ::= '<strong>repeat</strong>' &lt;statements block&gt;
+                       '<strong>until</strong>' &lt;parenthesised expr&gt; '<strong>;</strong>'
+</pre>
+
+The parenthesised expression is a conditional expression. It evaluates to either <code style="font-size:115%;font-weight:bold;">true</code> or <code style="font-size:115%;font-weight:bold;">false</code>.
+
+As for any type of loops, three <em>flow</em> keywords can be used within the block of statements of <code style="font-size:115%;font-weight:bold;">repeat</code>: <code style="font-size:115%;font-weight:bold;">break</code>, <code style="font-size:115%;font-weight:bold;">continue</code> and <code style="font-size:115%;font-weight:bold;">return</code>.
+
+<code style="font-size:115%;font-weight:bold;">break</code> immediately stops the processing within the statements block of <code style="font-size:115%;font-weight:bold;">repeat</code> and exits from it.
+
+<code style="font-size:115%;font-weight:bold;">continue</code> skips the processing of the statements below it into the <code style="font-size:115%;font-weight:bold;">repeat</code> statements block and processing gets back to the start of this block, for a next iteration within the <code style="font-size:115%;font-weight:bold;">repeat</code> loop.
+
+<code style="font-size:115%;font-weight:bold;">return</code> may be used when the loop is present in the statements block of a function or of a method. The loop processing stops then immediately and control is given back to the caller of the function or method.
+
+
+&nbsp;
+<h4>3.5.5 <strong>switch</strong> statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">switch</code statement in <strong>Typee</strong> does not act exactly as a traditional switch. Let's explain this that way: a <code style="font-size:115%;font-weight:bold;">switch</code> statement in <strong>Typee</strong> evaluates an expression, checks it against values associated with <code style="font-size:115%;font-weight:bold;">case</code>s and runs the statements block associated with all the corresponding <code style="font-size:115%;font-weight:bold;">case</code>s this value appears in.
+
+The formal EBNF specification for <code style="font-size:115%;font-weight:bold;">switch</code> is:
+<pre>&lt;switch statement&gt; ::= '<strong>switch</strong>' &lt;parenthesised expr&gt;
+                           '<strong>{</strong>' &lt;switch block&gt; '<strong>}</strong>'
+                           ['<strong>otherwise</strong>' &lt;statements block&gt;]
+
+&lt;switch block&gt;     ::= (&lt;case&gt; [&lt;switch block&gt;])*
+
+&lt;case&gt;             ::= '<strong>case</strong>' &lt;expr list&gt; &lt;statements block&gt;
+&lt;expr list&gt;        := &lt;expression&gt;  ( '<strong>,</strong>' &lt;expression&gt; )*
+</pre>
+
+Since a same value may appear in many <code style="font-size:115%;font-weight:bold;">case</code> clauses, many blocks of statements may be processed within the <code style="font-size:115%;font-weight:bold;">switch</code> statement. We do understand that this may lead to code that could be a little bit more difficult to read, but it surely will shorten the code also, factorizing it when possible.
+
+When processing a <code style="font-size:115%;font-weight:bold;">switch</code> statement, the associated parenthesised expression is first evaluated. It gets a value which may be of any type. Each <code style="font-size:115%;font-weight:bold;">case</code> clause is checked then, searching for the evaluated value within the list of expressed values associated with it. The expressed values have not to be literals, as it may have to be with other programming languages. Every time the evaluated value of the <code style="font-size:115%;font-weight:bold;">swicth</code> expression matches with at least one of the expressed values of the <code style="font-size:115%;font-weight:bold;">case</code> clause, the block of statements corresponding to this clause is processed.
+
+Notice: Typee <code style="font-size:115%;font-weight:bold;">switch</code> statement is not specified to finally optimize the processor generated binary code, while this is the case in <em>C</em> or <em>C++</em> for instance. Nevertheless, <strong>Typee</strong> translators aim at optimizing the source code they generate for it to take as much as possible benefits from the final targeted programming language they are translating Typee code to.
+
+
+&nbsp;
+<h4>3.5.6 <strong>try</strong> statement</h4>
+
+<strong>Typee</strong> manages exceptions. Exceptions are faulty execution of code, such as division by 0 or out-of-bounds indexing, for instance. Typee uses a <em>Python</em>-like naming. <em>C++</em> and <em>Java</em> programmers should nevertheless get no difficulty to understand and to use this concept.
+
+The formal EBNF specification in Typee is this:
+<pre>&lt;try statement&gt;   ::= '<strong>try</strong>' &lt;statements block&gt;
+                      &lt;try except&gt;   &lt;statements block&gt;
+                      (&lt;try except&gt;  &lt;statements block&gt;)*
+                      [&lt;try else&gt;    &lt;statements block&gt;]
+                      [&lt;try finally&gt; &lt;statements block&gt;]
+
+&lt;try except&gt;      ::= '<strong>except</strong>' '<strong>(</strong>' [ (&lt;try except expr&gt; | '<strong>all</strong>' ) ] '<strong>)</strong>'
+&lt;try except expr&gt; ::= &lt;expression&gt; ['<strong>as</strong>' &lt;identifier&gt;]
+                          ('<strong>,</strong>' &lt;expression&gt; ['<strong>as</strong>' &lt;identifier&gt;])*
+
+&lt;try else&gt;        ::= '<strong>otherwise</strong>'
+
+&lt;try finally&gt;     ::= '<strong>finally</strong>'
+</pre>
+
+The keyword <code style="font-size:115%;font-weight:bold;">try</code> tags a block of statements in which any raised exception will be caught. As soon as an exception is raised by some statement in this block, the execution of the statements in this block stops and the chain of <code style="font-size:115%;font-weight:bold;">except</code> clauses is checked against the type of the raised exception.
+
+Each <code style="font-size:115%;font-weight:bold;">except</code> clause specify one or many types of exceptions for which their associated block of statements will be processed. The keyword <code style="font-size:115%;font-weight:bold;">as</code> names the raised exception which can then be addressed in the statements block after it.
+ 
+If the type of the raised exception matches the type expressed in an <code style="font-size:115%;font-weight:bold;">except</code> clause, the statements block associated with this <code style="font-size:115%;font-weight:bold;">except</code> clause is immediately processed.
+
+If none of the exceptions types expressed in the chain of <code style="font-size:115%;font-weight:bold;">except</code> clauses matches the raised exception, then the <code style="font-size:115%;font-weight:bold;">else</code> clause is used and its associated block of statements is processed, is this clause is present.
+
+If a <code style="font-size:115%;font-weight:bold;">finally</code> clause is present, the raised exception having been caught by a previous <code style="font-size:115%;font-weight:bold;">except</code> clause or not, the statements block associated with clause <code style="font-size:115%;font-weight:bold;">finally</code> is processed. This means that when a <code style="font-size:115%;font-weight:bold;">finally</code> clause is present, it is <strong>always</strong> processed.
+
+The <strong>Exceptions</strong> concept will be fully explained later in this documentation. For the sole purpose of describing the related syntax, the EBNF specification should be enough to provide.
+
+
+&nbsp;
+<h4>3.5.7 <strong>while</strong> statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">while</code> first evaluates a conditional expression. If it evaluates to <code style="font-size:115%;font-weight:bold;">true</code>, the block of statements associated whith the <code style="font-size:115%;font-weight:bold;">while</code> keyword is processed and processing gets back to the evaluation again of the conditional expression.
+
+Here is a formal EBNF specification of it:
+<pre>&lt;while statement&gt; ::= '<strong>while</strong>' &lt;parenthesised expr&gt; &lt;statements block&gt;
+                          ['<strong>otherwise</strong>' &lt;statements block&gt;]
+</pre>
+
+The parenthesised expression above is a conditional expression which evaluates either to <code style="font-size:115%;font-weight:bold;">true</code> or to <code style="font-size:115%;font-weight:bold;">false</code>.
+
+While the conditional expression evaluates to <code style="font-size:115%;font-weight:bold;">true</code>, the block of statements is processed. As soon as it evaluates then to false, processing is kept on at the first statement after the block of statements.
+
+If the conditional expression evaluates to <code style="font-size:115%;font-weight:bold;">false</code> the very first time it is evaluated, the block of statements associated with the keyword <code style="font-size:115%;font-weight:bold;">otherwise</code> is processed, as long as this clause appears after the <code style="font-size:115%;font-weight:bold;">while</code>-related block of statements.
+<em>Python</em> programmers, CAUTION: this is <strong>not</strong> the <em>Python</em> behavior of keyword <code style="font-size:115%;font-weight:bold;">else</code> put after a <code style="font-size:115%;font-weight:bold;">while</code>.
+
+
+&nbsp;
+<h4>3.5.8 <strong>with</strong> statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">with</code> concept of <strong>Typee</strong> is directly inherited from <em>Python</em> syntax. This <em>Python</em> goodie is so useful that we have decided to specify it in <strong>Typee</strong> also.
+
+This concept will be fully explained later in this documentation. Let's just see its syntax for now. Its formal EBNF specification is:
+<pre>&lt;with statement&gt;  ::= '<strong>with</strong>' &lt;with items list&gt; &lt;statements block&gt;
+
+&lt;with items list&gt; ::= &lt;with item&gt; ('<strong>,</strong>' &lt;with item&gt;)*
+&lt;with item&gt;       ::= &lt;expression&gt; ['<strong>as</strong>' &lt;target&gt;]
+</pre>
+
+After keyword <code style="font-size:115%;font-weight:bold;">with</code>, at least one entity is declared as an expression. Each of these declared entities may be associated with an alias, or wrapper: an identifier that will be locally known in the block of statements which is processed just after the <code style="font-size:115%;font-weight:bold;">with</code> clause.
+
+
+&nbsp;
+<h4>3.5.9 <strong>embed</strong> statement</h4>
+
+This is a <strong>key concept</strong> in <strong>Typee</strong>. When translating Typee code into some targeted programming language, and since Typee code aims at being generic enough, it might be that some specificities of the targeted programming language are not available with <strong>Typee</strong>. The <code style="font-size:115%;font-weight:bold;">embed</code> statement lets programmers embed <em>native</em> code in <strong>Typee</strong> code.
+
+A <em>semi-</em>formal EBNF specification of its syntax is:
+<pre>&lt;embed statement&gt;      ::= '<strong>embed</strong>' &lt;language&gt; ( &lt;dotted name&gt; '<strong>;</strong>'  |
+                                                    &lt;embedded native code&gt; )
+
+&lt;language&gt;             ::= '<strong>cpp</strong>' | '<strong>java</strong>' | '<strong>python</strong>'
+
+&lt;embedded native code&gt; ::= '<strong>{{</strong>' (&lt;any code chars but '}}'&gt;)* '<strong>}}</strong>'
+</pre>
+
+This is not a truly formal LL(1) EBNF specification, but trust us, it can very easily be transformed in a legal one. The advantage of its formulation this way is that it is far easier to understand.
+
+Of course, native code will be put as is in the finally generated source code files. Then, it gets also access to every declared entity locally known at the <code style="font-size:115%;font-weight:bold;">embed</code> clause level.
+
+Let's provide a few examples.
+<pre>const int32 NB = 16
+int32 my_data[NB];
+
+embed cpp {{
+    for( int *ptr=my_data; ptr < my_data+NB; )
+        *ptr++ = 0;
+}}
+
+embed java {{
+    for( int i=0; i < NB; i++ )
+        my_data[i] = 0;
+}}
+
+embed python {{
+    my_data = [0]*NB
+}}
+
+my_data [1] = 1;
+print( my_data );  // prints 0 1 0 ... 0
+</pre>
+
+<pre>const int32 NB = 16;
+int32 my_data[NB];
+
+embed cpp     zero_set.cpp;        // (all of these  native  code
+embed java    zero_set.java;       //  source files being present
+embed python  zero_set.py;         //  in the 'current' directory)
+
+my_data [1] = 1;
+print( my_data );  // prints 0 1 0 ... 0
+</pre>
+
+
+&nbsp;
+Next section formerly explains two next sets of Typee statements, the <strong>empty</strong> and the <strong>simple</strong> statements.
+
+(<em>&lt;under construction...&gt;</em>)
+
+<center><a href="http://www.typee.ovh/index.php/doc-034-expressions/">&lt; previous</a> (3.4 identifiers & expressions) | (3.6 simple statements) <a href="http://www.typee.ovh/index.php/doc-036-simple-statements/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

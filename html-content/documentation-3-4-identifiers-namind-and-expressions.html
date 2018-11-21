@@ -1,0 +1,393 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.4 - Identifiers naming and Expressions</h3>
+
+Let's first specify the naming conventions for identifiers names. Then, we will be able to fully specify expressions constructions in <strong>Typee</strong>.
+
+&nbsp;
+<h4>3.4.1 Identifiers naming conventions</h4>
+
+Identifiers in Typee are specified as usual for so many computer languages. An identifier begins with either a letter or an underscore and contains then a series of letters, decimal digits and underscores. Identifiers are case sensitive in Typee. Programmers should be cautious about this in the case when the targeted programming language would be case unsensitive (well, this should not be the case for first targets, i.e. <em>Python</em>, <em>C++</em> and <em>Java</em>). FInally, there is no limitation on signs number in an identifier. Here again, programmers should be cautious since some programming languages do not accept very long identifiers.
+
+The EBNF formal specification of identifiers in Typee is described here below:
+<pre>&lt;identifier&gt;     ::= (&lt;alpha char&gt; | '_') (&lt;alpha num char&gt; | '_')*
+
+&lt;alpha char&gt;     ::= 'A'...'Z'  |  'a'...'z'
+&lt;alpha num char&gt; ::= &lt;alpha char&gt;   |  &lt;num char&gt;
+&lt;num char&gt;       ::= '0'...'9'
+</pre>
+
+Should some targeted computer language not accept identifiers formed as this, programmers are encouraged to use for the naming of their identifiers only accepted signs and no other ones. Currently, Typee translators do not modify the identifiers used by your side, but this could be the case in some future to help translation in some programming languages that are not yet targeted.
+
+What are identifiers for? In Typee, they are used to name constants, variables, functions, classes and methods. Once this and their naming conventions are understood, we can explain how expressions are constructed.
+
+
+&nbsp;
+<h4>3.4.2 References</h4>
+
+References are a convenient way to refer to a same entity or object with different identifiers. There will be cases when this will really be valuable.
+
+In <strong>Typee</strong>, references are assigned with token <code style="font-size:115%;"><strong>@</strong></code> and can only be applied to identifiers.
+
+<pre>&lt;reference&gt;   ::= '<strong>@</strong>' &lt;dotted name&gt;
+&lt;dotted name&gt; ::= &lt;identifier&gt; ('<strong>.</strong>' &lt;identifier&gt;)*
+</pre>
+
+Examples:
+<pre><strong>str</strong> s = "abc";
+<strong>?</strong> s_ref = <strong>@</strong>s;       // s_ref is now of type <strong>str</strong>
+<strong>print</strong>( s, s_ref );  // prints: abc abc
+s_ref[1] = B;
+<strong>print</strong>( s, s_ref );  // prints: aBc aBc
+</pre>
+
+
+&nbsp;
+<h4>3.4.3 Expressions - Introduction</h4>
+
+There are many kinds of expressions in every computer language. By no way is Typee different from them all. The formal specification, even in EBNF, of expressions may be very complex. We will split the associated grammar rules into different kinds of expressions.
+
+A generic specification of expressions in Typee, fromerly expressed in its EBNF form, is:
+<pre>&lt;expression&gt; ::= &lt;artihmetic expression&gt; |
+                 &lt;string expression&gt; |
+                 &lt;boolean expression&gt;
+</pre>
+
+Most types of Typee expressions are <em>Python</em>-like. In next sub-section, we specify arithmetic expressions. We then specify string expressions. Comprehensions are explained in the sub-section after. Attribute reference, subscription, slicing and function (and method) call expressions are specified next. Finally, we specify conditional expressions and unnamed functions. For each kind of expression, we specify also what are the built-in operators, their meaning and their precedence over others.
+
+
+&nbsp;
+<h4>3.4.4 Arithmetic Expressions</h4>
+
+Arithmetic expressions are expressions that finally evaluate as an arithmetic value, i.e. integer or float value. They mix entities which are of an integer or a float type, arithmetic operators and enclosing parenthesis. Those entities may be integer literals, float literals, identifiers of variables or identifiers of constant values of an interger type or a float type, and functions or methods call that return an integer value or a float value.
+Furthermore, unary operators can be applied to identifiers of integer and float variables, but not on functions and methods calls, on literals and on identifiers of constant values.
+
+Remember, built-in integer and float types in <strong>Typee</strong> are:
+<pre>integer types     float types
+-------------     -----------
+<strong>int8</strong> , <strong>uint8</strong>
+<strong>int16</strong>, <strong>uint16</strong>
+<strong>int32</strong>, <strong>uint32</strong>     <strong>float32</strong>
+<strong>int64</strong>, <strong>uint64</strong>     <strong>float64</strong>
+</pre>
+
+Arithmetic operators get some precedence between them. From top precedence to bottom precedence, the artihmetic operators in <strong>Typee</strong> are:
+<pre>&lt;op_unary&gt;  ::= '<strong>++</strong>'  |  '<strong>--</strong>'  |  '<strong>+</strong>'  |  '<strong>-</strong>'  |  '<strong>~</strong>'  // higher precedence
+&lt;op_power&gt;  ::= '<strong>**</strong>'  |  '<strong>^^</strong>'
+&lt;op_user&gt;   ::= '<strong>@</strong>'   |  '<strong>&gt;&lt;</strong>'  |  '<strong>!!</strong>'  |  '<strong>::</strong>'
+&lt;op_mul&gt;    ::= '<strong>*</strong>'   |  '<strong>/</strong>'  |  '<strong>%</strong>'  |  &lt;op_user&gt;
+&lt;op_add&gt;    ::= '<strong>+</strong>'   |  '<strong>-</strong>'
+&lt;op_shift&gt;  ::= '<strong>&lt;&lt;</strong>'  |  '<strong>&lt;&lt;&lt;</strong>'  | '<strong>&gt;&gt;</strong>'  |  '<strong>&gt;&gt;&gt;</strong>'
+&lt;op_bitand&gt; ::= '<strong>|</strong>'
+&lt;op_bitxor&gt; ::= '<strong>^</strong>' 
+&lt;op_bitor&gt;  ::= '<strong>&</strong>'                                    // lower precedence
+</pre>
+
+Enclosing parenthesis, <code style="font-size=115%;"><strong>(</strong></code> and <code style="font-size=115%;"><strong>)</strong></code> finally take precedence over all the arithmetic and unary operators.
+
+The EBNF formal specification of arithmetic expressions in Typee is this:
+<pre>&lt;arithmetic expr&gt;       ::= &lt;bitor expr&gt;
+
+&lt;bitor expr&gt;            ::= &lt;bitxor expr&gt; ( '<strong>|</strong>' &lt;bitxor expr&gt; )*
+&lt;bitxor expr&gt;           ::= &lt;bitand expr&gt; [ '<strong>^</strong>' &lt;bitand expr&gt; ]
+&lt;bitand expr&gt;           ::= &lt;shift expr&gt; ( '<strong>&</strong>' &lt;shift expr&gt; )*
+&lt;shift expr&gt;            ::= &lt;term expr&gt;
+                               ( ('<strong>&lt;&lt;</strong>' | '<strong>&lt;&lt;&lt;</strong>' | '<strong>&gt;&gt;</strong>' | '<strong>&gt;&gt;&gt;</strong>') &lt;term expr&gt; )*
+&lt;term expr&gt;             ::= &lt;term&gt;  (&lt;op_add&gt;  &lt;term&gt;)*
+&lt;term&gt;                  ::= &lt;factor&gt; (&lt;op_mul&gt; &lt;factor&gt;)*
+&lt;factor&gt;                ::= &lt;atom element&gt;  (&lt;op_power&gt; &lt;unary expr&gt;)*
+&lt;unary expr&gt;            ::= ['<strong>+</strong>' | '<strong>-</strong>' |
+                                      '<strong>~</strong>' | '<strong>#</strong>']  &lt;factor&gt;  |
+                                  '<strong>#</strong>' <string expression>
+
+&lt;atom element&gt;          ::= &lt;atom&gt;  |  &lt;dotted name&gt; (&lt;scalar type casting&gt; |
+                                                          &lt;function call&gt;)*
+&lt;atom&gt;                  ::= ['<strong>++</strong>' | '<strong>--</strong>']  &lt;dotted name&gt;  ['<strong>++</strong>' | '<strong>--</strong>']  |
+                          &lt;enclosure&gt;  |  &lt;scalar&gt;
+&lt;dotted name&gt;           ::= &lt;identifier&gt;  ('<strong>.</strong>' &lt;identifier&gt;)*
+
+&lt;scalar type casting&gt;   ::= '<strong>(</strong>' &lt;arithmetic expr&gt; '<strong>)</strong>'
+&lt;function call&gt;         ::= '<strong>(</strong>' &lt;function call args&gt; '<strong>)</strong>'
+&lt;function call args&gt;    ::= [ ( (&lt;arithmetic expr&gt; |
+                                     &lt;dotted name&gt; (&lt;function call&gt;)* |
+                                     &lt;unnamed function&gt; &lt;function call&gt;)
+                                ('<strong>,</strong>' (&lt;arithmetic expr&gt;  |
+                                          &lt;dotted name&gt; (&lt;function call&gt;)*  |
+                                          &lt;unnamed function&gt; &lt;function call&gt;)*
+                                ['<strong>,</strong>' &lt;ellipsis&gt; &lt;identifier&gt;)] )  |
+                             &lt;for comprehension&gt; ]
+&lt;unnamed function&gt;      ::= '<strong>unnamed</strong>'  |  '<strong>lambda</strong>'
+
+&lt;enclosure&gt;             ::= &lt;parenthesis expr&gt;
+&lt;parenthesis expr&gt;      ::= '<strong>(</strong>' &lt;arithemetic expr&gt; '<strong>)</strong>'
+&lt;scalar&gt;                ::= &lt;integer literal&gt;  |  &lt;float literal&gt;
+&lt;ellipsis&gt;              ::= '<strong>...</strong>'
+</pre>
+
+The attentive reader will notice an ambiguity in this specification of Typee grammar, when parsing a '('. We have simplified the grammar specification here for an easier-understanding purpose. Implementing Typee with this grammar description would lead to no a priori knowledge of what grammar rule should be processed on '(' succeeding some identifier: would this be a type casting or a function (or method) call? The truly formal description of Typee grammar alleviates this ambiguity.
+
+For simplification purpose also, we have ommitted all templated forms of operators, functions and methods calls. Templating will be seen later in this documentation, with its formal specification also.
+We do not provide here the specification of the 'for comprehension' grammar rule, which is described in the next numbered sub-section.
+
+String expressions are defined a little bit later in this page. The hash operator which can be applied to strings returns an integer value: the integer hashing value of the string. For simplification purpose, the described rules about the hash operator are a priori ambiguous, here again. According to previous rules, when parsing a hash what should be the next processed rule: the factor or the string expression one? This is not addressed here but the truly formal specification of Typee grammar alleviates this a priori ambiguity.
+
+
+<h4><em>Arithmetic Operators definitions</em></h4>
+
+They are very classical.
+
+<em><strong>Unary operators</strong></em>
+
+<code style="font-size:115%;"><strong>+</strong></code> is the unary plus. Numbers are put to positive and values keep their internal sign after this sign. This is the default setting when no unary operator is used.
+<code style="font-size:115%;"><strong>-</strong></code> is the unary minus. Numbers are put to negative and values change their positive/negative sign after this sign.
+<code style="font-size:115%;"><strong>~</strong></code> is the unary negation of binary values. When put after this sign, values get every of their bits changing of value: 0 becomes 1 and 1 becomes 0.
+<code style="font-size:115%;"><strong>#</strong></code> is the hashing operator. When applied to a literal, it delivers the ahsh value of this literal. This operator is available also for other types of entities, such as strings and instantiations of classes.
+<code style="font-size:115%;"><strong>++</strong></code> is the increment operator. It can only be applied to identifiers of integer variables. When put before the identifier, it pre-increments (i.e. it internally adds 1 to) the value of the variable and then returns the new value of this variable. When put after the identifier, it returns the current value of the variable and then post-increments its value (i.e. it internally adds 1 to it) which get modified as well.
+<code style="font-size:115%;"><strong>--</strong></code> is the decrement operator. It can only be applied to identifiers of integer variables. When put before the identifier, it pre-decrements (i.e. it internally subtracts 1 to) the value of the variable and then returns the new value of this variable. When put after the identifier, it returns the current value of the variable and then post-decrements its value (i.e. it internally subtracts 1 to it) which get modified as well.
+
+<em><strong>Bitwise binary operators</strong></em>
+
+<code style="font-size:115%;"><strong>&</strong></code> is the bitwise <strong>and</strong> operator.
+<code style="font-size:115%;"><strong>|</strong></code> is the bitwise <strong>or</strong> operator.
+<code style="font-size:115%;"><strong>^</strong></code> is the bitwise <strong>xor</strong> operator.
+
+Examples:
+<pre>0b0011 <strong>&</strong> 0b0101 --> 0b0001
+0b0011 <strong>|</strong> 0b0101 --> 0b0111
+0b0011 <strong>^</strong> 0b0101 --> 0b1010
+</pre>
+
+<em><strong>Bit-shift binary operators</strong></em>
+
+<code style="font-size:115%;"><strong>&lt;&lt;</strong></code> is the signed left bit-shift operator.
+<code style="font-size:115%;"><strong>&lt;&lt;&lt;</strong></code> is the unsigned left bit-shift operator.
+<code style="font-size:115%;"><strong>&gt;&gt;</strong></code> is the signed right bit-shift operator.
+<code style="font-size:115%;"><strong>&gt;&gt;&gt;</strong></code> is the unsigned right bit-shift operator.
+
+The bit-shift operators shift bits of a value, to the left or to the right, inserting '0' in the newly empty bits of the value, except for the signed right-shift and left-shift which preserve the bit sign (the leftmost bit of the value).
+
+Examples:
+<pre>
+0b1010_0011 <strong>&lt;&lt;</strong> 3 --> 0b1001_1000
+0b1010_0011 <strong>&lt;&lt;&lt;</strong> 3 --> 0b0001_1000
+0b1010_1100 <strong>&gt;&gt;</strong> 3 --> 0b1000_0101
+0b1010_1100 <strong>&gt;&gt;&gt;</strong> 3 --> 0b0001_0101
+</pre>
+
+<em><strong>Other binary operators</strong></em>
+
+<code style="font-size:115%;"><strong>+</strong></code> is the addition operator.
+<code style="font-size:115%;"><strong>-</strong></code> is the subtraction operator.
+<code style="font-size:115%;"><strong>*</strong></code> is the multiplication operator.
+<code style="font-size:115%;"><strong>/</strong></code> is the division operator. Division between integer values evaluates to an integer value, truncated to the low integer value. Division between float values evaluates to a float value. When mixing integer and float values, the integer values are promoted to floats and the division evaluates to a float value.
+<code style="font-size:115%;"><strong>%</strong></code> is the modulo operator.
+<code style="font-size:115%;"><strong>**</strong></code> is the power operator.
+<code style="font-size:115%;"><strong>^^</strong></code> is the power operator also. Both notations are valid in Typee.
+
+Typee specifies four new and undefined binary operators. Programmers are free to overwrite the definition of built-in operators. Those four undefined operators are specified but not defined for the convenience of programmers who may define them for any of their specific needs (e.g. matrix multiplication, vector dot product, etc.)
+These operators are: <code style="font-size:115%;"><strong>@</strong></code>, <code style="font-size:115%;"><strong>&gt;&lt;</strong></code>, <code style="font-size:115%;"><strong>!!</strong></code> and <code style="font-size:115%;"><strong>::</strong></code>.
+Their precedence is specified in Typee language description and is the same as for multiplicative operators (i.e. <code style="font-size:115%;"><strong>*</strong></code>, <code style="font-size:115%;"><strong>/</strong></code> and <code style="font-size:115%;"><strong>%</strong></code>).
+
+Operators overwriting will be explained in a later section.
+
+
+<h4><em>Type promotion</em></h4>
+
+When using values or entities of different types in an arithmetic expression, type promotion takes place. If integer and float types are mixed, integer types are promoted to float and the finally evaluated value of the arithmetic expression is a float. Furthermore, type promotion always takes place when mixing types of different lengths (i.e. 8-, 16-, 32- and 64- bits encoded values). Every value used in the arithmetic expression gets its type promoted to the largest type used in the expression and the finally returned value is of this largest encountered type.
+
+
+&nbsp;
+<h4>3.4.5 String Expressions</h4>
+
+There are only two valid operators that can be applied to them in Typee, the concatenation and the hashing operators.
+The hash operator is a unary operator that has been described in the sub-section about arithmetic expressions. It returns an integer value, the hash value of the string expression. If the hash operator is to be applied on a concatenation of strings, this concatenation should be enclosed within parenthesis, due to built-in operators precedence in Typee.
+
+The concatenation operator concatenates strings together, from left to right. This operator is <code style="font-size:115%;"><strong>+</strong></code>.
+
+The formal EBNF specification of string expressions is very simple:
+
+<pre>&lt;string expression&gt; ::= &lt;string&gt; (&lt;op_concat&gt; &lt;string&gt;)*  |
+                            '<strong>(</strong>' &lt;string expression&gt; '<strong>)</strong>'
+&lt;hash string&gt;       ::= &lt;op_hash&gt; (&lt;string&gt;  |  '<strong>(</strong>' &lt;string expression&gt; '<strong>)</strong>')
+&lt;op_concat&gt;         ::= '<strong>+</strong>'
+&lt;op_hash&gt;           ::= '<strong>#</strong>'
+</pre>
+
+<strong><em>Type promotion</em></strong>
+When strings of different types are concatenated, the resulting string is of the largest mixed string type (i.e. <strong>str16</strong> with current specification of Typee).
+
+
+&nbsp;
+<h4>3.4.6 Comprehensions</h4>
+
+<em>Python</em> programmers are used to use comprehensions. This concept is a set of loops and tests that generate series of values. They can be used to initialize lists, sets or maps as well as to generate a list of arguments within a function (or method) call.
+
+Their formal EBNF specification is:
+<pre>&lt;for comprehension&gt;  ::= '<strong>for</strong>' '<strong>(</strong>' &lt;target list&gt; '<strong>in</strong>' &lt;or test&gt;
+                             &lt;iter comprehension&gt; '<strong>)</strong>'
+
+&lt;if comprehension&gt;   ::= '<strong>if</strong>' '<strong>(</strong>' (&lt;or test&gt; | &lt;unnamed func&gt;) '<strong>)</strong>'
+                             &lt;iter comprehension&gt;
+
+&lt;iter comprehension&gt; ::= [ &lt;for comprehension&gt;  |  &lt;if comprehension&gt; ]
+</pre>
+
+Rules <code style="font-size:115%;">&lt;unnamed func&gt;</code> and <code style="font-size:115%;">&lt;or test&gt;</code> are specified later in this page - see sections on boolean expressions and on unnamed functions.
+Rule <code style="font-size:115%;">&lt;target list&gt;</code> will be later specified in this documentation.
+
+Example:
+<pre><strong>list</strong> my_list = [1, 2, 3, 4, 5, 6];
+<strong>print</strong>( n <strong>for</strong> n <strong>in</strong> my_list <strong>if</strong> n <strong>%</strong> 2 <strong>==</strong> 0 ); 
+</pre>
+should print:
+<pre>2 4 6</pre>
+
+The above comprehension example prints every item contained in variable <code style="font-size:115%;">my_list</code> if and only of it is an even value.
+
+
+&nbsp;
+<h4>3.4.7 Subscription and Slicing</h4>
+
+A subscription indexes an item that is contained in a container. Containers are, for instance, lists, sets, maps, arrays and strings (which are ordered lists of characters). A slice indexes a subpart of a container, this subpart being allowed to contain many of the container items.
+
+They both can be applied to any kind of container. Their EBNF formal specification is:
+<pre>&lt;subscription&gt; ::= '<strong>[</strong>' &lt;integer expression&gt; ( ('<strong>,</strong>' &lt;integer expression&gt;)* |
+                                               &lt;if comprehension&gt; ) '<strong>]</strong>'
+
+&lt;slicing&gt;      ::= '<strong>[</strong>' &lt;integer expression&gt; '<strong>:</strong>' [&lt;integer expression&gt;]
+                        ['<strong>:</strong>' [&lt;integer expression&gt;]] &lt;slice end&gt;
+&lt;slice end&gt;    ::= '<strong>]</strong>'  |  '<strong>)</strong>'
+</pre>
+
+Here, <code style="font-size:115%;">&lt;integer expression&gt;</code> is a rule to express arithmetic expressions that evaluate to an integer value. Any other type of evaluated value is a type error.
+
+Examples:
+<pre><strong>str</strong> s = "abcdefghij";  // prints:
+<strong>print</strong>( s[4] );         //   e        -- this is a char
+<strong>print</strong>( s[4:6) );       //   ef       -- this is an str, final index is excluded
+<strong>print</strong>( s[4:6] );       //   efg      -- this is an str, final index is included
+<strong>print</strong>( s[4:] );        //   efghij   -- this is an str
+<strong>print</strong>( s[4::2] );      //   egi      -- this is an str
+<strong>print</strong>( s[-1] );        //   j        -- this is a char, first char before end
+<strong>print</strong>( s[-1:-8] );     //   jihgfedc -- this is a string, reverse indexing
+<strong>print</strong>( s[-2:-8:-2) );  //   ige      -- this is a string, reverse indexing, last index excluded
+</pre>
+
+
+&nbsp;
+<h4>3.4.8 Functions and Methods calls</h4>
+
+Methods are functions that are defined in classes. The act exactly the same as functions but their names are associated with the identifiers of the instances of the class they are defined in.
+
+Every function or method gets an identifier. For a method, this identifier at call time is associated with another identifier: the identifier of its owning entity. Both identifiers are separated with a dot, the identifier of the owning entity first ,the identifier of the owned function then.
+
+At call time, arguments are passed to the called function or method. These arguments are separated by commas and are surrounded by parenthesis. The EBNF formal specification of this is here:
+<pre>&lt;function call&gt;      ::= &lt;dotted name&gt; [&lt;template args&gt;] &lt;function call args&gt;
+
+&lt;dotted name&gt;        ::= &lt;identifier&gt; ('<strong>.</strong>' &lt;identifier&gt;)*
+
+&lt;function call args&gt; ::= '<strong>(</strong>' [ (&lt;function call&gt;)*
+                                 ['<strong>,</strong>' ((&lt;function call&gt;)*  |
+                                        &lt;ellipsis&gt; &lt;identifier&gt;)  |
+                                  &lt;for comprehension&gt;] ] '<strong>)</strong>'
+&lt;template args&gt;      ::= '<strong>&lt;</strong>' [&lt;expression&gt; ('<strong>,</strong>' &lt;expression&gt;)*] '<strong>&gt;</strong>'
+</pre>
+
+<em>C++</em> programmers know what templates are. <em>Java</em> programmers know it also as soon as they are told that this has to do with generics. <em>Python</em> programmers may not know what are templates. We will explain their roles later in this documentation, when we will introduce classes. Let's just consider that this is a convenient way to specify what are the types or constant values that a method or a function may process while they might be known or evaluated at run time.
+
+
+&nbsp;
+<h4>3.4.9 Boolean Expressions</h4>
+
+Boolean expressions are used to evaluate conditions. Their results are booleans, i.e. either <code style="font-size:115%;"><strong>True</strong></code> or <code style="font-size:115%;"><strong>False</strong></code>. They may embed arithmetic expressions and string expressions and operate with specific operators: boolean operators and comparison operators.
+
+The formal specification (EBNF one) is quite complex but examples make it simple to understand.
+
+<pre>&lt;boolean expression&gt; ::= &lt;and test&gt;  [ '<strong>or</strong>' &lt;and test&gt; ]
+
+&lt;and test&gt;           ::= &lt;not test&gt;  [ '<strong>and</strong>' &lt;not test&gt; ]
+&lt;not test&gt;           ::= '<strong>not</strong>' &lt;not test&gt;  |  &lt;comparison&gt;
+
+&lt;comparison&gt;         ::= &lt;arithmetic expression&gt; (&lt;op_comp&gt; &lt;arithmetic expression&gt; |
+                                                  &lt;op_cont&gt; &lt;container&gt;) |
+                         &lt;string expression&gt; (&lt;op_comp&gt; &lt;string expression&gt; |
+                                              &lt;op_cont&gt; &lt;container&gt;)
+
+&lt;container&gt;          ::= &lt;dotted name&gt; | &lt;list&gt; | &lt;set&gt; | &lt;map&gt; | &lt;array&gt;
+</pre>
+
+Lists, Sets, Maps and Arrays are explained later in this documentation. They are containers and any literal of their types can be used for the definition of a container. The <dotted name> as the resolution of rule <container> has to be the identifier of a container, otherwise it will lead to a Type Error.
+
+The related operators are classical:
+<pre>&lt;op_comp&gt;     ::= '<strong>&lt;=</strong>'  |  '<strong>==</strong>'  |  '<strong>!=</strong>'  |  '<strong>&gt;=</strong>'  |  '<strong>&lt;</strong>'  |  '<strong>&gt;</strong>'  |  '<strong>is</strong>' [ '<strong>not</strong>' ]
+&lt;op_cont'&gt;    ::= '<strong>in</strong>'  |  '<strong>not</strong>' '<strong>in</strong>'
+</pre>
+
+The strictly boolean operators <code style="font-size:115%;"><strong>and</strong></code>, <code style="font-size:115%;"><strong>or</strong></code> and <code style="font-size:115%;"><strong>not</strong></code> only operate on boolean values.
+
+Operator <code style="font-size:115%;"><strong>and</strong></code> returns <code style="font-size:115%;"><strong>True</strong></code> if left and right operands both evaluate to <code style="font-size:115%;"><strong>True</strong></code> and <code style="font-size:115%;"><strong>False</strong></code> if they do not both.
+Operator <code style="font-size:115%;"><strong>or</strong></code> returns <code style="font-size:115%;"><strong>True</strong></code> if either left operand or right operand evaluates to <code style="font-size:115%;"><strong>True</strong></code> and <code style="font-size:115%;"><strong>False</strong></code> if they both evaluate to <code style="font-size:115%;"><strong>False</strong></code>
+Operator <code style="font-size:115%;"><strong>not</strong></code> is a unary operator. It returns the inverse of the value of its operand: <code style="font-size:115%;"><strong>not True</strong></code> evaluates to <code style="font-size:115%;"><strong>False</strong></code>, and <code style="font-size:115%;"><strong>not False</strong></code></code> evaluates to <code style="font-size:115%;"><strong>True</strong></code>.
+
+The comparison operators are the classic ones. Meanwhile, <strong>Typee</strong> accepts series of comparison operators as does <em>Python</em>.
+<strong>Typee</strong> adds to these the <em>Python</em> operator <code style="font-size:115%;"><strong>is</strong></code> and its pendant <code style="font-size:115%;"><strong>is not</strong></code>.
+Operator <code style="font-size:115%;"><strong>is</strong></code> evaluates to <code style="font-size:115%;"><strong>True</strong></code> when left and right operands are referencing the same entity. Operator <code style="font-size:115%;"><strong>is not</strong></code> evaluates to <code style="font-size:115%;"><strong>True</strong></code> when both operands do not refer to the same entity.
+
+Examples:
+<pre><strong>int16</strong> x = 20, y = 21;
+<strong>print</strong>( 0 <strong>&lt;=</strong> x <strong>&lt;=</strong> y <strong>&lt;=</strong> 21 ); // prints <strong>true</strong>
+<strong>print</strong>( 35 <strong>&gt;</strong>y <strong>&gt;</strong> x <strong>&gt;</strong> 20 );    // prints <strong>False</strong> - due to rightmost comparison
+<strong>int16</strong> xx = x;
+<strong>int16</strong> x_ref = <strong>@</strong>x;
+<strong>print</strong>( xx <strong>is</strong> x, x_ref <strong>is</strong> x, x_ref <strong>is not</strong> xx ); // prints false, true, true
+</pre>
+
+The containment operators operate on values and containers. Operator <code style="font-size:115%;"><strong>in</strong></code> evaluates to <code style="font-size:115%;"><strong>True</strong></code> if the left operand (the value) is contained in the right operand (the container). It evaluates to <code style="font-size:115%;"><strong>False</strong></code> otherwise.
+Inserting keyword <code style="font-size:115%;"><strong>not</strong></code> before <code style="font-size:115%;"><strong>in</strong></code> inverses this evaluation.
+
+Examples:
+<pre>
+<strong>const char</strong> a = 'A';
+<strong>const str</strong>  s = 'dDeEaAdDbBeEeEfF';
+<strong>print</strong>( a <strong>in</strong> s );       // <strong>true</strong>
+<strong>print</strong>( 'Z' <strong>not in</strong> s ); // <strong>true</strong>
+</pre>
+
+<em><strong>Types precedence</strong></em>
+
+Operator <code style="font-size:115%;"><strong>not</strong></code> takes precedence on operator <code style="font-size:115%;"><strong>and</strong></code> which takes precedence on operator <code style="font-size:115%;"><strong>not</strong></code>.
+
+Those three boolean operators take precedence on comparison and containment operators which are processed from left to right, sharing the same low precedence level.
+
+<em><strong>Types promotion</strong></em>
+
+When comparing values, types promotion may happen. The rules for arihtmetic expression apply when comparing expressions. The same is true when comparing string expressions. Meanwhile, string expression have to be understood as extended here to type character when evaluating the containment or not of a character in a string: <strong>char</strong> or <strong>char16</strong> is the type of the left operand value and <strong>str</strong> or <strong>str16</strong> is the type of the right operand container.
+
+
+&nbsp;
+<h4>3.4.10 Unnamed Functions</h4>
+
+Unnamed functions are heavily used in <em>Javascript</em>. There, they most often are embedded in callbacks registration on user events. Unnamed functions are very often used in <em>Java</em> also and they are available in <em>Python</em>.
+
+They sometimes are named <strong>lambda</strong>s. This naming seems to be much confusing for many programmers who are not used with such functions. In <trong>Typee</strong>, we have decided to name these functions <code style="font-size:115%;"><strong>unnamed</strong></code>.
+
+You will see in the specification of unnamed functions that keyword <code style="font-size:115%;"><strong>lambda</strong></code> is also specified. Well, this keyword is so many common in other computer languages that we have decided to accept both namings for unnamed function. This could lead in some future to the depreciation of one or the other of these keywords. This is why we <strong>strongly</strong> encourage newbies-to-unnamed-functions to systematically use keyword <code style="font-size:115%;"><strong>unnamed</strong></code> when they define an <em>unnamed</em> function.
+
+Formal specification is this:
+<pre>
+&lt;unnamed func&gt; ::= &lt;unnamed&gt; [&lt;returned type&gt;] &lt;function args declaration&gt; &lt;statements block&gt;
+&lt;unnamed&gt;      ::= '<strong>unnamed</strong>'  |  '<strong>lambda</strong>'
+</pre>
+
+&lt;function args declaration&gt; has been specified above in present page.
+&lt;returned type&gt; is any built-in or user-defined type. We will specify user-defined types later in this documentation.
+&lt;statements block&gt; is a list of statements, separated with semi-colons and grouped into a block of statements. We are going to specify statements in next section, and statements blocks then after.
+
+
+
+Next section formerly explains a first set of Typee statements, the <strong>compound statements</strong>.
+
+
+<center><a href="http://www.typee.ovh/index.php/doc-033-literals/">&lt; previous</a> (3.3 literals) | (3.5 compound statements) <a href="http://www.typee.ovh/index.php/doc-035-compound-statements/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

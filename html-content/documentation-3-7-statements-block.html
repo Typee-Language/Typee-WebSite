@@ -1,0 +1,27 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.7 - Statements Block</h3>
+
+Blocks of statements are associated with compound statements, as seen before in this documentation. They are also used with functions, methods and classes definitions as it will be seen later in this documentation. Let's first describe Typee grammar specification for blocks of statements.
+
+The EBNF formal specification of statements blocks is this:
+<pre>&lt;statements block&gt; ::= '<strong>{</strong>' [&lt;statements list&gt;] '<strong>}</strong>' |
+                           &lt;compound statement&gt;    |
+                           &lt;simple statement&gt;      |
+                           [&lt;nop statement&gt;] ';'
+
+&lt;statements list&gt;  ::= &lt;statement&gt;  ( &lt;statement&gt; )*
+</pre>
+
+A block of statements is any simple or coumpound statement, a nop statement followed by a semi-colon, a semi-colon alone or a list of any statement enclosed in curly brackets.
+
+Caution: Nesting blocks of statement is legal in Typee, but tokens <code style="font-size:115%;font-weight:bold;">{{</code> and <code style="font-size:115%;font-weight:bold;">}}</code> being used to enclose embeded native code, programmers should avoid the concatenation of two or more successive curly brackets when nesting statements blocks.
+
+
+&nbsp;
+Next section formerly explains &lt;<em>empty statements</em>&gt;.
+
+
+<center><a href="http://www.typee.ovh/index.php/doc-036-simple-statements/">&lt; previous</a> (3.6 simple statements) | (3.8 empty statements) <a href="http://www.typee.ovh/index.php/doc-038-empty-statements/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

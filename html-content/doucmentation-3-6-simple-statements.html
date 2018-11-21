@@ -1,0 +1,177 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.6 - Simple Statements</h3>
+
+We describe here the specification of simple statements, i.e. statements that can be or are written on a single line of code and that are all ended by a semi-colon, which is a regular separator between statements in Typee.
+
+Here is the formal EBNF specification of simple statements in <strong>Typee</strong>:
+<pre>&lt;simple statement&gt; ::= ( &lt;access protection statement&gt; |
+                         &lt;assert statement&gt; |
+                         &lt;delete statement&gt; |
+                         &lt;ensure statement&gt; |
+                         &lt;flow statement&gt;   |
+                         &lt;import statement&gt; |
+                         &lt;nop statement&gt;    |
+                         &lt;require statement&gt; )  &lt;simple statement end&gt;
+
+&lt;simple statement end&gt; ::= '<strong>;</strong>'
+</pre>
+
+We explain each of those statements in next sub-sections.
+
+
+&nbsp;
+<h4>3.6.1 Access Protection statement</h4>
+
+Access protection is traditionnally associated with object oriented programming and classes implementation, for which methods and attributes may get a protected or even a forbidden access either externally to the class or to inheriting classes also. This concept is specified in <em>C++</em> as well as in <em>Java</em> which extends it to <em>packages</em>. It is not totally ignored in <em>Python</em>, where everything is public except entites for which identifiers are prefixed with two successive underscores (said to be protected, but with a forbidden-external access meaning).
+
+<strong>Typee</strong> extends the access protection concept to modules. Every declaration in a file may get access protection. The declared entities will then be accessible to external modules. There are two ways for the declaration of access protection in Typee. It is either specified within the declaration itself or declared at statement level and set for all the next declarations appearing after this statement.
+
+We present here the access protection statements only. Individual access protection in declaration statements will be seen later in this documentation. The formal EBNF specification for access protection statements is:
+<pre>&lt;access protection statement&gt; ::= '<strong>:</strong>' &lt;public&gt; | &lt;protected&gt; | &lt;hidden&gt; '<strong>:</strong>'
+
+&lt;public&gt;    ::= '<strong>public</strong>'
+&lt;protected&gt; ::= '<strong>protected</strong>'
+&lt;hidden&gt;    ::= '<strong>hidden</strong>' | '<strong>local</strong>' | '<strong>private</strong>'
+</pre>
+
+Keyword <code style="font-size:115%;font-weight:bold;">hidden</code> might sound strange to experienced programmers who are more used to use <code style="font-size:115%;font-weight:bold;">private</code> for this. This is why Typee accepts also keyword <code style="font-size:115%;font-weight:bold;">private</code> for highly protected entities. Meanwhile, programmers are strongly encouraged to use keyword <code style="font-size:115%;font-weight:bold;">hidden</code> in Typee. This keyword really means that no entity external to the class is supposed to see these declarations and that, as such, they are not allowed to get access to them. Since this level of protection is also available within modules, Typee accepts also keyword <code style="font-size:115%;font-weight:bold;">local</code>, which is sometimes used in other programming languages but for other while quite similar purposes. These three keywords all get the same effects. Every declaration appearing after them will be not accessible to any external entities out of the module.
+
+
+&nbsp;
+<h4>3.6.2 Assert statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">assert</code> statement evaluates a conditional expression (i.e. an <em>assertion</em>) and raises an exception if the expression evaluates to <code style="font-size:115%;font-weight:bold;">false</code>.
+
+EBNF formal specification of this statement is:
+<pre>&lt;assert statement&gt; ::= '<strong>assert</strong>' &lt;expression&gt; ('<strong>,</strong>' &lt;expression&gt;)*
+</pre>
+
+This is useful when some value (of a function or method argument, for instance) has to be checked at run-time. The first expression appearing after keyword <code style="font-size:115%;font-weight:bold;">assert</code> is the conditional expression to be evaluated. The next expressions, separated by commas, are the arguments to be passed to the raised exception.
+
+When <strong>exceptions</strong> will be fully described, later in this document, we will explain what they are, how they are instantiated when they are raised and what are the arguments passed to their constructors. With the <code style="font-size:115%;font-weight:bold;">assert</code> statement, an <code style="font-size:115%;font-weight:bold;">AssertException</code> is instantiated with, as its sole argument, a string (either <code style="font-size:115%;font-weight:bold;">str</code> or <code style="font-size:115%;font-weight:bold;">str16</code>) which defaults to the empty string if no second expression is set in the <code style="font-size:115%;font-weight:bold;">assert</code> statement. Typee nevertheless accepts a list of argument expressions right now because this may be useful in the future. Up today, passing more than one argument expression to an <code style="font-size:115%;font-weight:bold;">assert</code> statement will lead to a warning set by Typee translators.
+
+
+&nbsp;
+<h4>3.6.3 Delete statement</h4>
+
+In <strong>Typee</strong>, the <code style="font-size:115%;font-weight:bold;">delete</code> statement is used to delete objects and items from memory. Two keywords are accepted for this statement. They get the exact same results. They are <code style="font-size:115%;font-weight:bold;">delete</code> and its shorter wrapper <code style="font-size:115%;font-weight:bold;">del</code> which will, for sure, be preferred by <em>Python</em> programmers.
+
+The formal EBNF specification is:
+<pre>&lt;delete statement&gt;        ::= ('<strong>del</strong>' | '<strong>delete</strong>') &lt;targets list&gt;
+
+&lt;targets list&gt;            ::= &lt;target&gt; ('<strong>,</strong>' &lt;target&gt;)*
+&lt;target&gt;                  ::= &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;subscription or slicing&gt; ::= '<strong>[</strong>' (&lt;subscription&gt; | &lt;slicing&gt;) '<strong>]</strong>'
+</pre>
+
+When applied to an instance of a class (i.e. an object), this statement calls the descructor of this class and applies it to this instance. When applied to an indexed item or to a sliced group of items of a container, this statement suppresses this item or these items from within the container. Finally, when applied to the identifier of a container, the whole content of this container is suppressed from memory.
+
+Typee translators will keep track of references to items, objects and containers at translation time. They will do their best to "nullify" any reference to finally deleted objects, items or containers. Programmers are nevertheless warned that there might be situations when this tracking will not be possible to ensure, and that creating references to objects has to be done cautiously in case of later deletes of the original element. Do not be too much confident in others' softwares. Typee translators are others' softwares.
+
+
+&nbsp;
+<h4>3.6.4 Ensure statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">ensure</code> statement evaluates a conditional expression and raises an exception if the expression evaluates to <code style="font-size:115%;font-weight:bold;">false</code>. It is used in <strong>contract programming</strong> and it has a slightly different behavior when compared with <code style="font-size:115%;font-weight:bold;">assert</code> statement.
+
+EBNF formal specification of this statement is:
+<pre>&lt;ensure statement&gt; ::= '<strong>ensure</strong>' &lt;expression&gt; ('<strong>,</strong>' &lt;expression&gt;)*
+</pre>
+
+<em>Contract programming</em> defines two statements, <code style="font-size:115%;font-weight:bold;">require</code> and <code style="font-size:115%;font-weight:bold;">ensure</code>. Statement <code style="font-size:115%;font-weight:bold;">require</code> verifies that a condition is <code style="font-size:115%;font-weight:bold;">true</code> when entering some part of code - for instance, a function or a loop entrance. Statement <code style="font-size:115%;font-weight:bold;">ensure</code> verifies that a condition is <code style="font-size:115%;font-weight:bold;">true</code> when exiting some part of code - for instance, after the processing of a loop.
+
+These contract programming statements may be considered similar to the <code style="font-size:115%;font-weight:bold;">assert</code> statement. According to their functionalities, they truly are BUT, while asserts are always processed, statements <code style="font-size:115%;font-weight:bold;">require</code> and <code style="font-size:115%;font-weight:bold;">ensure</code> are only processed when in <strong>debug</strong> mode. Once a software has been validated, there is no more needs to check again for contract programming.
+
+About statement <code style="font-size:115%;font-weight:bold;">ensure</code>: this statement should appear at the end of the code to be checked as ensuring a condition - for instance, verifying some constant condition within a loop. It raises an exception of type <code style="font-size:115%;font-weight:bold;">EnsureException</code>. Associated with the instantiated exception are a message string - the first expression next to keyword ensure ensure</code>, and a list of other arguments which up today are not used for the base class <code style="font-size:115%;font-weight:bold;">EnsureExpression</code> but which could be used in some future. Up today then, passing more than one argument expression to an <code style="font-size:115%;font-weight:bold;">ensure</code> statement will lead to a warning set by Typee translators.
+
+
+&nbsp;
+<h4>3.6.5 Flow statements</h4>
+
+Flow statements are statements which interrupt the flow of the processing, redirecting it elsewhere in the code. These statements are not branching. Branching keeps the flow of processing continuous, it does not stop it.
+
+In <strong>Typee</strong> there are four flow statements. Their EBNF formal specifications are:
+<pre>&lt;flow statement&gt;   ::= '<strong>break</strong>' | '<strong>continue</strong>'  |
+                        &lt;raise statement&gt; | &lt;return statement&gt;
+
+&lt;raise statement&gt;  ::= '<strong>raise</strong>' &lt;expression&gt; ['<strong>from</strong>' &lt;expression&gt;]
+&lt;return statement&gt; ::= ('<strong>ret</strong>' | '<strong>return</strong>') &lt;expr list&gt;
+</pre>
+
+We've already described keywords <code style="font-size:115%;font-weight:bold;">break</code> and <code style="font-size:115%;font-weight:bold;">continue</code> when describing the syntax of loops (<code style="font-size:115%;font-weight:bold;">for</code>, <code style="font-size:115%;font-weight:bold;">forever</code>, <code style="font-size:115%;font-weight:bold;">while</code> and <code style="font-size:115%;font-weight:bold;">repeat</code>).
+<code style="font-size:115%;font-weight:bold;">break</code> exits from the loop it is in. Processing jumps to the first statement after the block of statements of the loop.
+<code style="font-size:115%;font-weight:bold;">continue</code> restarts the processing at the first statement contained in the loop after having iterated. Any statement placed after <code style="font-size:115%;font-weight:bold;">continue</code> is ignored.
+
+The <code style="font-size:115%;font-weight:bold;">return</code> statement can only be placed in functions and methods bodies (i.e. statements block). This immediately interrupts the processing of the function or of the method and returns the processing back to the caller statement. Two keywords are accepted in Typee for this: <code style="font-size:115%;font-weight:bold;">return</code> and its shorter form <code style="font-size:115%;font-weight:bold;">ret</code>. This keyword may be associated with a list of expressions or with a single expression. This is not mandatory. If absent, then the embedding function or method has to be declared as returning no value (this is sepcified by keyword <code style="font-size:115%;font-weight:bold;">none</code>). If present, the expression or the succession of expressions have to conform the types that have been specified at the declaration statement of the function or method. Type checking takes place within every Typee translator. Errors will be set if type checking fails between the declared returned types and the types used with the <code style="font-size:115%;font-weight:bold;">return</code> statement.
+
+Statement <code style="font-size:115%;font-weight:bold;">raise</code> is associated with <strong>exceptions</strong>. This statement raises exceptions at the discretion of programmers. If this statement is processed in an environment where exceptions are caught, the associated raised exception will be caught and processed accordingly. The expression next to keyword <code style="font-size:115%;font-weight:bold;">raise</code> should be the constructor of an Exception or an instance of an exception class. It may be followed by keyword <code style="font-size:115%;font-weight:bold;">from</code> and another exception expression. This secondary information may help producing more precise errors messages when raising exceptions. In <em>Python</em>, this is used to chain exceptions. This is its use also in <strong>Typee</strong>.
+
+
+&nbsp;
+<h4>3.6.6 Import statement</h4>
+
+Import is... important. We will fully discuss this topic later in this documentation. It allows for the importation of declared classes, variables, functions, etc. from a module (i.e. a source file) into another module. We just explain here the syntax of imports in <strong>Typee</strong>. <em>Python</em> and <em>Java</em> programmers will get no surprise with it. To the attention of <em>C++</em> programmers: think <code style="font-size:115%;font-weight:bold;">include</code> and forget double quotes!
+
+The formal EBNF specification of statement <code style="font-size:115%;font-weight:bold;">import</code> is:
+<pre>&lt;import statement&gt; ::= &lt;import name&gt;  |  &lt;import from&gt;
+
+&lt;import name&gt;      ::= '<strong>import</strong>' &lt;dotted as names&gt;
+
+&lt;import from&gt;      ::= '<strong>from</strong>' ('<strong>.</strong>')* &lt;dotted name&gt; '<strong>import</strong>'
+                           ( '<strong>all</strong>' |
+                             '<strong>(</strong>' &lt;import as names&gt; '<strong>)</strong>' | &lt;import as names&gt; )
+
+&lt;import as names&gt;  ::= &lt;import as name&gt; ('<strong>,</strong>' &lt;import as name&gt;)*
+&lt;import as name&gt;   ::= &lt;identifier&gt; ['<strong>as</strong>' &lt;identifier&gt;]
+
+&lt;dotted as names&gt;  ::= ('<strong>.</strong>')* &lt;dotted as name&gt; ('<strong>,</strong>' ('<strong>.</strong>')* &lt;dotted as name&gt;)*
+
+&lt;dotted as name&gt;   ::= &lt;dotted name&gt; ['<strong>as</strong>' &lt;identifier&gt;]
+&lt;dotted name&gt;      ::= &lt;identifier&gt; ('<strong>.</strong>' &lt;identifier&gt;)*
+</pre>
+
+A first version of <code style="font-size:115%;font-weight:bold;">import</code> statement imports the whole content of a module. This is the <code style="font-size:105%;">&lt;import name&gt;</code> grammar rule. The <code style="font-size:105%;">&lt;dotted  as names&gt;</code> rule that is associated with it declares paths to the modules for which content is to be imported. Each dot in <code style="font-size:105%;">&lt;dotted name&gt:</code> indicates a level in the directories hierarchy of the program. The prefixing dots each figure a level up in this hierarchy of directories: one prefixing dot, one level up. Each intermediate identifier within the chain of identifiers seperated by dots is the name of a directory. The final identifier in the dotted chain is the name of the imported module without its suffix (either '<code style="font-size:105%;">.ty</code>' or '<code style="font-size:105%;">.typee</code>'. Typee allows the aliasing of every imported module with keyword <code style="font-size:115%;font-weight:bold;">as</code>. Such aliases may be useful to shorten some modules when or to rename modules which get same name while not belonging to the same directory (i.e. <em>package</em>): when importing the whole content of a module, its content identifiers of variables, functions, classes and the like have to be prefixed with the name of this module.
+
+A second version of <code style="font-size:115%;font-weight:bold;">import</code> statement imports parts only of an external module. This is the <code style="font-size:105%;">&lt;import from&gt;</code> grammar rule. This statements starts with keyword <code style="font-size:115%;font-weight:bold;">from</code> which precedes the path name to the imported module. This path is of the same form than paths to modules described in the above paragraph: they are dotted names with dots representing a level up or down in the directories hierarchy. The imported entities (classes names, variables identifiers, cnostant values identifiers, etc.) from this module are then listed, separated with commas, maybe enclosed between parenthesis, after keyword <code style="font-size:115%;font-weight:bold;">import</code>. Those names may each be aliased, either to be shorten or to be differnciated with other same names imported from other modules.
+
+Weel, that's it. Let's delay imports discussion for now. This was just a presentation of the syntax of imports in Typee.
+
+
+&nbsp;
+<h4>3.6.7 No-Operation statement</h4>
+
+There may be times when no operation is to take place. This may be used, for instance, when further debugging will need the setting of breakpoints or during development progression when some parts of the code are not yet available while the global skeleton of its architecture has been defined.
+
+<strong>Typee</strong> specifies the no-operation statement - as does <em>C++</em> and <em>Java</em> with the empty instruction (a single semi-colon), <em>Python</em> with statement <code style="font-size:115%;font-weight:bold;">pass</code> or most of assemblers with instruction <code style="font-size:115%;font-weight:bold;">nop</code>. The two last styles are accepted in typee as explained here below. 
+
+<pre>&lt;nop statement&gt; ::= '<strong>nop</strong>' | '<strong>pass</strong>'
+</pre>
+
+The first style (i.e. single semi-colon) is also accepted in Typee, as is explained in next section of this documentation on blocks of statements.
+
+
+&nbsp;
+<h4>3.6.8 Require statement</h4>
+
+The <code style="font-size:115%;font-weight:bold;">require</code> statement evaluates a conditional expression and raises an exception if the expression evaluates to <code style="font-size:115%;font-weight:bold;">false</code>. It is used in <strong>contract programming</strong> and it has a slightly different behavior when compared with <code style="font-size:115%;font-weight:bold;">assert</code> statement.
+
+EBNF formal specification of this statement is:
+<pre>&lt;require statement&gt; ::= '<strong>require</strong>' &lt;expression&gt; ('<strong>,</strong>' &lt;expression&gt;)*
+</pre>
+
+<em>Contract programming</em> defines two statements, <code style="font-size:115%;font-weight:bold;">require</code> and <code style="font-size:115%;font-weight:bold;">ensure</code>. Statement <code style="font-size:115%;font-weight:bold;">require</code> verifies that a condition is <code style="font-size:115%;font-weight:bold;">true</code> when entering some part of code - for instance, a function or a loop entrance. Statement <code style="font-size:115%;font-weight:bold;">ensure</code> verifies that a condition is <code style="font-size:115%;font-weight:bold;">true</code> when exiting some part of code - for instance, after the processing of a loop.
+
+These contract programming statements may be considered similar to the <code style="font-size:115%;font-weight:bold;">assert</code> statement. According to their functionalities, they truly are BUT, while asserts are always processed, statements <code style="font-size:115%;font-weight:bold;">require</code> and <code style="font-size:115%;font-weight:bold;">ensure</code> are only processed when in <strong>debug</strong> mode. Once a software has been validated, there is no more needs to check again for contract programming.
+
+About statement <code style="font-size:115%;font-weight:bold;">require</code>: this statement should appear at the entrance of the code to be checked as requiring a condition before being processed - for instance, verifying some entering condition within a loop. It raises an exception of type <code style="font-size:115%;font-weight:bold;">RequireException</code>. Associated with the instantiated exception are a message string - the first expression next to keyword ensure ensure</code>, and a list of other arguments which up today are not used for the base class <code style="font-size:115%;font-weight:bold;">RequireExpression</code> but which could be used in some future. Up today then, passing more than one argument expression to an <code style="font-size:115%;font-weight:bold;">require</code> statement will lead to a warning set by Typee translators.
+
+
+&nbsp;
+Next section formerly explains <strong>blocks of statements</strong>.
+
+&nbsp;
+<center><a href="http://www.typee.ovh/index.php/doc-035-compound-statements/">&lt; previous</a> (3.5 compound statements) | (3.7 statements blocks) <a href="http://www.typee.ovh/index.php/doc-037-statements-block/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

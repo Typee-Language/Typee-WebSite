@@ -1,0 +1,192 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.3 - Literals and Constants</h3>
+
+This is a more formal description of the construction of literals - i.e. howto form constant values in <strong>Typee</strong>.
+
+<h4>3.3.1 Boolean Literals</h4>
+
+Booleans literals are built-in constant names: <code style="font-size:120%;"><strong>True</strong></code> and <code style="font-size:120%;"><strong>False</strong></code>.
+To ease typing as well as to take into account programming habits, those language boolean literals may be written <code style="font-size:120%;"><strong>true</strong></code> and <code style="font-size:120%;"><strong>false</strong></code>.
+
+The EBNF (<em>Extended Backus-Naur Form</em>) expression for boolean literals is
+<pre>&lt;boolean&gt; ::= &lt;TRUE&gt;  | &lt;FALSE&gt;
+&lt;TRUE&gt;    ::= 'True'  | 'true'
+&lt;FALSE&gt;   ::= 'False' | 'false'
+</pre>
+
+<h4>3.3.2 Character Literals</h4>
+
+Whatever the type of a character literal (either <code style="font-size:115%;"><strong>char</strong></code> or <code style="font-size:115%;"><strong>char16</strong></code>), it is always written with the same syntax. A character literal is always embedded within single quotes or double quotes. in between, the literal is defined this way:
+
+<pre>&lt;single char&gt;        ::= "'" (&lt;any escaped char&gt; |
+                              &lt;any source character except '\', newline 
+                                  or single-quote&gt;) "'"  |
+                         '"' (&lt;any escaped char&gt; |
+                              &lt;any source character except '\', newline 
+                                  or double-quote&gt;) '"'
+
+&lt;any escaped char&gt;   ::= '\' (&lt;any source character except newline or '0'&gt; |
+                              "0" &lt;octal or hexa char&gt;)
+
+&lt;octal or hexa char&gt; ::= &lt;octal char&gt; &lt;octal char&gt; &lt;octal char&gt; |
+                         ('x'|'X') &lt;hexa char&gt; &lt;hexa char&gt;
+                             [&lt;hexa char&gt; &lt;hexa char&gt;]
+
+&lt;hexa char&gt;          ::= '0'...'9'  |  'A'...'F'  |  'a'...'f'
+&lt;octal char&gt;         ::= '0'...'7'
+</pre>
+
+The type of a character literal will be inferred from its content and its environment. If it is assigned to a typed variable, it will have to conform the type of this variable. For instance, if a <code style="font-size:115%;"><strong>char</strong></code> variable containing 8-bits characters is assigned with a character literal, this literal will be considered to be of type <code style="font-size:115%;"><strong>char</strong></code>. No <code style="font-size:115%;"><strong>char16</strong></code> literal will be assignable to this variable (this will detect a type checking error at translation time). Assigning a <code style="font-size:115%;"><strong>char16</strong></code> variable, the inferred type of the character literal will be <code style="font-size:115%;"><strong>char16</strong></code>.
+
+Meanwhile, according to its content, a character literal will be considered to be either 8-bits or 16-bits character according to the variable it is assigned to, while its inferred type will be <code style="font-size:115%;"><strong>char16</strong></code> as soon as it contains a 16-bits character.
+
+Any 8-bits character can be specified with octal notation <code style="font-size:115%;">\0ooo</code> with <code style="font-size:115%;">o</code> representing any octal digit (from 0 to 7). 16-bits characters can be specified, in character literals, with escape sequence <code style="font-size:115%;">\0xHHHH</code> where <code style="font-size:115%;">H</code> is any hexa-decimal character (i.e. any character within "0123456789abcdefABCDEF"). At any time a character literal will be specified with a four digits hexadecimal escape sequence, it will be considered as a <code style="font-size:115%;"><strong>char16</strong></code> character literal and will be assignable to only a <code style="font-size:115%;"><strong>char16</strong></code> variable. A type checking error will be detected at compile time if the assigned variable is not of this type.
+
+Casting is also a way to specify the type of a character literal. Casting is a concept that allows the transformation of the type of an object into another type. Syntax is simple, and for character literals this would be
+
+<pre><strong>char16</strong>( 'T' );</pre>
+
+Caution there: do not attempt to cast a 16-bits character literal into an 8-bits one. A type checking error would be detected at translation time.
+
+<pre><strong>char</strong>( '\0x10ff' )  // --> type error !</pre>
+
+Finally, built-in library <strong>String</strong> provides functions and methods to specify the type of a character or of a string literal. This way, programmer can force the type of a character literal at translation time. See the documentation of this library.
+
+The mostly used or known escape sequences are
+<pre>\\  backslash (i.e. "\")
+\'  single quote          (i.e. "'", to be used in literal '\'')
+\"  double quote          (i.e. '"', to be used in literal "\"")
+\n  ASCII linefeed        (i.e. LF, often misnamed 'newline')
+\r  ASCII carriage return (i.e. CR, which combined with LF is a true newline in some Operating Systems)
+\t  ASCII horizontal tab  (i.e. TAB)
+\v  ASCII vertical tab    (i.e. VTAB, rarely used today)
+\b  ASCII backspace       (i.e. BS, not that much used today)
+\a  ASCII bell            (i.e. BEL, or a for alarm)
+</pre> 
+
+<h4>3.3.3 String Literals</h4>
+
+Well, string literals are the pendant of character literals. Any string is a series of characters. A string literal is a literal which contains a series of characters.
+
+As for character literals, a string literal starts and ends with either a single quotes or a double quotes, with no mixing of both types of quotes. They may contain escaped sequences also.
+
+<pre>&lt;string&gt;        ::= &lt;single string&gt; (&lt;single string&gt;)*
+
+&lt;single string&gt; ::= "'" (&lt;any escaped char&gt; |
+                              &lt;any source character except '\', newline 
+                                  or single-quote&gt;)* "'"  |
+                     '"' (&lt;any escaped char&gt; |
+                          &lt;any source character except '\', newline 
+                              or double-quote&gt;)* '"'
+</pre>
+
+According to previous specification, string literals may be split on many code lines, coded as a succession of single strings separated by spaces, tabs or newlines:
+<pre><strong>const str16</strong> k_text = "This is a "
+"multi-lines string literal.\n"
+'This kind of notation is useful when ' "specifying very long string constants.";
+</pre>
+
+The type of a string literal is inferred from its environment as well as from its content. As for character literals, af a string literal is assigned to a typed variable, it will have to conform the type of this variable. For instance, if an <code style="font-size:115%;"><strong>str</strong></code> variable containing 8-bits characters is assigned with a string literal, this literal will be considered to be of type <code style="font-size:115%;"><strong>str</strong></code>. No <code style="font-size:115%;"><strong>str16</strong></code> literal will be assignable to this variable (this will detect a type checking error at translation time). Assigning a <code style="font-size:115%;"><strong>str16</strong></code> variable, the inferred type of the string literal will be <code style="font-size:115%;"><strong>str16</strong></code>.
+
+Meanwhile, according to its content, a string literal will be considered to be either 8-bits or 16-bits string according to the variable it is assigned to, while its inferred type will be <code style="font-size:115%;"><strong>str16</strong></code> as soon as it contains any 16-bits character.
+
+Casting is also a way to specify the type of a string literal. Casting is a concept that allows the transformation of the type of an object into another type. Syntax is simple, and for string literals this would be
+
+<pre><strong>str16</strong>( 'This is now a 16-bits string literal!' );</pre>
+
+Caution there: do not attempt to cast a 16-bits string literal into an 8-bits one. A type checking error would be detected at translation time.
+
+The truly implemented rule for string literals is the next one which is a little bit more complex than the one we have previously shown:
+<pre>&lt;string&gt; ::= &lt;single string&gt; (&lt;single string&gt;)* 
+                ('.' &lt;identifier&gt; &lt;function arguments list&gt;)*
+</pre>
+
+This specification shows that in Typee strings are associated with built-in functions that can be directly applied to strings as if strings where instances of a dedicated class. This is true for string variables and for string literals also. We will study this later. For now, let's just be aware of this and see a short example of it:
+<pre><strong>print</strong>( 'Let\'s try something'.to_upper().replace('E','ee') );</pre>
+
+Once translated to some programming language, maybe compiled and eventually run, this should print
+<pre>LeeT'S TRY SOMeeTHING</pre>
+
+<h4>strings vs. characters</h4>
+
+Strings are not characters. They are series of. Characters are not strings. They are part of. Then, it is NOT allowed to assign strings with caracters and characters with strings. Meanwhile, any indexed string (indexed, not sliced) IS a character. Next code is legal:
+<pre><strong>str16</strong> s = "abcd";
+s[2] = 'E';
+<strong>print</strong>( s )
+</pre>
+and would print <code style="font-size=115%;"> abEd </code>. Moreover, <code style="font-size=115%;"> s[i] </code>, for any <code style="font-size=115%;"> i </code> in 0, 1, 2 and 3, is a <code style="font-size=115%;">char16</code> in above code, and literal <code style="font-size=115%;"> 'E' </code> is considered to be of type <strong>char16</strong>.
+
+Finally, built-in library <strong>String</strong> provides functions and methods to specify the type of a character or of a string literal. This way, programmer can force the type of a string literal at translation time. See the documentation of this library.
+
+
+<h4>3.3.4 Integer Literals</h4>
+
+Any programmer knows how to write integer literals. They start with a digit and only contain digits. Ok. But what about digits?
+In <strong>Typee</strong>, integer numbers are accepted in base 2, 8, 10 and 16 as for nearly any other computer language.
+
+The formal specification of the related grammar rules is:
+<pre>&lt;integer number&gt;     ::= '1'...'9' [&lt;decimal part&gt;]
+                      |  '0' &lt;octal hexa binary&gt;
+
+&lt;decimal part&gt;       ::= &lt;num_char&gt; (['_'] &lt;num_char&gt;)*
+
+&lt;octal hexa binary&gt;  ::= &lt;octal number&gt;  |
+                         ('b' | 'B') &lt;binary number&gt;  |
+                         ('x' | 'X') &lt;hexadecimal number&gt;
+
+&lt;hexa char&gt;          ::= &lt;num char&gt;  |  'A'...'F'  |  'a'...'f'
+
+&lt;hexadecimal number&gt; ::= &lt;hexa char&gt; (['_'] &lt;hexa char&gt;)*
+&lt;num char&gt;           ::= '0'...'9'
+&lt;octal char&gt;         ::= '0'...'7'
+&lt;octal number&gt;       ::= &lt;octal char&gt; (['_'] &lt;octal char&gt;)*
+</pre>
+
+As with (at least) <em>Python</em>, integer literals accept the underscore in between digits, never as the first or the last character of the literal. They may be used as a convenience to make literals easier to read.
+
+Examples of legal integer literals are:
+<pre>0  12  345  6_789
+0b1010_0110  0777  0x0123_4567_89ab_CDEF
+</pre>
+
+Please notice that integer literals are never signed. Signed integers may be used in expressions and assignments, but the minus sign preceeding any integer literal is the unary operator <code style="font-size=115%;"> - </code>, in <strong>Typee</strong>.
+
+Integer literals always implicitely conform to the largest type used in the expression they appear in, or conform to the type of the variable they are assigned to when they appear alone in the right side of this assignment, or are considered as being of the smallest integer size (int-8, 16, 32 or 64) when assigned alone to an auto-typed variable (which, then, gets this type as its current type).
+
+
+<h4>3.3.5 Float Literals</h4>
+
+In <strong>Typee</strong>, float literals are very classic. Either coded on 32 or 64 bits, their types are named <strong>float32</strong> and <strong>float64</strong>.
+
+The formal description of their grammar rules  is:
+<pre>&lt;float literal&gt;     ::= &lt;num char&gt; [&lt;decimal part&gt;] 
+                            [&lt;fraction part&gt; [&lt;exponent part&gt;]]
+
+&lt;decimal part&gt;      ::= &lt;num_char&gt; (['_'] &lt;num_char&gt;)*
+&lt;fraction part&gt;     ::= '.' &lt;decimal part&gt;
+&lt;exponent part&gt;     ::= ('e' | 'E') ['+' | '-'] &lt;decimal part&gt;
+&lt;num char&gt;          ::= '0'...'9'
+</pre>
+
+
+As with (at least) <em>Python</em>, float literals accept the underscore in between digits, never as the first or the last character of the part of the literal they belong to. They may be used as a convenience to make literals easier to read.
+
+Examples of legal float literals are:
+<pre>0   0.  0.0   1.23  4.567_89
+1_023.456_789
+1.2e3   1.2e+3   1.2E-3
+1E23    123e-2
+</pre>
+
+Please notice that float literals are never signed. Signed floats may be used in expressions and assignments, but the minus sign preceeding any float literal is the unary operator <code style="font-size=115%;"> - </code>, in <strong>Typee</strong>.
+
+Float literals always implicitely conform to the largest float type used in the expression they appear in, or conform to the type of the variable they are assigned to when they appear alone in the right side of this assignment, or are considered as being of the smallest float size (float- 32 or 64) when assigned alone to an auto-typed variable (which, then, gets this type as its current type).
+
+
+
+Next section formerly explains identifiers naming and the construction of expressions.
+
+<center><a href="http://www.typee.ovh/index.php/doc-032-types/">&lt; previous</a> (3.2 types) | (3.4 expressions) <a href="http://www.typee.ovh/index.php/doc-034-expressions/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

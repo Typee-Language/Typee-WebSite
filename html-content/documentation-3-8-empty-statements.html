@@ -1,0 +1,28 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.8 - Empty Statements</h3>
+
+Empty statements... How could a statement be empty? in <strong>Typee</strong>, empty statements are comments. They are statements, they are translated in targeted languages, but they are not processed statements while compound ones and simple ones are.
+
+Their formal EBFN specification is:
+<pre>&lt;empty statement&gt;      ::= &lt;comment&gt;  |  &lt;NEWLINE&gt;
+
+&lt;comment&gt;              ::= '<strong>//</strong>' ((&lt;any non newline char&gt;)* | &lt;line end&gt;) |
+                           '<strong>/*</strong>' &lt;multi lines comment&gt;
+
+&lt;multi lines comment&gt;  ::= (&lt;any non star char&gt; | &lt;NEWLINE&gt;)*  |
+                           '<strong>*</strong>' ('<strong>/</strong>' | &lt;multi lines comment&gt;)
+
+&lt;NEWLINE&gt;              ::= '<strong>\n</strong>'  |  '<strong>\r</strong>'  |  '<strong>\f</strong>'
+</pre>
+
+So, Typee comments are exactly the same as in <em>C</em>, <em>C++</em> and <em>Java</em>. <em>Python</em>programmers will have to forget the '<code style="font-size:115%;font-weight:bold;">#</code>' token, which gets another meaning in Typee (this is the hashing operator), as well as the multi-lines comments that are commonly used for documenting code in <em>Python</em>.
+
+
+&nbsp;
+Next section formerly explains &lt;<em>declarations and assignments</em>&gt;.
+
+
+<center><a href="http://www.typee.ovh/index.php/doc-037-statements-block/">&lt; previous</a> (3.7 statements blocks) | (3.9 declarations and assignments) <a href="http://www.typee.ovh/index.php/doc-039-declarations-assignments/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

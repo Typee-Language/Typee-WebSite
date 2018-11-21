@@ -1,0 +1,88 @@
+<h1>- Typee Documentation -</h1>
+<h2>1 - Introduction</h2>
+<h3>1.1 - What is Typee?</h3>
+<strong>Typee</strong> is an Object Oriented Programming language. Its syntax is derived from other OOP language such as <em>C++11</em>, <em>Java 8.0</em> and <em>Python 3.7</em>.
+<h3>1.2 - Typee language characteristics</h3>
+We list here only the main characteristics of <strong>Typee</strong>.
+<ul>
+ 	<li>Object Oriented Programming;</li>
+ 	<li>typed variables and objects;</li>
+ 	<li>classical scalar types;</li>
+ 	<li>Templated on functions, methods and <strong>operators</strong> - as with templates in <em>C++</em> and generics in <em>Java</em> while with bonuses on operators;</li>
+ 	<li>auto typing in specific cases - as with <code>auto</code> in <em>C++</em> and as is by default in <em>Python</em>;</li>
+ 	<li>'for' and 'if' comprehensions - as in <em>Python</em>;</li>
+ 	<li>built-in containers for objects - as in <em>Python</em>: <code>list</code>, <code>set</code>, code&gt;dict,
+plus <code>array</code>;</li>
+ 	<li>classical instructions plus bonuses - e.g. <code>else</code> associated with <code>for</code> and <code>while</code> as in <em>Python</em> or with <code>switch</code>;</li>
+ 	<li>classical exception handling;</li>
+ 	<li>classical operators plus a few bonuses - e.g. 0-shifting as built in <em>Java</em>;</li>
+ 	<li>few undefined operators available for users specific definitions;</li>
+ 	<li>unnamed functions - as in <em>Java</em> or <em>Python</em> lambdas;</li>
+ 	<li>an <code>embed</code> instruction for the embedding of native code in <em>Python</em>, <em>C++</em> or <em>Java</em> for instance;</li>
+ 	<li>and few other goodies you will enjoy to use.</li>
+</ul>
+While navigating in this documentation, you will find numerous information on <strong>Typee</strong> grammar specification, the <strong>Typee</strong> translator software architecture (see short description below) or the whole software documentation - as generated in HTML by an open source application, <em>PyYadc</em> (Yet another documentation compiler).
+
+Please be aware that this project is under construction and that currently NO running version is available. Documentation as well as directories tree and their contents are highly subject to change, actually on a daily or at least on a weekly basis.
+<h4>Rationale</h4>
+At first, this was a personnal project. It aimed at developping an upper layer to <em>Python</em> with a true type verification. This had already been partially addressed by Google with their project <a href="https://opensource.google.com/projects/pytype" rel="nofollow"><strong>PyType</strong></a>. The kind of annotations this project proposes is now widely accepted and inserted in new <em>Python</em> code. <em>PyType</em> is a static analyzer that infers and checks types for <em>Python</em> code.
+<pre><code>PyType is a static type inferencer and type checker for _Python_ code. It is 
+capable of analyzing existing _Python_ code to determine what possible types 
+could be used on APIs throughout the program.
+</code></pre>
+(source: <em>Google</em> project <em>PyType</em>)
+
+Well. This is not exactly full type checking - while it is perfectly adapted to <em>Python</em> programming for which no type declaration is needed before manipulating objects.
+
+But we wanted to get a typed language to further translate it in <em>Python</em> code, full static type checking having been done before automatically generating <em>Python</em> modules then running the <em>Python</em> interpreter on them.
+<h4>1.2.1 - Typee: neither compiled nor interpreted but translated</h4>
+Traditionnal OOP languages are either compiled (e.g. C++) or interpreted (e.g. <em>Python</em> ). They even may be first compiled into an intermediate code which is then interpreted (e.g. Java and its Bytecode interpreted by a <em>Java Virtual Machine</em> that has to be implemented on each of the different targetted devices).
+
+<strong>Typee</strong> is neither compiled nor interpreted. It is rather translated into other OOP languages, such as <em>Python</em> which chronologically is the first addressed OOP language from: <em>Python</em>, <em>C++</em> and <em>Java</em>. During the translation, type infering and checking is done not only for APIs as does <em>PyType</em> but also on all the other parts of the code.
+
+While this may seem to be valuable for untyped languages such as <em>Python</em>, it should appear to be not useful for other typed languages, of course.
+Yes, but wait...
+<h4>1.2.2 - Typee: one code for many implementations</h4>
+Here is the core usefulness of <strong>Typee</strong>: once a program has been written in <strong>Typee</strong>, it can then easily be translated in any other available OOP language. At first, this will be a translator to <em>Python</em>. But as soon as other translators will be available, e.g. for <em>C++</em> or <em>Java</em>, the same code will be available for translation in these languages also.
+
+As long as related libraries are added to the package (for instance graphical ones or GPU parallel programming ones) and are programmed in <strong>Typee</strong> with dedicated code (i.e. native embedded code) for the targetted OOP language, it should be easy to program applications for Windows, Linux, iOS or Android with a single code programmed in <strong>Typee</strong>.
+
+Here we are!
+<h3>1.3 - Typee global architecture</h3>
+<strong>Typee</strong> has been specified as would have been any compiler. Our bedside book for a long has been "Engineering a Compiler, 2nd Edition, Keith D.Cooper &amp; Linda Torczon, Elsevier, 2012" and we encourage the reader to read this book.
+
+We have choosen this book because it was newer than the famous Dragoon book "Compilers, principles, techniques, &amp; tools, 2nd ed." from Alfred V. Aho, Monica S. Lam, Ravi Ethi and Jeffrey D. Ullman, Pearson-Addison Wesley, 2007, while this Dragoon book had been used to specify the <em>Python</em> interpretor <em>CPython</em>.
+<h4>1.3.1 - Global architecture of a compiler</h4>
+A compiler is composed of a <strong>front-end</strong>, a <strong>back-end</strong> and an <strong>optimizer</strong>.
+<h4>The Front-End</h4>
+It contains a <strong>scanner</strong> that scans the code and generates a first level of intermediate code: the <em>tokenized</em> code.
+
+The generated tokenized code is provided to a <strong>parser</strong> that parses the tokens and generates a second level of intermediate code: the <em>IC</em>. The <strong>parser</strong> parses this code and checks it for syntax correctness. Syntax errors are emitted during this step of the compilation.
+
+The generated <em>IC</em> is finally passed to an <strong>elaborator</strong> that elaborates all the other checkings - such as types infering and checking, for instance. Not declared variables or objects, or types errors are emitted during this step of the compilation.
+<h4>The Back-End</h4>
+It generates the final binary code for the targetted processing unit. It gets as input the intermediate code <em>IC</em> as generated by the <strong>elaborator</strong> of the <strong>Front-End</strong> once this <em>IC</em> has been fully checked and validated. The <strong>Back-End</strong> output is a binary file that contains either executable code within a targetted <em>Operating System</em> or binary code and linkage metadata to be later linked with other code.
+<h4>1.3.2 - The Optimizer</h4>
+According to the targetted processing unit, it optimizes the finally generated binary code. According to the <em>IC</em> generated by the <strong>Front-End</strong> it may also provide optimizations within the <em>IC</em>, e.g. by duplicating code of small functions rather than calling them (speed optimization) or by removing dead code as long as this can be statically detected (space optimization).
+<h4>1.3.3 - Global architecture of Typee</h4>
+Well, <strong>Typee</strong> is a translator not a compiler. So, we only implement the <strong>Front-End</strong> and the <strong>Back-End</strong> steps of a compiler.
+<h4>Typee Front-End</h4>
+As for any compiler, <strong>Typee</strong> gets a <strong>scanner</strong> for the tokenization of the code, a <strong>parser</strong> for syntax checking and an <strong>elaborator</strong> for undeclared variables detection, types infering and types checking.
+
+It generates an <em>Intermediate Code</em> and passes it to the <em>Back-End</em> as long as all checks are ok.
+<h4>Typee Back-End</h4>
+The <strong>Typee</strong> <em>Back-End</em> finalizes the translation to the targetted programming language. Remember, as a first step, <em>Python</em> is the targetted language. <em>C++</em> and <em>Java</em> will come next.
+
+According to this, the <em>Back-End</em> of <strong>Typee</strong> contains as many generators as targetted languages, each of them generating the corresponding code to be either interpreted (<em>Python</em>) or compiled (<em>C++</em>, <em>Java</em>) with the corresponding interpreter / compiler.
+<h4>Optimizer</h4>
+<strong>Typee</strong> implements no <em>optimizer</em>. This step is left to the final interpreters and compilers that will do a definitively correct job.
+<h4>Final step</h4>
+The final step for the user is then to run the compiler or the interpretor of the targetted language. Of course, this step can be automated via scripting and <strong>Typee</strong> project aims at providing such scripts to ease the whole process.
+<h3>1.4 - Visit us</h3>
+Our <strong>GitHub</strong> repository is at <a href="https://typee-language.github.io/Typee/" rel="nofollow">https://typee-language.github.io/Typee/</a>
+
+You can follow us also at <a href="https://twitter.com/TypeeProgrammi1" rel="nofollow">https://twitter.com/TypeeProgrammi1</a> and at <a href="https://www.facebook.com/LanguageTypee rel=">https://www.facebook.com/LanguageTypee</a>.
+
+<center><a href="http://www.typee.ovh/index.php/documentation/">&lt; previous</a> (documentation home) | (2. language specs) <a href="http://www.typee.ovh/index.php/doc-02-language-specs/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->

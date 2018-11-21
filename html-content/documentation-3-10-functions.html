@@ -1,0 +1,206 @@
+<h1>- Typee Documentation -</h1>
+<h2>3 - Typee Language Description</h2>
+<h3>3.10 - Functions</h3>
+
+Functions, and methods which are functions declared within classes to be applied to the instances of these classes, are parts of code that are factorized end then called at multiple places in a more global software code.
+
+<strong>Typee</strong> specifies functions (and methods) the same way as most OOP (Object Oriented Programming) languages do. Functions can be declared, defined and called. They may be <em>templated</em> with template arguments. They may get arguments. Finally, they are typed; the type of a function is the type of the value it returns back to its caller once it has completed. Among all valid types is type <code style="font-size:115%;font-weight:bold;">none</code>, also writable <code style="font-size:115%;font-weight:bold;">None</code>, which means that the function just runs some code but do not return any value.
+
+<strong>Typee</strong> specifies also <code style="font-size:115%;font-weight:bold;">unnamed</code> functions. These are named <code style="font-size:115%;font-weight:bold;">lambda</code> in <em>Java</em> and <em>Python</em>.
+
+Finally, functions (and methods as well) may be overloaded and overridden. We will explain what does this mean, later in this section.
+
+The overall formal EBNF specification of functions (and methods) rules in <strong>Typee</strong> are:
+<pre>&lt;function call&gt;             ::= &lt;identifier&gt;
+                                    [&lt;template args&gt;] '<strong>(</strong>' &lt;function call args&gt; '<strong>)</strong>' 
+
+&lt;function declaration&gt;      ::= &lt;forward&gt; &lt;function decl&gt;
+
+&lt;function definition&gt;       ::= &lt;function decl&gt; &lt;statements block&gt;
+
+&lt;access protection qualifier&gt; ::= '<strong>hidden</strong>' | '<strong>local</strong>' | '<strong>private</strong>'
+                                     '<strong>protected</strong>' | '<strong>public</strong>'
+
+&lt;call operator&gt;             ::= '<strong>(</strong>' '<strong>)</strong>' 
+
+&lt;forward&gt;                   ::= '<strong>ret</strong>' | '<strong>return</strong>' 
+
+&lt;function args declaration&gt; ::= '<strong>(</strong>' [&lt;typed args list&gt;] '<strong>)</strong>' 
+
+&lt;function call args&gt;        ::= [ &lt;expression&gt; (&lt;function call&gt;)*
+                                    [ '<strong>,</strong>' ( &lt;expression&gt; (&lt;function call&gt;)*  |
+                                            '<strong>...</strong>' &lt;identifier&gt; )  |
+                                      &lt;for comprehension&gt;] ]
+
+&lt;function decl&gt;             ::= [&lt;access protection qualifier&gt;] ['<strong>final</strong>']
+                                    &lt;type&gt; &lt;identifier&gt;
+                                    [&lt;template def&gt;] &lt;function args declaration&gt;
+
+&lt;return statement&gt;          ::= ( '<strong>ret</strong>' | '<strong>return</strong>' ) &lt;expr list&gt;
+
+&lt;expr list&gt;                 ::= &lt;expression&gt;  ( '<strong>,</strong>' &lt;expression&gt; )*
+
+&lt;typed args list&gt;           ::= &lt;type&gt; &lt;identifier&gt; ( '<strong>,</strong>' &lt;type&gt; &lt;identifier&gt; )*
+
+&lt;unnamed&gt;                   ::= '<strong>unnamed</strong>' | '<strong>lambda</strong>' 
+
+&lt;unnamed func&gt;              ::= &lt;unnamed&gt; [&lt;type&gt;] &lt;function args declaration&gt;
+                                    &lt;statements block&gt;
+</pre>
+
+
+<pre>&lt;spaced template args&gt;    ::= '<strong> &lt;</strong>' &lt;template args'&gt; '<strong>&gt;</strong>' 
+
+&lt;spaced template def&gt;     ::= '<strong> &lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+
+&lt;template args&gt;           ::= '<strong>&lt;</strong>' &lt;template args'&gt; '<strong>&gt;</strong>' 
+&lt;template args'&gt;          ::= [&lt;expression&gt; ( '<strong>,</strong>' &lt;expression&gt; )*]
+
+&lt;template def&gt;            ::= '<strong>&lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+&lt;template def'&gt;           ::= (&lt;identifier&gt; |
+                               '<strong>const</strong>' &lt;template def const name&gt;) 
+                                    ( '<strong>,</strong>' (&lt;identifier&gt; | 
+                                           '<strong>const</strong>' &lt;template def const name&gt;) )*
+
+&lt;template def const name&gt; ::= &lt;scalar type or dotted name&gt; &lt;identifier&gt;
+                                  [ '<strong>=</strong>' &lt;expression&gt; ]
+</pre>
+
+
+<pre>&lt;for comprehension&gt;  ::= '<strong>for</strong>' '<strong>(</strong>' &lt;target list&gt; '<strong>in</strong>'
+                             &lt;or test&gt; &lt;iter comprehension&gt; '<strong>)</strong>' 
+
+&lt;iter comprehension&gt; ::= [ &lt;for comprehension&gt;  |  &lt;if comprehension&gt; ]
+
+&lt;if comprehension&gt;   ::= '<strong>if</strong>' '<strong>(</strong>' (&lt;or test&gt; | &lt;unnamed func&gt;) '<strong>)</strong>' 
+                             &lt;iter comprehension&gt;
+
+&lt;targets list&gt;       ::= &lt;target&gt; ( '<strong>,</strong>' &lt;target&gt; )*
+
+&lt;target&gt;             ::= &lt;dotted name&gt; (&lt;subscription or slicing&gt;)*
+
+&lt;dotted name&gt;        ::= &lt;identifier&gt; ( '<strong>.</strong>' &lt;identifier&gt; )*
+</pre>
+
+&nbsp;
+<h4>3.10.1 Function Definition</h4>
+
+The definition of a function specifies:
+<ul>
+    <li>the access protection level that is associated with this function, when the function is defined at the highest level of statements-blocks nesting of the module it is defined in;</li>
+    <li>the overridding possibility or not on this function;</li>
+    <li>the type of the value this function returns back to its caller;</li>
+    <li>the identifier of this function;</li>
+    <li>a list of template arguments when this concept is used;</li>
+    <li>the list of the typed arguments that have to be passed to this function when it is called;</li>
+    <li>a block of statements which contains all the statements that this function is to compute.</li>
+</ul>
+
+A function is designed by its signature rather than by its identifier which is part of this signature. At call-time, the function body that is computed is the one associated with the function signature that matches the call signature.
+
+Those elements are constituting the signature of a function:
+<ul>
+    <li>the type of the value it returns to its caller;</li>
+    <li>the identifier of the function;</li>
+    <li>the template arguments that may be declared and applied to it - if present;</li>
+    <li>the whole ordered list of the arguments types that are declared in its definition.</li>
+</ul>
+The function body, the access protection qualifier and the overridding possibility are not part of a function signature.
+
+
+&nbsp;
+<strong><em>Access Protection</em></strong>
+The access protection level of a function is either set locally for it, with protection keywords, or set at a global level, as seen before, between two colons. When set locally at the definition of the function, the specified visibilty level takes precedence over any global level set before in the same source code file. Access protection levels may only be set at the highest level of blocks nesting within a module. Typee translators will set warnings when any vivibility qualifier will appear in nested blocks of instructions within a module (i.e. within a Typee source code file).
+
+As a reminder, visibility qualifiers in Typee are:
+<pre>&lt;access protection qualifier&gt; ::= '<strong>hidden</strong>' | '<strong>local</strong>' | '<strong>private</strong>'
+                                     '<strong>protected</strong>' | '<strong>public</strong>'
+</pre>
+
+&nbsp;
+<strong><em>Overridding</em></strong>
+Overridding possibility is the default in <strong>Typee</strong>. As will be explained later in this documentation, overridding is a way to modify the definition of a function (with same signature) within a specified area of code. Typee accepts the definition of functions (and methods) that should not be overridden. The keyword for indicating this is the same as in <em>Java</em>: <code style="font-size:115%;font-weight:bold;">final</code>.
+
+&nbsp;
+<strong><em>Returned value</em></strong>
+Functions may return values to their callers. The type of the returned value has to be specified and is considered as belonging to the signature of the function.
+Example:
+<pre><strong>const int32</strong> my_sum( <strong>const int32</strong> a, <strong>const int32</strong> b ){
+    <strong>return</strong> a + b;
+}
+</pre>
+The returned types may be any kind of type, and even containers, instances of classes, etc. Meanwhile, functions may also return no value. In this case, the returned type has to be specified as <code style="font-size:115%;font-weight:bold;">none</code>:
+<pre><strong>none</strong> display(){
+    // ...
+}
+</pre>
+
+&nbsp;
+<strong><em>Function identifier</em></strong>
+The identifier of a function is set as any other identifier in <strong>Typee</strong>: it has to start with a letter or an underscore. It may contain then any number of letters, decimal digits and underscores. No assumption is made in <strong>Typee</strong>, while it is the case in <em>Python</em> for instance, about the number of starting or ending underscores. Programmers wishing to translate their Typee source codes to many different programming languages including <em>Python</em> should nevertheless be careful about the naming of the identifiers they declare and define. In such a case, avoid identifiers prefixed with two underscores as well as identifiers prefixed and suffixed with two underscores also. These are special conventions of naming in <em>Python</em>.
+Furthermore, avoid any function names which would be the same as libraries functions. <strong>Typee</strong> translators will do their best to avoid colliding naming, but it might be that this will not be possible at some times. For sure, colliding names will finally be detected at compile- or at interpretation- time of the translated source code but programmers should do their best to avoid such troubles after translation-time.
+
+Notice that a function identifier is part of the function signature. Functions are called according to their signatures, not according to their sole identifiers.
+
+&nbsp;
+<strong><em>Templates</em></strong>
+Templates will be fully explained later in this documentation. Let's just talk here about their syntax when defining a function. Template arguments are part of the signature of the function. They are declared at its definition time. They are enclosed between angle brackets: <code style="font-size:115%;font-weight:bold;">&lt;</code> and <code style="font-size:115%;font-weight:bold;">&gt;</code>. They consist in a list of identifiers which will only be visible in the body of the function (i.e. its block of statements), separated by commas. Any single identifier within the list is the local identifier of a type which will be inferred at call-time of the function. Other identifiers, when preceded by a type identifier (either a built-in one or an already defined one),are identifiers of constant values that will be locally visible in the body of the function, taht may get a default value and that will be inferred at call-time of the function.
+The formal EBNF specification of Typee related grammar syntax is:
+<pre>
+&lt;template def&gt;            ::= '<strong>&lt;</strong>' &lt;template def'&gt; '<strong>&gt;</strong>' 
+&lt;template def'&gt;           ::= (&lt;identifier&gt; |
+                               '<strong>const</strong>' &lt;template def const name&gt;) 
+                                    ( '<strong>,</strong>' (&lt;identifier&gt; | 
+                                           '<strong>const</strong>' &lt;template def const name&gt;) )*
+
+&lt;template def const name&gt; ::= &lt;scalar type or dotted name&gt; &lt;identifier&gt;
+                                  [ '<strong>=</strong>' &lt;expression&gt; ]
+</pre>
+
+Example:
+<pre><strong>const</strong> ScalarT my_sum&lt;ScalarT&gt;( <strong>const</strong> ScalarT a, <strong>const</strong> ScalarT b ){
+    <strong>return</strong> a + b;
+}
+
+<strong>print</strong>( my_sum&lt;int32&gt;(1, 2),
+       my_sum&lt;float64&gt;(2.718_281_828_459_045, 6.022_140_857) );
+// prints: 3 8.740422685459045
+</pre>
+
+&nbsp;
+<strong><em>Function arguments</em></strong>
+Functions get passed arguments. The block of statements of the function processes these arguments or uses these arguments while running through it. The ordered list of the types of the arguments is part of the signature of the function. At definition- and at declaration- time, each argument is specified by its identifier, which has to be unique in the list of arguments, and by its type. Arguments types may be preceded by keyword <code style="font-size:115%;font-weight:bold;">const</code>. In this case, the related arguments are considered as not mutable outside of the function. This means that the values of these arguments may be modified within the function body, but that they will just be modified locally while their initial value at call-time will not be modified once control will have been returned back to the caller of the function.
+
+
+&nbsp;
+<strong><em>Function body</em></strong>
+The body of a function is the statements block that is associated with it. It is not part of its signature. The formal specification of statements blocks is described in <a href="http://www.typee.ovh/index.php/documentation/doc-03-language-descr/doc-037-statements-block/" target="_blank">this section</a> of Typee documentation.
+
+
+&nbsp;
+<h4>3.10.2 Function Declaration</h4>
+
+
+&nbsp;
+<h4>3.10.3 Function Call</h4>
+
+
+&nbsp;
+<h4>3.10.5 Unnamed Functions</h4>
+
+
+&nbsp;
+<h4>3.10.5 Function Overloading</h4>
+
+
+&nbsp;
+<h4>3.10.6 Function Overriding</h4>
+
+
+&nbsp;
+Next section formerly explains operators definitions and overrriding.
+
+
+<center><a href="http://www.typee.ovh/index.php/doc-039-declarations-assignments/">&lt; previous</a> (3.9 declarations & assignments) | (3.11 operators definitions) <a href="http://www.typee.ovh/index.php/doc-0311-operators-definitions/">next &gt;</a></center>
+
+<!-- copyright (c) 2018 Philippe Schmouker, http://www.typee.ovh -->
