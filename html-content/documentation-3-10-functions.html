@@ -232,14 +232,72 @@ Programmers are informed that they should avoid as much as possible any ambiguit
 &nbsp;
 <h4>3.10.5 Unnamed Functions</h4>
 
+Unnamed functions are functions which are used in-place. They are functions that are defined at the exact place where they are called, so they do not need to get identifiers. These functions are called <strong>lambda</strong> functions in other programming languages, e.g. <em>Python</em> or <em>Java</em>. They are used to define callbacks in <em>Javascript</em> also.
+
+Their formal EBNF specification is:
+<pre>&lt;unnamed func&gt;              ::= &lt;unnamed&gt; [&lt;TYPE&gt;] &lt;function args declaration&gt;
+                                    &lt;statements block&gt;
+
+&lt;function args declaration&gt; ::= '<strong>(</strong>' [&lt;typed args list&gt;] '<strong>)</strong>'
+
+&lt;typed args list&gt;           ::= &lt;type&gt; &lt;identifier&gt; ( '<strong>,</strong>' &lt;type&gt; &lt;identifier&gt; )*
+
+&lt;unnamed&gt;                   ::= '<strong>unnamed</strong>'  |  '<strong>lambda</strong>'
+</pre>
+
+In <strong>Typee</strong>, these functions are called <code style="font-size:115%;font-weight:bold;">unnamed</code> just because they get no identifier. As programmers are used ot use keyword <code style="font-size:115%;font-weight:bold;">lambda</code> in other programming languages, this keyword is also accepted wioth <strong>Typee</strong> but programmers are strongly encouraged to use <code style="font-size:115%;font-weight:bold;">unnamed</code> instead when programming in Typee.
+
+Usage of <strong>unnamed functions</strong> will be fully explained later in this documentation.
+
+Example - a little bit complex, but experienced programmers will understand it:
+<pre><strong>forward</strong> TContainer qsort&lt;TContainer&gt;( <strong>bool</strong> f_comp&lt;T&gt;(<strong>const</strong> T a, <strong>const</strong> T b),
+                                      TContainer container );
+
+<strong>list</strong>&lt;<strong>uint8</strong>&gt; my_list = [5, 4, 3, 1, 2, 0];
+
+my_list = qsort&lt;<strong>list</strong>&lt;<strong>uint8</strong>&gt; ( <strong>unnamed</strong>&lt;<strong>uint8</strong>&gt; <strong>bool</strong>(<strong>const uint8</strong> a, <strong>const uint8</strong> b){
+                                  <strong>return</strong> a < b;
+                              },
+                              my_list );
+
+// results in my_list <-- [0, 1, 2, 3, 4, 5]
+</pre>
+
 
 &nbsp;
 <h4>3.10.5 Function Overloading</h4>
+
+We shortly discuss this concept here. There is no specific rule for it in <strong>Typee</strong> grammar.
+<strong>Overloading</strong> has to do with functions (and methods) signatures. A function (or a method) is said to be overloaded as soon as it gets many different signatures with its same identifier.
+
+We stress here that point, generic to any OOP language, because <strong>Typee</strong> gets a specificity about it. The returned type of functions and methods is aprt of their signature. This is not the case in most programming languages.
+
+Example:
+<pre><strong>fwd int64</strong>   sum( <strong>list</strong>&lt;<strong>int32</strong>&gt; nums );
+<strong>fwd float32</strong> sum( <strong>list</strong>&lt;<strong>float32</strong>&gt; nums );
+<strong>fwd float64</strong> sum( <strong>list</strong> nums );
+</pre>
 
 
 &nbsp;
 <h4>3.10.6 Function Overriding</h4>
 
+We shortly discuss this concept here. There is no specific rule for it in <strong>Typee</strong> grammar.
+<strong>Overridding</strong> is the rewriting of the body (i.e. statements block) of a method while not changing its signature. This is classical in Objetc Oriented Programming, while redefining the purpose of a method in an inheriting class.
+
+Example:
+<pre><strong>class</strong> A{
+    <strong>static none</strong> func( <strong>const str</strong> s ){
+        <strong>print</strong>( "in A.func(", s, ")" );
+    }
+}
+
+<strong>class</strong> B: A {
+    <strong>static none</strong> func( <strong>const str</strong> s ){
+        <strong>print</strong>( "in B.func(", s, ")" );  // overridding
+    }
+}
+</pre>
 
 &nbsp;
 Next section formerly explains operators definitions and overrriding.
